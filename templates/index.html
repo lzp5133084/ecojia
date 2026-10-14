@@ -61,7 +61,7 @@
 <section class="section" id="brands">
   <div class="sec-head">
     <h2>生态品牌</h2>
-    <p>已登记的成员品牌，定位待完善（可在后台配置中随时补充）</p>
+    <p>来自梦境的三个产品构想 —— 一个盒子、一只鸽子、一片羽毛</p>
   </div>
   <div class="hw-grid">
     {% for b in brands %}
@@ -69,7 +69,8 @@
       <span class="hw-icon">{{ b.icon }}</span>
       <div>
         <h4>{{ b.name }} <small class="brand-cn">· {{ b.cn }}</small></h4>
-        <p>{{ b.desc }}</p>
+        <p class="brand-tag">{{ b.tag }}</p>
+        <p class="brand-desc">{{ b.desc }}</p>
       </div>
     </div>
     {% endfor %}
