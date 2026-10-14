@@ -94,6 +94,16 @@ HARDWARE = [
     {"name": "手表平台", "icon": "⌚", "desc": "腕上生态入口"},
 ]
 
+# ---- 生态品牌（2026-10-14用户提供，定位待确认）----
+BRANDS = [
+    {"icon": "🧰", "name": "bigBOX", "cn": "大盒子",
+     "desc": "生态新成员品牌 · 定位待确认（收纳 / 共享方向）"},
+    {"icon": "🧩", "name": "geziAI", "cn": "格子AI",
+     "desc": "生态新成员品牌 · 定位待确认（语料 / 资料方向）"},
+    {"icon": "📋", "name": "huoxingPM", "cn": "火星PM",
+     "desc": "生态新成员品牌 · 定位待确认（项目管理方向）"},
+]
+
 WISH_STATUS = ["待评估", "已纳入规划", "开发中", "已上线", "暂不规划"]
 
 
@@ -216,7 +226,7 @@ def footer_info():
 @app.route("/")
 def index():
     return render_template("index.html", products=PRODUCTS, hardware=HARDWARE,
-                           main_url=MAIN_SITE_URL)
+                           brands=BRANDS, main_url=MAIN_SITE_URL)
 
 
 @app.route("/wishes")
@@ -315,6 +325,12 @@ def api_auth_bridge():
 @app.route("/api/products")
 def api_products():
     return jsonify({"ok": True, "products": PRODUCTS})
+
+
+@app.route("/api/brands")
+def api_brands():
+    """生态品牌注册表（供子站/后续程序调用）"""
+    return jsonify({"ok": True, "brands": BRANDS})
 
 
 @app.route("/api/ecosystem/status")

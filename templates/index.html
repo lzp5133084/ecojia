@@ -57,6 +57,25 @@
   </div>
 </section>
 
+<!-- ═══ 生态品牌 ═══ -->
+<section class="section" id="brands">
+  <div class="sec-head">
+    <h2>生态品牌</h2>
+    <p>已登记的成员品牌，定位待完善（可在后台配置中随时补充）</p>
+  </div>
+  <div class="hw-grid">
+    {% for b in brands %}
+    <div class="hw-card">
+      <span class="hw-icon">{{ b.icon }}</span>
+      <div>
+        <h4>{{ b.name }} <small class="brand-cn">· {{ b.cn }}</small></h4>
+        <p>{{ b.desc }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
 <!-- ═══ 硬件探讨区 ═══ -->
 <section class="section" id="hardware">
   <div class="sec-head">
