@@ -37,7 +37,7 @@
 <section class="section" id="products">
   <div class="sec-head">
     <h2>产品矩阵</h2>
-    <p>十位数字成员，覆盖生活的每个角落（点击卡片可许愿催更）</p>
+    <p>十三位数字成员，覆盖生活的每个角落（含3个来自梦境的产品，点击卡片可许愿催更）</p>
   </div>
   <div class="product-grid">
     {% for p in products %}
@@ -49,30 +49,11 @@
       </div>
       <div class="p-icon">{{ p.icon }}</div>
       <h3 class="p-name">{{ p.name }}</h3>
+      {% if p.en %}<div class="p-en">{{ p.en }}</div>{% endif %}
       <p class="p-scope">{{ p.scope }}</p>
       <p class="p-desc">{{ p.desc }}</p>
       <span class="p-go">{{ p.url and '进入 →' or '许愿催更 →' }}</span>
     </a>
-    {% endfor %}
-  </div>
-</section>
-
-<!-- ═══ 生态品牌 ═══ -->
-<section class="section" id="brands">
-  <div class="sec-head">
-    <h2>生态品牌</h2>
-    <p>来自梦境的三个产品构想 —— 一个盒子、一只鸽子、一片羽毛</p>
-  </div>
-  <div class="hw-grid">
-    {% for b in brands %}
-    <div class="hw-card">
-      <span class="hw-icon">{{ b.icon }}</span>
-      <div>
-        <h4>{{ b.name }} <small class="brand-cn">· {{ b.cn }}</small></h4>
-        <p class="brand-tag">{{ b.tag }}</p>
-        <p class="brand-desc">{{ b.desc }}</p>
-      </div>
-    </div>
     {% endfor %}
   </div>
 </section>

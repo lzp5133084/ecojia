@@ -80,7 +80,16 @@ PRODUCTS = [
     {"no": "09", "name": "直播间工具", "scope": "粉丝 · 主播", "icon": "📡",
      "status": "规划中", "main": False, "url": "",
      "desc": "直播间数据、话术、素材一站式工具箱，主播的好帮手。"},
-    {"no": "10", "name": "待添加", "scope": "您的想法", "icon": "✨",
+    {"no": "10", "name": "大盒子", "en": "BIGBOX", "scope": "个人 · 家庭 · 企业", "icon": "🗃️",
+     "status": "规划中", "main": False, "url": "",
+     "desc": "承载数字资产的盒子产品，定位为工具平台——保单、合同、证件收进一个盒子，随身携带、随时取用。"},
+    {"no": "11", "name": "鸽子AI", "en": "geziAI", "scope": "个人专属 · 私人助手", "icon": "🕊️",
+     "status": "规划中", "main": False, "url": "",
+     "desc": "属于个人的私人AI助手，像信鸽一样替您传递、查找、记事，只服务主人一人。"},
+    {"no": "12", "name": "火星平面", "en": "huoxingPM", "scope": "个人 · 一生历程", "icon": "🪶",
+     "status": "规划中", "main": False, "url": "",
+     "desc": "以羽毛为形象的历程记录器：每一根绒毛都是一段历程或一条记录，越长越丰盈，像一张会生长的身份证。"},
+    {"no": "13", "name": "待添加", "scope": "您的想法", "icon": "✨",
      "status": "虚位以待", "main": False, "url": "/wishes",
      "desc": "这里预留给你——下一个改变生活的产品，由你的愿望开启。"},
 ]
@@ -92,16 +101,6 @@ HARDWARE = [
     {"name": "高效喷码器", "icon": "🔫", "desc": "标识与溯源"},
     {"name": "AI硬件", "icon": "🧠", "desc": "端侧智能设备"},
     {"name": "手表平台", "icon": "⌚", "desc": "腕上生态入口"},
-]
-
-# ---- 生态品牌（用户梦境中的三个产品构想，2026-10-14确认定位）----
-BRANDS = [
-    {"icon": "🗃️", "name": "BIGBOX", "cn": "大盒子", "tag": "工具平台 · 数字资产承载",
-     "desc": "承载数字资产的盒子产品，定位为工具平台。把保单、合同、证件等数字资产收进一个盒子，随身携带、随时取用。"},
-    {"icon": "🕊️", "name": "geziAI", "cn": "鸽子AI", "tag": "私人AI助手",
-     "desc": "专属于个人的私人AI助手，像信鸽一样替您传递、查找、记事，只服务主人一人。"},
-    {"icon": "🪶", "name": "huoxingPM", "cn": "火星平面", "tag": "历程记录 · 羽毛形象",
-     "desc": "以羽毛为形象的历程记录器：每一根绒毛都是一段历程或一条记录，越长越丰盈，整体像一张会生长的身份证。"},
 ]
 
 WISH_STATUS = ["待评估", "已纳入规划", "开发中", "已上线", "暂不规划"]
@@ -226,7 +225,7 @@ def footer_info():
 @app.route("/")
 def index():
     return render_template("index.html", products=PRODUCTS, hardware=HARDWARE,
-                           brands=BRANDS, main_url=MAIN_SITE_URL)
+                           main_url=MAIN_SITE_URL)
 
 
 @app.route("/wishes")
@@ -329,8 +328,8 @@ def api_products():
 
 @app.route("/api/brands")
 def api_brands():
-    """生态品牌注册表（供子站/后续程序调用）"""
-    return jsonify({"ok": True, "brands": BRANDS})
+    """生态品牌（梦境三品牌，已编号进产品矩阵 10/11/12）"""
+    return jsonify({"ok": True, "brands": [p for p in PRODUCTS if p.get("en")]})
 
 
 @app.route("/api/ecosystem/status")
