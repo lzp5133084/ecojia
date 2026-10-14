@@ -1,0 +1,12 @@
+# 数据库与密钥
+ecojia.db
+secret_key.txt
+
+# 临时文件
+__pycache__/
+*.pyc
+ck_*.txt
+cookies.txt
+
+# 运行日志
+*.log

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}登录 / 注册{% endblock %}
+{% block content %}
+
+<section class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button id="tab-login" class="auth-tab active" onclick="switchTab('login')">登录</button>
+      <button id="tab-reg" class="auth-tab" onclick="switchTab('reg')">注册</button>
+    </div>
+
+    {% if deny %}<div class="deny-tip">⛔ {{ deny }}</div>{% endif %}
+
+    <form id="form-login" onsubmit="return doLogin(event)">
+      <label>用户名</label>
+      <input id="l-username" type="text" autocomplete="username" placeholder="请输入用户名" required>
+      <label>密码</label>
+      <input id="l-password" type="password" autocomplete="current-password" placeholder="请输入密码" required>
+      <button class="btn btn-gold btn-block" type="submit">进入生态 →</button>
+      <p class="form-tip">一个账号畅游全生态：资料百事通等子站后续统一打通</p>
+    </form>
+
+    <form id="form-reg" style="display:none" onsubmit="return doReg(event)">
+      <label>用户名 <small>（3-20字符）</small></label>
+      <input id="r-username" type="text" autocomplete="username" placeholder="用于登录的唯一账号" required>
+      <label>昵称 <small>（选填，展示用）</small></label>
+      <input id="r-nickname" type="text" placeholder="大家怎么称呼您">
+      <label>密码 <small>（至少6位）</small></label>
+      <input id="r-password" type="password" autocomplete="new-password" placeholder="设置密码" required>
+      <label>确认密码</label>
+      <input id="r-password2" type="password" autocomplete="new-password" placeholder="再输一次" required>
+      <button class="btn btn-gold btn-block" type="submit">创建账号 ✨</button>
+      <p class="form-tip">首个注册用户自动成为本站管理员</p>
+    </form>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function switchTab(t){
+  document.getElementById('tab-login').classList.toggle('active', t==='login');
+  document.getElementById('tab-reg').classList.toggle('active', t==='reg');
+  document.getElementById('form-login').style.display = t==='login' ? '' : 'none';
+  document.getElementById('form-reg').style.display = t==='reg' ? '' : 'none';
+}
+async function doLogin(e){
+  e.preventDefault();
+  const d = await api('/api/auth/login', {method:'POST', body: JSON.stringify({
+    username: document.getElementById('l-username').value.trim(),
+    password: document.getElementById('l-password').value
+  })});
+  if(d.ok){ toast(d.msg); setTimeout(()=>location.href=d.redirect, 500); }
+  return false;
+}
+async function doReg(e){
+  e.preventDefault();
+  const p1 = document.getElementById('r-password').value;
+  const p2 = document.getElementById('r-password2').value;
+  if(p1 !== p2){ toast('两次密码不一致', false); return false; }
+  const d = await api('/api/auth/register', {method:'POST', body: JSON.stringify({
+    username: document.getElementById('r-username').value.trim(),
+    nickname: document.getElementById('r-nickname').value.trim(),
+    password: p1
+  })});
+  if(d.ok){
+    toast(d.msg + (d.role==='admin' ? '（已自动成为管理员）' : ''));
+    setTimeout(()=>location.href=d.redirect, 600);
+  }
+  return false;
+}
+</script>
+{% endblock %}

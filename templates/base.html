@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}数字生态家园{% endblock %} · ecojia.cn</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="aurora" aria-hidden="true"></div>
+<div class="grid-bg" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/">
+      <span class="brand-mark">⌘</span>
+      <span class="brand-name">数字生态家园</span>
+      <span class="brand-domain">ecojia.cn</span>
+    </a>
+    <nav class="nav">
+      <a href="/" class="{{ 'active' if request.path=='/' else '' }}">生态主页</a>
+      <a href="/#products" >产品矩阵</a>
+      <a href="/wishes" class="{{ 'active' if request.path=='/wishes' else '' }}">许愿墙</a>
+      {% if user and user.role == 'admin' %}
+      <a href="/admin" class="{{ 'active' if request.path=='/admin' else '' }}">管理后台</a>
+      {% endif %}
+    </nav>
+    <div class="user-area">
+      {% if user %}
+        <span class="user-chip"><i>👤</i>{{ user.nickname }}{% if user.role=='admin' %}<em class="role-badge">管理员</em>{% endif %}</span>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">退出</button>
+      {% else %}
+        <a class="btn btn-gold btn-sm" href="/login">登录 / 注册</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+<main class="wrap page">
+{% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="foot-brand">
+      <span class="brand-mark small">⌘</span>
+      <strong>数字生态家园</strong>
+      <span class="foot-domain">ecojia.cn</span>
+    </div>
+    <div class="foot-info">
+      <span>版本 {{ footer.version }}</span><i>|</i>
+      <span>程序大小 {{ footer.size }}</span><i>|</i>
+      <span>最后保存 {{ footer.saved }}</span><i>|</i>
+      <span>作者：军哥懂保</span><i>|</i>
+      <span>微信：xunijiayuan</span>
+    </div>
+    <div class="foot-slogan">一个账号 · 万物互联 · 服务生活的数字生态</div>
+  </div>
+</footer>
+
+<div id="toast" class="toast"></div>
+<script>
+function toast(msg, ok=true){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (ok ? '' : ' err');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.className='toast', 2600);
+}
+async function api(url, opts={}){
+  const r = await fetch(url, Object.assign({headers:{'Content-Type':'application/json'}}, opts));
+  let data = {};
+  try{ data = await r.json(); }catch(e){}
+  if(!r.ok && data.msg) toast(data.msg, false);
+  return data;
+}
+async function logout(){
+  const d = await api('/api/auth/logout', {method:'POST'});
+  if(d.ok) location.href = d.redirect;
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}许愿墙{% endblock %}
+{% block content %}
+
+<section class="page-head">
+  <h1>💡 许愿墙</h1>
+  <p>您想让数字生态家园长出什么新产品？或者希望现有产品增加什么功能？<br>
+  写下您的愿望，我们逐条评估、公示进展 —— 产品由大家共创。</p>
+</section>
+
+<div class="wish-layout">
+  <!-- 左：提交表单 -->
+  <div class="wish-form-card">
+    <h3>提交新愿望</h3>
+    <label>许愿产品</label>
+    <select id="w-product">
+      <option value="">— 请选择 —</option>
+      {% for p in products if p.name != '待添加' %}
+      <option value="{{ p.name }}" {{ 'selected' if request.args.get('product')==p.name else '' }}>{{ p.no }} {{ p.name }}（{{ p.scope }}）</option>
+      {% endfor %}
+      <option value="其他">✨ 其他新产品构想</option>
+    </select>
+    <label>联系方式 <small>（微信/QQ/手机，方便回访，仅管理员可见）</small></label>
+    <input id="w-contact" type="text" maxlength="100" placeholder="例如：微信 xunijiayuan">
+    <label>愿望内容 <small>（5-300字，越具体越容易被采纳）</small></label>
+    <textarea id="w-content" rows="5" maxlength="300" placeholder="例如：希望资料百事通支持按医院名称筛选，并增加收藏功能……"></textarea>
+    <button class="btn btn-gold btn-block" onclick="submitWish()">🕊️ 放飞愿望</button>
+    <p class="form-tip">已有账号登录后提交，可在下方随时查看/修改/删除自己的记录</p>
+  </div>
+
+  <!-- 右：许愿列表 -->
+  <div class="wish-list-card">
+    <div class="wl-head">
+      <h3>全部愿望</h3>
+      <div class="wl-tools">
+        <input id="w-kw" type="text" placeholder="搜索愿望…" oninput="loadWishes()">
+        <button class="btn btn-ghost btn-sm" onclick="loadWishes()">刷新</button>
+      </div>
+    </div>
+    <div id="wish-list" class="wish-list"><div class="empty">加载中…</div></div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const STATUS = ["待评估","已纳入规划","开发中","已上线","暂不规划"];
+const isAdmin = {{ 'true' if user and user.role=='admin' else 'false' }};
+const myUid = {{ user.id if user else 'null' }};
+
+async function loadWishes(){
+  const kw = document.getElementById('w-kw').value.trim();
+  const d = await api('/api/wishes?kw=' + encodeURIComponent(kw));
+  const box = document.getElementById('wish-list');
+  if(!d.ok || !d.wishes.length){
+    box.innerHTML = '<div class="empty">还没有愿望，来抢第一个沙发！</div>';
+    return;
+  }
+  box.innerHTML = d.wishes.map(w => `
+    <div class="wish-item ${w.mine?'mine':''}" data-id="${w.id}">
+      <div class="wi-top">
+        <span class="wi-product">${w.product}</span>
+        <span class="wi-status st-${STATUS.indexOf(w.status)}">${w.status}</span>
+      </div>
+      <p class="wi-content" id="wc-${w.id}">${escapeHtml(w.content)}</p>
+      <div class="wi-bottom">
+        <span class="wi-meta">${w.nickname ? '👤 '+escapeHtml(w.nickname) : '匿名朋友'} · ${w.created_at.slice(0,16)}</span>
+        ${w.can_manage ? `
+        <span class="wi-ops">
+          ${w.mine?`<a href="javascript:void(0)" onclick="editWish(${w.id})">修改</a>`:''}
+          ${isAdmin?`
+          <select onchange="setStatus(${w.id}, this.value)">
+            ${STATUS.map(s=>`<option ${s===w.status?'selected':''}>${s}</option>`).join('')}
+          </select>`:''}
+          <a href="javascript:void(0)" class="danger" onclick="delWish(${w.id})">删除</a>
+        </span>`:''}
+      </div>
+    </div>`).join('');
+}
+
+async function submitWish(){
+  const payload = {
+    product: document.getElementById('w-product').value,
+    contact: document.getElementById('w-contact').value.trim(),
+    content: document.getElementById('w-content').value.trim()
+  };
+  const d = await api('/api/wishes', {method:'POST', body: JSON.stringify(payload)});
+  if(d.ok){
+    toast(d.msg);
+    document.getElementById('w-contact').value='';
+    document.getElementById('w-content').value='';
+    loadWishes();
+  }
+}
+
+function editWish(id){
+  const el = document.getElementById('wc-'+id);
+  const old = el.textContent;
+  el.innerHTML = `<textarea rows="3" maxlength="300" style="width:100%">${old.replace(/</g,'&lt;')}</textarea>
+    <div style="margin-top:6px;display:flex;gap:8px">
+    <button class="btn btn-gold btn-sm" onclick="saveWish(${id}, this)">保存</button>
+    <button class="btn btn-ghost btn-sm" onclick="loadWishes()">取消</button></div>`;
+  el.querySelector('textarea').focus();
+}
+
+async function saveWish(id, btn){
+  const val = btn.closest('.wi-content').querySelector('textarea').value.trim();
+  const d = await api('/api/wishes/'+id, {method:'PUT', body: JSON.stringify({content: val})});
+  if(d.ok){ toast('已修改'); loadWishes(); }
+}
+
+async function setStatus(id, status){
+  const d = await api('/api/wishes/'+id, {method:'PUT', body: JSON.stringify({status: status})});
+  if(d.ok){ toast('状态已更新：'+status); loadWishes(); }
+}
+
+async function delWish(id){
+  if(!confirm('确定删除这条许愿吗？')) return;
+  const d = await api('/api/wishes/'+id, {method:'DELETE'});
+  if(d.ok){ toast('已删除'); loadWishes(); }
+}
+
+function escapeHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+loadWishes();
+</script>
+{% endblock %}
