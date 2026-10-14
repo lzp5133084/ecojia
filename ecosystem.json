@@ -3,14 +3,15 @@
     "name": "数字生态家园",
     "role": "生态积木底座",
     "domain": "ecojia.cn",
-    "version": "V1.3",
+    "version": "V1.4",
     "author": "军哥懂保",
     "wechat": "xunijiayuan",
     "positioning": "本网站是整个数字生态的底座：所有产品共用统一入口、统一账号、统一数据源；后续新工具以「积木」方式持续加入，加入后自动出现在门户与许愿墙。",
     "data_file": "ecosystem.json",
     "updated_at": "2026-10-14",
     "security_note": "本文件为公开数据源，禁止写入任何密码、密钥、Token；服务器与第三方凭据一律存放在腾讯云站内信 / Windows凭据管理器，不落库不落文件。",
-    "usage": "其他程序或网页可直接读取本文件（或调用 /api/ecosystem/manifest）获取生态全部信息；新增/修改积木只需改本文件，服务自动热加载。"
+    "usage": "其他程序或网页可直接读取本文件（或调用 /api/ecosystem/manifest）获取生态全部信息；新增/修改积木只需改本文件，服务自动热加载。",
+    "style": "2027星霓暖赛博风（用户选定，豆包 doubao-seed-2.1-turbo 生成方案）"
   },
   "products": [
     {
@@ -893,6 +894,10 @@
     {
       "date": "2026-10-14",
       "event": "全量部署到腾讯云 118.24.173.246：门户8400 + 资料百事通8300(systemd) + 14个网页工具(nginx 8080)，全部改用 IP:端口 访问"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "V1.4 全站换装「星霓暖赛博风」：豆包生成 3 套风格方案供选，seedream 生成星云/羽毛/横幅 3 张素材，CSS 全变量换色 + 霓光流动边缘 + 星尘粒子特效"
     }
   ],
   "todos": [
@@ -900,5 +905,86 @@
     "ICP备案通过后绑定 ecojia.cn 域名与 HTTPS",
     "确认三个梦境品牌是否配置子域名",
     "V1.0 统一账号 token 互认"
-  ]
+  ],
+  "styles": {
+    "current": "星霓暖赛博风",
+    "generator": "豆包大模型 doubao-seed-2.1-turbo（方案）+ doubao-seedream（首屏/羽毛/横幅三张素材图）",
+    "palette": {
+      "bg": "#1a1025",
+      "bg_soft": "#221536",
+      "accent": "#f472b6 → #c084fc → #fbbf24",
+      "text": "#f3edfa",
+      "muted": "#a99bc0"
+    },
+    "assets": [
+      "static/img/hero-nebula.jpg",
+      "static/img/feather-neon.jpg",
+      "static/img/tools-banner.jpg"
+    ],
+    "all_options": [
+      {
+        "style_name": "柔雾暖晶风",
+        "concept": "融合晨间柔雾氛围感与晶质科技质感的暖调数字生态门户风格",
+        "mood": "柔暖通透、轻量未来、治愈科技",
+        "bg": "#1A1722",
+        "bg_soft": "#252230",
+        "card": "#2A273880",
+        "card_hi": "#35314599",
+        "border": "#3D3A4D40",
+        "border_hi": "#F5C68B60",
+        "gold": "#F5C68B",
+        "gold_hi": "#FFE4C4",
+        "gold_grad": "linear-gradient(135deg, #F5C68B 0%, #E8A0BF 50%, #C9A7EB 100%)",
+        "text": "#F0EDE8",
+        "muted": "#A9A3B3",
+        "ok": "#9CCC65",
+        "danger": "#FF8A65",
+        "font": "鸿蒙黑体柔版 中文",
+        "effect": "全局采用低饱和度暖调玻璃拟态，卡片边缘带极细的晶质高光描边，背景搭配若隐若现的暖金色漂浮粒子。交互动效以缓动弹性过渡为主，按钮悬停时泛起柔雾状金粉色光晕，无生硬跳变。",
+        "hero_idea": "首屏中央悬浮半透明生态晶球，球内动态生长对应个人数字资产的微光植物，周围环绕柔雾状功能入口气泡。"
+      },
+      {
+        "style_name": "森氧数息风",
+        "concept": "以森林氧吧为灵感，融合生物科技感的清新治愈系数字生态门户风格",
+        "mood": "清新治愈、鲜活科技、自然松弛",
+        "bg": "#121E1B",
+        "bg_soft": "#1A2D29",
+        "card": "#22383380",
+        "card_hi": "#2D4A4499",
+        "border": "#3A5F5640",
+        "border_hi": "#6EE7B760",
+        "gold": "#6EE7B7",
+        "gold_hi": "#A7F3D0",
+        "gold_grad": "linear-gradient(135deg, #6EE7B7 0%, #FDE68A 100%)",
+        "text": "#ECFDF5",
+        "muted": "#86A8A0",
+        "ok": "#4ADE80",
+        "danger": "#FB923C",
+        "font": "鸿蒙黑体圆体版 中文",
+        "effect": "全局采用磨砂毛玻璃与生物脉络纹理结合的质感，卡片底部带微弱绿光呼吸投影，背景有极淡的叶绿体状粒子缓慢游动。交互动效采用自然生长式过渡，点击元素时泛起水波纹状绿色涟漪，悬停时边缘长出细碎微光叶脉。",
+        "hero_idea": "首屏呈现动态数字森林场景，每个功能模块对应一棵发光智能树，用户头像为悬浮核心光球，树木随用户操作动态生长。"
+      },
+      {
+        "style_name": "星霓暖赛博风",
+        "concept": "以霓虹星轨为灵感，融合暖调粉彩的潮酷未来感数字生态门户风格",
+        "mood": "梦幻潮酷、暖感赛博、灵动未来",
+        "bg": "#1A1025",
+        "bg_soft": "#2A1A3A",
+        "card": "#35204580",
+        "card_hi": "#452A5A99",
+        "border": "#5B3A7540",
+        "border_hi": "#F472B660",
+        "gold": "#F472B6",
+        "gold_hi": "#F9A8D4",
+        "gold_grad": "linear-gradient(135deg, #F472B6 0%, #C084FC 50%, #FBBF24 100%)",
+        "text": "#FAF5FF",
+        "muted": "#A78BBA",
+        "ok": "#34D399",
+        "danger": "#F43F5E",
+        "font": "阿里妈妈数黑体柔化版 中文",
+        "effect": "全局采用霓光玻璃拟态质感，卡片边缘带有流动的粉紫渐变光晕，背景有缓慢漂移的暖调星尘粒子与光带。交互动效采用星轨式弹性过渡，悬停元素时拖出淡粉紫色彗星光尾，点击时炸开细碎暖调星芒。",
+        "hero_idea": "首屏中央是环绕星轨的个人数字核心星球，每个功能入口为沿轨道运行的彩色小行星，拖动星球可切换不同生态模块。"
+      }
+    ]
+  }
 }
