@@ -32,13 +32,42 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "ecojia.db")
-VERSION = "V1.4"
+VERSION = "V1.5"
 
 # 资料百事通公网入口（已部署到腾讯云服务器；备案后切换为 ziliao.ecojia.cn）
 MAIN_SITE_URL = "http://118.24.173.246:8300"
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
+
+# ══════════════════ 商业级图标系统：emoji → 线性 SVG 图标名 ══════════════════
+# 底座 icon 字段保留 emoji 语义，显示层统一映射为 icon_sprite.html 中的霓虹线性图标
+ICON_MAP = {
+    # 产品矩阵
+    "🔐": "shieldlock", "📦": "database", "🗂": "library", "🗂️": "library",
+    "💎": "gem", "🧒": "baby", "🗄": "locker", "🗄️": "locker",
+    "🤝": "accessibility", "⚖": "scale", "⚖️": "scale",
+    "📡": "tower", "🗃": "box", "🗃️": "box",
+    "🕊": "bird", "🕊️": "bird", "🪶": "feather",
+    "✨": "sparkles", "🧩": "puzzle",
+    # 硬件生态
+    "🛸": "drone", "🛸️": "drone", "🖨": "printer", "🖨️": "printer",
+    "🕶": "glasses", "🕶️": "glasses", "🔫": "scan",
+    "🧠": "cpu", "⌚": "watch",
+}
+
+
+def picon(emoji):
+    """底座 emoji 图标 → SVG 图标名（未知图标回落到星光）"""
+    return ICON_MAP.get((emoji or "").strip(), "sparkles")
+
+
+app.jinja_env.globals["picon"] = picon
+
+
+@app.context_processor
+def inject_icon_map():
+    return {"icon_map": ICON_MAP}
 
 # ---- 密钥：首次运行自动生成 secret_key.txt，不入代码库 ----
 _key_file = os.path.join(BASE_DIR, "secret_key.txt")

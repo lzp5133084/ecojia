@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+{% from "icon_macro.html" import icon %}
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+{% include "icon_sprite.html" %}
 <div class="aurora" aria-hidden="true"></div>
 <div class="stardust" aria-hidden="true"></div>
 <div class="grid-bg" aria-hidden="true"></div>
@@ -14,7 +16,7 @@
 <header class="topbar">
   <div class="wrap topbar-inner">
     <a class="brand" href="/">
-      <span class="brand-mark">⌘</span>
+      <span class="brand-mark">{{ icon("logo") }}</span>
       <span class="brand-name">数字生态家园</span>
       <span class="brand-domain">ecojia.cn</span>
     </a>
@@ -30,8 +32,8 @@
     </nav>
     <div class="user-area">
       {% if user %}
-        <span class="user-chip"><i>👤</i>{{ user.nickname }}{% if user.role=='admin' %}<em class="role-badge">管理员</em>{% endif %}</span>
-        <button class="btn btn-ghost btn-sm" onclick="logout()">退出</button>
+        <span class="user-chip">{{ icon("user", "uc-ic") }}{{ user.nickname }}{% if user.role=='admin' %}<em class="role-badge">管理员</em>{% endif %}</span>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">{{ icon("logout") }} 退出</button>
       {% else %}
         <a class="btn btn-gold btn-sm" href="/login">登录 / 注册</a>
       {% endif %}
@@ -46,7 +48,7 @@
 <footer class="footer">
   <div class="wrap footer-inner">
     <div class="foot-brand">
-      <span class="brand-mark small">⌘</span>
+      <span class="brand-mark small">{{ icon("logo") }}</span>
       <strong>数字生态家园</strong>
       <span class="foot-domain">ecojia.cn</span>
     </div>

@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+{% from "icon_macro.html" import icon %}
 {% block title %}管理后台{% endblock %}
 {% block content %}
 
 <section class="page-head">
-  <h1>🛠️ 管理后台</h1>
+  <h1>{{ icon("sliders") }}管理后台</h1>
   <p>许愿处理 · 运营数据 · 操作留痕</p>
 </section>
 
@@ -16,12 +17,12 @@
 
 <div class="admin-grid">
   <div class="admin-card">
-    <h3>📋 愿望处理</h3>
+    <h3>{{ icon("clipboard") }} 愿望处理</h3>
     <p class="admin-tip">点击状态直接修改；删除不可恢复</p>
     <div id="admin-wishes" class="admin-list"><div class="empty">加载中…</div></div>
   </div>
   <div class="admin-card">
-    <h3>🧾 操作日志 <small>（最近100条）</small></h3>
+    <h3>{{ icon("filetext") }} 操作日志 <small>（最近100条）</small></h3>
     <div id="admin-logs" class="log-list"><div class="empty">加载中…</div></div>
   </div>
 </div>
@@ -29,8 +30,8 @@
 <!-- ═══ 积木管理（V1.2 可视化后台）═══ -->
 <section class="admin-card brick-card">
   <div class="brick-head">
-    <h3>🧩 积木管理 <small>（产品矩阵增删查改 · 改完立即生效，无需改文件）</small></h3>
-    <button class="btn btn-gold btn-sm" onclick="openBrickForm()">＋ 新增积木</button>
+    <h3>{{ icon("puzzle") }} 积木管理 <small>（产品矩阵增删查改 · 改完立即生效，无需改文件）</small></h3>
+    <button class="btn btn-gold btn-sm" onclick="openBrickForm()">{{ icon("pluscircle") }} 新增积木</button>
   </div>
   <p class="admin-tip">新增的积木自动编号并插在「待添加」之前；「待添加」占位不可修改/删除。新增后即时出现在首页产品矩阵与许愿墙下拉框。</p>
 
@@ -41,13 +42,13 @@
       <label>名称 <b>*</b><input id="bf-name" maxlength="20" placeholder="如：智能名片"></label>
       <label>英文品牌名<input id="bf-en" maxlength="20" placeholder="如：BIGBOX（可空）"></label>
       <label>适用人群<input id="bf-scope" maxlength="30" placeholder="如：个人 · 家庭"></label>
-      <label>图标<input id="bf-icon" maxlength="4" placeholder="🧩"></label>
+      <label>图标<select id="bf-icon"></select></label>
       <label>状态<select id="bf-status"></select></label>
       <label>入口网址<input id="bf-url" maxlength="200" placeholder="https://…（可空，空则点卡片转许愿）"></label>
     </div>
     <label>一句话简介<textarea id="bf-desc" rows="2" maxlength="120" placeholder="20字内说清它是干什么的"></textarea></label>
     <div class="bf-ops">
-      <button class="btn btn-gold btn-sm" onclick="saveBrick()">💾 保存</button>
+      <button class="btn btn-gold btn-sm" onclick="saveBrick()">{{ icon("save") }} 保存</button>
       <button class="btn btn-ghost btn-sm" onclick="closeBrickForm()">取消</button>
     </div>
   </div>
@@ -62,6 +63,23 @@
 const STATUS = {{ wish_status | tojson }};
 const PSTATUS = {{ product_status | tojson }};
 const SMAP = {"已上线":"live","开发中":"plan","规划中":"plan","敬请期待":"soon","虚位以待":"open"};
+/* 底座 emoji → 商业级 SVG 图标（映射来自 app.py ICON_MAP） */
+const ICON_MAP = {{ icon_map|tojson }};
+/* 图标选择器可选项 [emoji值, svg名, 中文名] */
+const CHOICES = [
+  ["🧩","puzzle","积木拼图（默认）"],["🔐","shieldlock","盾牌安全锁"],["📦","database","数据库语料库"],
+  ["🗂️","library","资料库书架"],["💎","gem","钻石资产"],["🧒","baby","宝贝"],
+  ["🗄️","locker","共享储物柜"],["🤝","accessibility","无障碍助手"],["⚖️","scale","天平理赔"],
+  ["📡","tower","直播信号塔"],["🗃️","box","立体大盒子"],["🕊️","bird","飞鸟"],
+  ["🪶","feather","羽毛"],["✨","sparkles","星光"],
+  ["🛸","drone","无人机"],["🖨️","printer","3D打印机"],["🕶️","glasses","AI眼镜"],
+  ["🔫","scan","扫描喷码"],["🧠","cpu","AI芯片"],["⌚","watch","智能手表"]
+];
+function icn(n, neon){ return '<svg class="ic'+(neon?' ic-neon':'')+'" viewBox="0 0 24 24"><use href="#i-'+n+'"/></svg>'; }
+function pico(e){ return ICON_MAP[e] || 'puzzle'; }
+function fillIconChoices(sel){
+  sel.innerHTML = CHOICES.map(c=>'<option value="'+c[0]+'">'+c[2]+'</option>').join('');
+}
 let BRICKS = [];
 
 async function loadAll(){
@@ -91,8 +109,8 @@ async function loadAll(){
           <select onchange="setStatus(${w.id}, this.value)">
             ${STATUS.map(s=>`<option ${s===w.status?'selected':''}>${s}</option>`).join('')}
           </select>
-          <span class="wi-contact">📞 ${escapeHtml(w.contact)}</span>
-          <a href="javascript:void(0)" class="danger" onclick="delWish(${w.id})">删除</a>
+          <span class="wi-contact">${icn('phone')} ${escapeHtml(w.contact)}</span>
+          <a href="javascript:void(0)" class="danger" onclick="delWish(${w.id})">${icn('trash')} 删除</a>
         </div>
       </div>`).join('');
   } else {
@@ -121,7 +139,7 @@ function renderBricks(){
     const fixed = p.name === '待添加';
     return `<div class="brick-item${p.main?' b-main':''}${fixed?' b-fixed':''}">
       <span class="brick-no">${p.no}</span>
-      <span class="brick-icon">${p.icon||'🧩'}</span>
+      <span class="brick-icon">${icn(pico(p.icon), true)}</span>
       <div class="brick-info">
         <div class="brick-name">${escapeHtml(p.name)}
           ${p.en?`<em class="brick-en">${escapeHtml(p.en)}</em>`:''}
@@ -133,8 +151,8 @@ function renderBricks(){
       </div>
       <div class="brick-ops">
         ${fixed?'<span class="brick-lock">共创占位</span>':`
-        <a href="javascript:void(0)" onclick="editBrick('${p.no}')">修改</a>
-        <a href="javascript:void(0)" class="danger" onclick="delBrick('${p.no}')">删除</a>`}
+        <a href="javascript:void(0)" onclick="editBrick('${p.no}')">${icn('pencil')} 修改</a>
+        <a href="javascript:void(0)" class="danger" onclick="delBrick('${p.no}')">${icn('trash')} 删除</a>`}
       </div>
     </div>`;
   }).join('');
@@ -143,6 +161,7 @@ function fillStatus(sel){ sel.innerHTML = PSTATUS.map(s=>`<option>${s}</option>`
 function openBrickForm(){
   document.getElementById('bf-title').textContent = '新增积木';
   ['bf-no','bf-name','bf-en','bf-scope','bf-url','bf-desc'].forEach(id=>document.getElementById(id).value='');
+  fillIconChoices(document.getElementById('bf-icon'));
   document.getElementById('bf-icon').value = '🧩';
   fillStatus(document.getElementById('bf-status'));
   document.getElementById('bf-status').value = '规划中';
@@ -157,6 +176,7 @@ function editBrick(no){
   document.getElementById('bf-name').value = p.name||'';
   document.getElementById('bf-en').value = p.en||'';
   document.getElementById('bf-scope').value = p.scope||'';
+  fillIconChoices(document.getElementById('bf-icon'));
   document.getElementById('bf-icon').value = p.icon||'🧩';
   document.getElementById('bf-url').value = p.url||'';
   document.getElementById('bf-desc').value = p.desc||'';

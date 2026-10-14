@@ -1,24 +1,25 @@
 {% extends "base.html" %}
+{% from "icon_macro.html" import icon %}
 {% block title %}火星平面 · 历程羽毛{% endblock %}
 {% block content %}
 
 <section class="page-head">
-  <h1>🪶 火星平面</h1>
+  <h1>{{ icon("feather") }}火星平面</h1>
   <p><b>huoxingPM</b> · 以羽毛为形象的历程记录器 —— 每一根绒毛，都是一段历程。<br>
   记录越多，羽毛越丰盈，像一张会生长、只属于你的身份证。</p>
 </section>
 
 <div class="fx-banner">
-  <span class="fx-tag">🧪 原型演示</span>
+  <span class="fx-tag">{{ icon("flask") }} 原型演示</span>
   当前为示例数据。正式版将由您自己录入，支持增删查改与长期存档。
-  <a href="/api/huoxing/records" target="_blank">查看数据接口 →</a>
+  <a href="/api/huoxing/records" target="_blank">查看数据接口 {{ icon("external") }}</a>
 </div>
 
 <div class="fx-layout">
   <div class="fx-stage">
     <div class="fx-glow" aria-hidden="true"></div>
     <svg id="feather" viewBox="0 0 560 700" role="img" aria-label="历程羽毛"></svg>
-    <div class="fx-hint">👉 点击任意一根绒毛，查看那段历程</div>
+    <div class="fx-hint">{{ icon("bulb") }} 点击任意一根绒毛，查看那段历程</div>
   </div>
 
   <aside class="fx-side">

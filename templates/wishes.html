@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+{% from "icon_macro.html" import icon %}
 {% block title %}许愿墙{% endblock %}
 {% block content %}
 
 <section class="page-head">
-  <h1>💡 许愿墙</h1>
+  <h1>{{ icon("bulb") }}许愿墙</h1>
   <p>您想让数字生态家园长出什么新产品？或者希望现有产品增加什么功能？<br>
   写下您的愿望，我们逐条评估、公示进展 —— 产品由大家共创。</p>
 </section>
@@ -18,13 +19,13 @@
       {% for p in products if p.name != '待添加' %}
       <option value="{{ p.name }}" {{ 'selected' if request.args.get('product')==p.name else '' }}>{{ p.no }} {{ p.name }}（{{ p.scope }}）</option>
       {% endfor %}
-      <option value="其他">✨ 其他新产品构想</option>
+      <option value="其他">其他新产品构想</option>
     </select>
     <label>联系方式 <small>（微信/QQ/手机，方便回访，仅管理员可见）</small></label>
     <input id="w-contact" type="text" maxlength="100" placeholder="例如：微信 xunijiayuan">
     <label>愿望内容 <small>（5-300字，越具体越容易被采纳）</small></label>
     <textarea id="w-content" rows="5" maxlength="300" placeholder="例如：希望资料百事通支持按医院名称筛选，并增加收藏功能……"></textarea>
-    <button class="btn btn-gold btn-block" onclick="submitWish()">🕊️ 放飞愿望</button>
+    <button class="btn btn-gold btn-block" onclick="submitWish()">{{ icon("send") }} 放飞愿望</button>
     <p class="form-tip">已有账号登录后提交，可在下方随时查看/修改/删除自己的记录</p>
   </div>
 
@@ -48,6 +49,11 @@
 const STATUS = ["待评估","已纳入规划","开发中","已上线","暂不规划"];
 const isAdmin = {{ 'true' if user and user.role=='admin' else 'false' }};
 const myUid = {{ user.id if user else 'null' }};
+const ICO = {
+  user:'<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>',
+  edit:'<svg class="ic" viewBox="0 0 24 24"><path d="m4 20 1-4L15.5 5.5a2.1 2.1 0 0 1 3 3L8 19Z"/><path d="m13.5 7.5 3 3"/></svg>',
+  trash:'<svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/></svg>'
+};
 
 async function loadWishes(){
   const kw = document.getElementById('w-kw').value.trim();
@@ -65,15 +71,15 @@ async function loadWishes(){
       </div>
       <p class="wi-content" id="wc-${w.id}">${escapeHtml(w.content)}</p>
       <div class="wi-bottom">
-        <span class="wi-meta">${w.nickname ? '👤 '+escapeHtml(w.nickname) : '匿名朋友'} · ${w.created_at.slice(0,16)}</span>
+        <span class="wi-meta">${w.nickname ? ICO.user+' '+escapeHtml(w.nickname) : '匿名朋友'} · ${w.created_at.slice(0,16)}</span>
         ${w.can_manage ? `
         <span class="wi-ops">
-          ${w.mine?`<a href="javascript:void(0)" onclick="editWish(${w.id})">修改</a>`:''}
+          ${w.mine?`<a href="javascript:void(0)" onclick="editWish(${w.id})">${ICO.edit} 修改</a>`:''}
           ${isAdmin?`
           <select onchange="setStatus(${w.id}, this.value)">
             ${STATUS.map(s=>`<option ${s===w.status?'selected':''}>${s}</option>`).join('')}
           </select>`:''}
-          <a href="javascript:void(0)" class="danger" onclick="delWish(${w.id})">删除</a>
+          <a href="javascript:void(0)" class="danger" onclick="delWish(${w.id})">${ICO.trash} 删除</a>
         </span>`:''}
       </div>
     </div>`).join('');

@@ -1,22 +1,28 @@
 {% extends "base.html" %}
+{% from "icon_macro.html" import icon %}
 {% block title %}登录 / 注册{% endblock %}
 {% block content %}
 
 <section class="auth-wrap">
   <div class="auth-card">
+    <div class="auth-brand">
+      <span class="brand-mark auth-mark">{{ icon("logo") }}</span>
+      <div class="auth-brand-name">数字生态家园</div>
+      <div class="auth-brand-domain">一个账号 · 万物互联</div>
+    </div>
     <div class="auth-tabs">
       <button id="tab-login" class="auth-tab active" onclick="switchTab('login')">登录</button>
       <button id="tab-reg" class="auth-tab" onclick="switchTab('reg')">注册</button>
     </div>
 
-    {% if deny %}<div class="deny-tip">⛔ {{ deny }}</div>{% endif %}
+    {% if deny %}<div class="deny-tip">{{ icon("shieldalert") }} {{ deny }}</div>{% endif %}
 
     <form id="form-login" onsubmit="return doLogin(event)">
       <label>用户名</label>
       <input id="l-username" type="text" autocomplete="username" placeholder="请输入用户名" required>
       <label>密码</label>
       <input id="l-password" type="password" autocomplete="current-password" placeholder="请输入密码" required>
-      <button class="btn btn-gold btn-block" type="submit">进入生态 →</button>
+      <button class="btn btn-gold btn-block" type="submit">进入生态 {{ icon("arrowright") }}</button>
       <p class="form-tip">一个账号畅游全生态：资料百事通等子站后续统一打通</p>
     </form>
 
@@ -29,7 +35,7 @@
       <input id="r-password" type="password" autocomplete="new-password" placeholder="设置密码" required>
       <label>确认密码</label>
       <input id="r-password2" type="password" autocomplete="new-password" placeholder="再输一次" required>
-      <button class="btn btn-gold btn-block" type="submit">创建账号 ✨</button>
+      <button class="btn btn-gold btn-block" type="submit">{{ icon("sparkles") }} 创建账号</button>
       <p class="form-tip">首个注册用户自动成为本站管理员</p>
     </form>
   </div>

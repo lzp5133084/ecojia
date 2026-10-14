@@ -645,3 +645,136 @@ button{font-family:inherit;cursor:pointer}
 /* 状态徽章微调为星霓色 */
 .st-0{color:#a78bfa;border-color:rgba(167,139,250,.45)}
 .s-plan{color:var(--gold-hi);background:rgba(192,132,252,.10)}
+
+/* ════════════════════════════════════════════════════════════
+   V1.5 商业级线性图标系统（替换全站卡通 emoji）
+   统一 1.8 描边 · 圆角端点 · 跟随字号缩放 · 支持霓虹渐变
+   ════════════════════════════════════════════════════════════ */
+.ic{
+  width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;
+  vertical-align:-.15em;flex:0 0 auto;
+}
+.ic .dot{fill:currentColor;stroke:none}
+.ic-neon{stroke:url(#g-neon)}
+.ic-neon .dot{fill:url(#g-neon)}
+
+/* 品牌徽标：深色琉璃底 + 霓虹六边形生态 LOGO */
+.brand-mark{
+  background:linear-gradient(145deg,rgba(244,114,182,.18),rgba(192,132,252,.08) 55%,rgba(251,191,36,.12));
+  border:1px solid var(--border-hi);
+  box-shadow:0 0 18px rgba(244,114,182,.35),inset 0 0 12px rgba(192,132,252,.20);
+}
+.brand-mark .ic{width:23px;height:23px;stroke:url(#g-neon)}
+.brand-mark .ic .dot{fill:url(#g-neon)}
+.brand-mark.small .ic{width:16px;height:16px}
+
+/* 顶栏用户区 */
+.user-chip .uc-ic{width:15px;height:15px;color:var(--gold)}
+.user-chip i{font-style:normal;display:inline-flex}
+
+/* 按钮内图标对齐 */
+.btn .ic{width:16px;height:16px;vertical-align:-.2em}
+.btn-lg .ic{width:18px;height:18px}
+.btn-sm .ic{width:14px;height:14px}
+
+/* Hero 标签 */
+.hero-tags span{display:inline-flex;align-items:center;gap:7px}
+.hero-tags .ic{width:15px;height:15px;color:var(--gold)}
+
+/* 主打大卡图标：80px 霓虹渐变 + 辉光 */
+.mp-icon{display:inline-flex;line-height:1}
+.mp-icon .ic{
+  width:84px;height:84px;stroke:url(#g-neon);
+  filter:drop-shadow(0 0 18px rgba(244,114,182,.45));
+  animation:iconfloat 4.5s ease-in-out infinite;
+}
+.mp-icon .ic .dot{fill:url(#g-neon)}
+@keyframes iconfloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+.mp-feats span{display:inline-flex;align-items:center;gap:6px}
+.mp-feats .ic{width:14px;height:14px}
+.mp-btn .ic{width:18px;height:18px;vertical-align:-.25em}
+
+/* 产品矩阵卡图标 */
+.p-icon{display:flex;margin-bottom:12px}
+.p-icon .ic{width:36px;height:36px;transition:transform .25s ease}
+.p-card:hover .p-icon .ic{transform:scale(1.12) rotate(-4deg)}
+
+/* 硬件卡图标 */
+.hw-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:56px;height:56px;border-radius:16px;flex:0 0 auto;
+  border:1px solid var(--border);
+  background:linear-gradient(145deg,rgba(244,114,182,.10),rgba(192,132,252,.06));
+}
+.hw-icon .ic{width:28px;height:28px;stroke:url(#g-neon)}
+.hw-icon .ic .dot{fill:url(#g-neon)}
+
+/* 内页标题前图标 */
+.page-head h1 .ic,.sec-head h2 .ic{
+  width:30px;height:30px;vertical-align:-.28em;margin-right:10px;
+  stroke:url(#g-neon);
+}
+.page-head h1 .ic .dot{fill:url(#g-neon)}
+
+/* 工具页 / 通用信息标签 */
+.tool-meta span,.tip-row span{display:inline-flex;align-items:center;gap:6px}
+.tool-meta .ic{width:14px;height:14px}
+
+@media (max-width:640px){
+  .mp-icon .ic{width:64px;height:64px}
+  .brand-mark .ic{width:20px;height:20px}
+}
+
+/* ════ V1.5 图标在各组件内的对齐与尺寸 ════ */
+/* 工具页 chips / 元信息 */
+.tl-chip{display:inline-flex;align-items:center;gap:7px}
+.tl-chip .ic{width:15px;height:15px}
+.tool-note{display:flex;align-items:flex-start;gap:7px}
+.tool-note .ic{width:15px;height:15px;flex:0 0 auto;margin-top:2px}
+.tool-run{display:inline-flex;align-items:center;gap:5px}
+.tool-run .ic{width:13px;height:13px}
+
+/* 火星平面 */
+.fx-tag{display:inline-flex;align-items:center;gap:6px}
+.fx-tag .ic{width:13px;height:13px}
+.fx-hint{display:flex;align-items:center;justify-content:center;gap:7px}
+.fx-hint .ic{width:15px;height:15px;color:var(--gold)}
+.fx-banner a{display:inline-flex;align-items:center;gap:5px}
+.fx-banner a .ic{width:13px;height:13px}
+
+/* 登录页品牌区 */
+.auth-brand{text-align:center;margin:2px 0 22px}
+.auth-mark{width:54px;height:54px;border-radius:16px;margin:0 auto 12px}
+.auth-mark .ic{width:32px;height:32px}
+.auth-brand-name{
+  font-size:19px;font-weight:800;letter-spacing:3px;
+  background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.auth-brand-domain{font-size:11.5px;color:var(--muted);letter-spacing:3px;margin-top:5px}
+
+/* 后台标题与操作图标 */
+.admin-card h3{display:flex;align-items:center;gap:9px}
+.admin-card h3 > .ic{width:19px;height:19px;stroke:url(#g-neon);flex:none}
+.deny-tip{display:flex;align-items:center;gap:8px}
+.deny-tip .ic{width:16px;height:16px;flex:none}
+.wi-contact{display:inline-flex;align-items:center;gap:5px}
+.wi-contact .ic{width:13px;height:13px}
+.wi-ops a{display:inline-flex;align-items:center;gap:4px}
+.wi-ops .ic{width:13px;height:13px}
+
+/* 积木列表图标 */
+.brick-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:42px;height:42px;border-radius:12px;flex:0 0 auto;
+  border:1px solid var(--border);
+  background:linear-gradient(145deg,rgba(244,114,182,.10),rgba(192,132,252,.06));
+}
+.brick-icon .ic{width:22px;height:22px;stroke:url(#g-neon)}
+
+/* 许愿卡昵称图标 */
+.wi-meta{display:inline-flex;align-items:center;gap:5px}
+.wi-meta .ic{width:13px;height:13px;color:var(--gold)}
