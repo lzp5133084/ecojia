@@ -204,12 +204,80 @@ check("登出后访问我的许愿被拒(401)", code == 401)
 print("═══ 六、开放生态API ═══")
 code, body = req(guest, "GET", "/api/products")
 d = json.loads(body)
-check("产品矩阵接口(10个产品)", d.get("ok") and len(d["products"]) == 10)
+check("产品矩阵接口(13位积木)", d.get("ok") and len(d["products"]) == 13)
 
 code, body = req(guest, "GET", "/api/ecosystem/status")
 d = json.loads(body)
 check("生态总览接口", d.get("ok") and d.get("domain") == "ecojia.cn"
       and d["stats"]["users"] == 2)
+
+print("═══ 七、积木底座（ecosystem.json 单一数据源） ═══")
+code, body = req(guest, "GET", "/api/ecosystem/manifest")
+d = json.loads(body)
+m = d.get("manifest", {})
+check("底座全量清单接口", d.get("ok") and m.get("meta", {}).get("domain") == "ecojia.cn")
+check("清单含13位积木", len(m.get("products", [])) == 13)
+check("清单含硬件探讨区", len(m.get("hardware", [])) == 6)
+check("清单含子域名规划", len(m.get("subdomains", [])) >= 5)
+check("清单含接口目录", len(m.get("apis", [])) >= 15)
+check("清单未写入密钥字段",
+      "password" not in json.dumps(m, ensure_ascii=False).lower())
+
+code, body = req(guest, "GET", "/api/ecosystem/search?q=" + urllib.request.quote("羽毛"))
+d = json.loads(body)
+check("底座查找：羽毛 → 火星平面",
+      d.get("count", 0) >= 1 and d["hits"][0]["item"].get("en") == "huoxingPM")
+
+code, body = req(guest, "GET", "/api/ecosystem/search?q=BIGBOX")
+d = json.loads(body)
+check("底座查找：英文品牌名可命中",
+      any(h["item"].get("en") == "BIGBOX" for h in d.get("hits", [])))
+
+code, body = req(guest, "GET", "/api/ecosystem/search?q=" + urllib.request.quote("无人机"))
+d = json.loads(body)
+check("底座查找：硬件区可查", any(h["type"] == "hardware" for h in d.get("hits", [])))
+
+code, body = req(guest, "GET", "/api/ecosystem/search")
+check("空关键词被拦截(400)", code == 400)
+
+req(user, "POST", "/api/auth/login", {"username": "ceshi01", "password": "test123456"})
+code, body = req(user, "POST", "/api/ecosystem/products", {"name": "测试积木"})
+check("非管理员新增积木被拒(403)", code == 403)
+
+code, body = req(admin, "POST", "/api/ecosystem/products",
+                 {"name": "测试积木", "en": "testBrick", "scope": "测试", "icon": "🧪",
+                  "desc": "自动化测试用积木", "status": "规划中"})
+d = json.loads(body)
+check("管理员新增积木", code == 200 and d.get("ok"))
+check("新增积木自动编号并插在「待添加」之前", d.get("item", {}).get("no") == "13")
+
+code, body = req(guest, "GET", "/api/products")
+d = json.loads(body)
+check("新增后矩阵变14位", len(d["products"]) == 14)
+check("「待添加」始终在末位", d["products"][-1]["name"] == "待添加")
+
+code, body = req(admin, "PUT", "/api/ecosystem/products/13",
+                 {"desc": "已修改说明", "status": "开发中"})
+d = json.loads(body)
+check("管理员修改积木", code == 200 and d.get("item", {}).get("status") == "开发中")
+
+code, body = req(admin, "PUT", "/api/ecosystem/products/14", {"name": "改待添加"})
+check("「待添加」占位不可修改(400)", code == 400)
+
+code, body = req(admin, "POST", "/api/ecosystem/products", {"name": "测试积木"})
+check("同名积木被拦截(400)", code == 400)
+
+code, body = req(admin, "DELETE", "/api/ecosystem/products/13")
+check("管理员移除积木", code == 200)
+
+code, body = req(guest, "GET", "/api/products")
+d = json.loads(body)
+check("移除后矩阵恢复13位", len(d["products"]) == 13 and d["products"][-1]["name"] == "待添加")
+
+code, body = req(admin, "GET", "/api/admin/logs")
+d = json.loads(body)
+actions = [l["action"] for l in d.get("logs", [])]
+check("积木增删操作写入日志", "新增积木" in actions and "移除积木" in actions)
 
 print()
 print(f"═══════ 测试结果：{passed} 通过 / {failed} 失败 ═══════")

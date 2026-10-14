@@ -1,0 +1,467 @@
+{
+  "meta": {
+    "name": "数字生态家园",
+    "role": "生态积木底座",
+    "domain": "ecojia.cn",
+    "version": "V0.1",
+    "author": "军哥懂保",
+    "wechat": "xunijiayuan",
+    "positioning": "本网站是整个数字生态的底座：所有产品共用统一入口、统一账号、统一数据源；后续新工具以「积木」方式持续加入，加入后自动出现在门户与许愿墙。",
+    "data_file": "ecosystem.json",
+    "updated_at": "2026-10-14",
+    "security_note": "本文件为公开数据源，禁止写入任何密码、密钥、Token；服务器与第三方凭据一律存放在腾讯云站内信 / Windows凭据管理器，不落库不落文件。",
+    "usage": "其他程序或网页可直接读取本文件（或调用 /api/ecosystem/manifest）获取生态全部信息；新增/修改积木只需改本文件，服务自动热加载。"
+  },
+  "products": [
+    {
+      "no": "01",
+      "name": "数字保险箱",
+      "en": "",
+      "scope": "个人 · 家庭",
+      "icon": "🔐",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "家庭重要证件、保单、合同、房产资料的加密数字保管箱，一人保管全家共享。"
+    },
+    {
+      "no": "02",
+      "name": "语料收集器",
+      "en": "",
+      "scope": "个人 · 特定",
+      "icon": "📦",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "面向AI训练的语料收集与整理工具，让每个人的经验沉淀为可用数据。"
+    },
+    {
+      "no": "03",
+      "name": "资料百事通",
+      "en": "",
+      "scope": "个人 · 共创 · 大众",
+      "icon": "🗂️",
+      "status": "已上线",
+      "main": true,
+      "url": "https://72d51d79.r9.vip.cpolar.cn",
+      "desc": "全民共创式资料共享与智能查询平台——查资料、传资料、赚积分，AI帮您找。",
+      "path": "e:\\Chat GPT6\\资料百事通",
+      "port": 8300,
+      "repo": "https://github.com/lzp5133084/ziliaobaishitong"
+    },
+    {
+      "no": "04",
+      "name": "AI资产管理",
+      "en": "",
+      "scope": "个人 · 家庭 · 公司",
+      "icon": "💎",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "个人与家庭资产的AI盘点与管理，看得清、管得住、传得下。"
+    },
+    {
+      "no": "05",
+      "name": "AI宝贝助手",
+      "en": "",
+      "scope": "个人 · 家庭 · 学校",
+      "icon": "🧒",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "孩子的成长记录、学习陪伴与安全教育，AI宝贝成长好伙伴。"
+    },
+    {
+      "no": "06",
+      "name": "共享租赁柜",
+      "en": "",
+      "scope": "未来硬件",
+      "icon": "🗄️",
+      "status": "敬请期待",
+      "main": false,
+      "url": "",
+      "desc": "社区共享智能租赁柜，让闲置物品流动起来。"
+    },
+    {
+      "no": "07",
+      "name": "残障AI助手",
+      "en": "",
+      "scope": "个人 · 特定机构",
+      "icon": "🤝",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "视障、听障、肢障朋友的AI生活助手，科技向善，人人平等。"
+    },
+    {
+      "no": "08",
+      "name": "理赔AI助手",
+      "en": "",
+      "scope": "个人 · 团体 · 公司",
+      "icon": "⚖️",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "保险理赔材料智能整理与进度跟踪，理赔不再跑断腿。"
+    },
+    {
+      "no": "09",
+      "name": "直播间工具",
+      "en": "",
+      "scope": "粉丝 · 主播",
+      "icon": "📡",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "直播间数据、话术、素材一站式工具箱，主播的好帮手。"
+    },
+    {
+      "no": "10",
+      "name": "大盒子",
+      "en": "BIGBOX",
+      "scope": "个人 · 家庭 · 企业",
+      "icon": "🗃️",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "承载数字资产的盒子产品，定位为工具平台——保单、合同、证件收进一个盒子，随身携带、随时取用。",
+      "origin": "用户梦境产品"
+    },
+    {
+      "no": "11",
+      "name": "鸽子AI",
+      "en": "geziAI",
+      "scope": "个人专属 · 私人助手",
+      "icon": "🕊️",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "属于个人的私人AI助手，像信鸽一样替您传递、查找、记事，只服务主人一人。",
+      "origin": "用户梦境产品"
+    },
+    {
+      "no": "12",
+      "name": "火星平面",
+      "en": "huoxingPM",
+      "scope": "个人 · 一生历程",
+      "icon": "🪶",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "以羽毛为形象的历程记录器：每一根绒毛都是一段历程或一条记录，越长越丰盈，像一张会生长的身份证。",
+      "origin": "用户梦境产品",
+      "idea": "羽毛可视化：每根绒毛=一条记录，可点开查看"
+    },
+    {
+      "no": "13",
+      "name": "待添加",
+      "en": "",
+      "scope": "您的想法",
+      "icon": "✨",
+      "status": "虚位以待",
+      "main": false,
+      "url": "/wishes",
+      "desc": "这里预留给你——下一个改变生活的产品，由你的愿望开启。"
+    }
+  ],
+  "hardware": [
+    {
+      "name": "无人机",
+      "icon": "🛸",
+      "desc": "低空采集与配送"
+    },
+    {
+      "name": "3D打印",
+      "icon": "🖨️",
+      "desc": "个性化制造"
+    },
+    {
+      "name": "AI眼镜",
+      "icon": "🕶️",
+      "desc": "第一视角智能"
+    },
+    {
+      "name": "高效喷码器",
+      "icon": "🔫",
+      "desc": "标识与溯源"
+    },
+    {
+      "name": "AI硬件",
+      "icon": "🧠",
+      "desc": "端侧智能设备"
+    },
+    {
+      "name": "手表平台",
+      "icon": "⌚",
+      "desc": "腕上生态入口"
+    }
+  ],
+  "subdomains": [
+    {
+      "host": "ecojia.cn",
+      "target": "数字生态家园（门户总站·底座）",
+      "status": "已购买",
+      "note": "备案审核中，有效期至2027-10-14"
+    },
+    {
+      "host": "ziliao.ecojia.cn",
+      "target": "资料百事通",
+      "status": "预留",
+      "note": "上线后由cpolar地址切换为正式域名"
+    },
+    {
+      "host": "lipei.ecojia.cn",
+      "target": "理赔AI助手",
+      "status": "预留",
+      "note": ""
+    },
+    {
+      "host": "baoxian.ecojia.cn",
+      "target": "保险相关工具",
+      "status": "预留",
+      "note": ""
+    },
+    {
+      "host": "zhibo.ecojia.cn",
+      "target": "直播间工具",
+      "status": "预留",
+      "note": ""
+    },
+    {
+      "host": "bigbox.ecojia.cn",
+      "target": "大盒子 BIGBOX",
+      "status": "待确认",
+      "note": "用户尚未确认是否需要"
+    },
+    {
+      "host": "gezi.ecojia.cn",
+      "target": "鸽子AI geziAI",
+      "status": "待确认",
+      "note": "用户尚未确认是否需要"
+    },
+    {
+      "host": "huoxing.ecojia.cn",
+      "target": "火星平面 huoxingPM",
+      "status": "待确认",
+      "note": "用户尚未确认是否需要"
+    }
+  ],
+  "infrastructure": {
+    "domain_bought": {
+      "name": "ecojia.cn",
+      "price": "33元/首年",
+      "owner": "任军学",
+      "expire": "2027-10-14",
+      "registrar": "腾讯云"
+    },
+    "server": {
+      "provider": "腾讯云轻量应用服务器",
+      "spec": "2核2G",
+      "region": "成都",
+      "ip": "118.24.173.246",
+      "image": "宝塔面板镜像",
+      "price": "192元/1年",
+      "expire": "2027-10-14",
+      "status": "已购买，SSH(22)/面板(8888)端口已连通，尚未部署"
+    },
+    "tunnel": {
+      "tool": "cpolar",
+      "url": "https://72d51d79.r9.vip.cpolar.cn",
+      "maps_to": "本机8300端口（资料百事通）",
+      "config": "C:\\Users\\Administrator\\.cpolar\\cpolar.yml"
+    },
+    "plan": "备案通过后：门户部署到服务器8400端口，资料百事通8300端口，域名解析 ecojia.cn → 门户，ziliao.ecojia.cn → 资料百事通"
+  },
+  "apis": [
+    {
+      "method": "GET",
+      "path": "/api/ecosystem/manifest",
+      "desc": "生态底座全量数据（其他程序读取入口）",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/ecosystem/status",
+      "desc": "生态总览（名称/域名/版本/统计）",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/ecosystem/search?q=关键词",
+      "desc": "在底座中查找产品/硬件/子域名/接口",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/products",
+      "desc": "产品矩阵（13位积木）",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/brands",
+      "desc": "生态品牌（带英文名的产品）",
+      "auth": "公开"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ecosystem/products",
+      "desc": "新增积木（自动编号，插在“待添加”之前）",
+      "auth": "管理员"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/ecosystem/products/<no>",
+      "desc": "修改积木（按编号）",
+      "auth": "管理员"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/ecosystem/products/<no>",
+      "desc": "移除积木（自动重排编号）",
+      "auth": "管理员"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/register",
+      "desc": "注册统一账号（首个用户自动成为管理员）",
+      "auth": "公开"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "desc": "登录统一账号",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/status",
+      "desc": "查询当前登录状态",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/bridge",
+      "desc": "统一账号互认（预留，V1.0打通资料百事通）",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/wishes",
+      "desc": "许愿列表（支持 kw / product 筛选）",
+      "auth": "公开"
+    },
+    {
+      "method": "POST",
+      "path": "/api/wishes",
+      "desc": "提交许愿（游客可提交，需留联系方式）",
+      "auth": "公开"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/wishes/<id>",
+      "desc": "修改许愿（本人改内容/管理员改状态）",
+      "auth": "登录"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/wishes/<id>",
+      "desc": "删除许愿（本人或管理员）",
+      "auth": "登录"
+    },
+    {
+      "method": "GET",
+      "path": "/api/my/wishes",
+      "desc": "我的许愿（操作记忆）",
+      "auth": "登录"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/overview",
+      "desc": "后台统计",
+      "auth": "管理员"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/logs",
+      "desc": "操作日志（最近100条）",
+      "auth": "管理员"
+    }
+  ],
+  "stages": [
+    {
+      "version": "V0.1",
+      "name": "门户总站·底座",
+      "status": "已完成",
+      "content": "生态主页+产品矩阵(13位)+许愿墙+统一账号+管理后台+开放API, 46项测试通过"
+    },
+    {
+      "version": "V1.0",
+      "name": "统一账号打通",
+      "status": "待开发",
+      "content": "与资料百事通用户库token互认，一个账号畅游全生态"
+    },
+    {
+      "version": "V1.1",
+      "name": "服务器部署上线",
+      "status": "待开发",
+      "content": "部署至118.24.173.246，域名解析，HTTPS，备案完成后启用ecojia.cn"
+    },
+    {
+      "version": "V1.2",
+      "name": "专业后台",
+      "status": "待开发",
+      "content": "积木管理可视化界面（网页端增删查改，不用改文件）"
+    },
+    {
+      "version": "V2.0",
+      "name": "子站接入",
+      "status": "待开发",
+      "content": "各工具以积木方式接入底座，统一分发与导航"
+    }
+  ],
+  "conventions": [
+    "所有终端共用统一后端、统一数据库、统一用户体系、统一数据源",
+    "新增产品/工具优先通过 ecosystem.json 配置加入，不在代码里硬编码",
+    "所有权限校验必须在服务端实现，不依赖前端按钮隐藏",
+    "界面风格：2027黑金科技风（深色底+金色渐变+玻璃拟态），全中文，三端响应式",
+    "页脚必须显示：版本 / 程序大小 / 最后保存时间 / 作者军哥懂保 / 微信xunijiayuan",
+    "密钥与密码不入代码库、不入 ecosystem.json，使用环境变量或凭据管理器",
+    "接口需预留，便于其他程序调用；参数一律支持环境变量覆盖，避免硬编码",
+    "不同程序使用不同端口，互不冲突（门户8400 / 资料百事通8300）"
+  ],
+  "history": [
+    {
+      "date": "2026-10-14",
+      "event": "确定数字生态四层架构（入口/分发/应用/数据），规划12个候选域名"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "采购域名 ecojia.cn（33元，审核中）与腾讯云成都服务器（192元/年）"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "开发门户总站V0.1：生态主页/产品矩阵/许愿墙/统一账号/管理后台，46项测试通过"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "用户提出梦境三产品：BIGBOX（工具平台/数字资产盒子）、geziAI（私人AI助手）、huoxingPM（羽毛形象历程记录）"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "梦境三品牌编号进矩阵：10/11/12，原“待添加”移到13，矩阵扩为13位"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "建立 ecosystem.json 作为生态底座单一数据源，开放 manifest/search/CRUD 接口"
+    }
+  ],
+  "todos": [
+    "确认三个梦境品牌是否配置子域名",
+    "火星平面羽毛可视化组件原型（每根绒毛=一条记录）",
+    "服务器部署：门户8400 + 资料百事通8300",
+    "域名解析与HTTPS配置",
+    "ICP备案完成后启用 ecojia.cn",
+    "V1.0 统一账号 token 互认"
+  ]
+}

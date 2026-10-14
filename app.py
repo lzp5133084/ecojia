@@ -20,6 +20,7 @@
  - 首个注册用户自动成为管理员（role=admin）
 ════════════════════════════════════════════════════════════
 """
+import json
 import os
 import sqlite3
 from datetime import datetime
@@ -51,59 +52,60 @@ else:
     app.secret_key = _k
 
 
-# ══════════════════ 产品矩阵数据 ══════════════════
-PRODUCTS = [
-    {"no": "01", "name": "数字保险箱", "scope": "个人 · 家庭", "icon": "🔐",
-     "status": "规划中", "main": False, "url": "",
-     "desc": "家庭重要证件、保单、合同、房产资料的加密数字保管箱，一人保管全家共享。"},
-    {"no": "02", "name": "语料收集器", "scope": "个人 · 特定", "icon": "📦",
-     "status": "规划中", "main": False, "url": "",
-     "desc": "面向AI训练的语料收集与整理工具，让每个人的经验沉淀为可用数据。"},
-    {"no": "03", "name": "资料百事通", "scope": "个人 · 共创 · 大众", "icon": "🗂️",
-     "status": "已上线", "main": True, "url": MAIN_SITE_URL,
-     "desc": "全民共创式资料共享与智能查询平台——查资料、传资料、赚积分，AI帮您找。"},
-    {"no": "04", "name": "AI资产管理", "scope": "个人 · 家庭 · 公司", "icon": "💎",
-     "status": "规划中", "main": False, "url": "",
-     "desc": "个人与家庭资产的AI盘点与管理，看得清、管得住、传得下。"},
-    {"no": "05", "name": "AI宝贝助手", "scope": "个人 · 家庭 · 学校", "icon": "🧒",
-     "status": "规划中", "main": False, "url": "",
-     "desc": "孩子的成长记录、学习陪伴与安全教育，AI宝贝成长好伙伴。"},
-    {"no": "06", "name": "共享租赁柜", "scope": "未来硬件", "icon": "🗄️",
-     "status": "敬请期待", "main": False, "url": "",
-     "desc": "社区共享智能租赁柜，让闲置物品流动起来。"},
-    {"no": "07", "name": "残障AI助手", "scope": "个人 · 特定机构", "icon": "🤝",
-     "status": "规划中", "main": False, "url": "",
-     "desc": "视障、听障、肢障朋友的AI生活助手，科技向善，人人平等。"},
-    {"no": "08", "name": "理赔AI助手", "scope": "个人 · 团体 · 公司", "icon": "⚖️",
-     "status": "规划中", "main": False, "url": "",
-     "desc": "保险理赔材料智能整理与进度跟踪，理赔不再跑断腿。"},
-    {"no": "09", "name": "直播间工具", "scope": "粉丝 · 主播", "icon": "📡",
-     "status": "规划中", "main": False, "url": "",
-     "desc": "直播间数据、话术、素材一站式工具箱，主播的好帮手。"},
-    {"no": "10", "name": "大盒子", "en": "BIGBOX", "scope": "个人 · 家庭 · 企业", "icon": "🗃️",
-     "status": "规划中", "main": False, "url": "",
-     "desc": "承载数字资产的盒子产品，定位为工具平台——保单、合同、证件收进一个盒子，随身携带、随时取用。"},
-    {"no": "11", "name": "鸽子AI", "en": "geziAI", "scope": "个人专属 · 私人助手", "icon": "🕊️",
-     "status": "规划中", "main": False, "url": "",
-     "desc": "属于个人的私人AI助手，像信鸽一样替您传递、查找、记事，只服务主人一人。"},
-    {"no": "12", "name": "火星平面", "en": "huoxingPM", "scope": "个人 · 一生历程", "icon": "🪶",
-     "status": "规划中", "main": False, "url": "",
-     "desc": "以羽毛为形象的历程记录器：每一根绒毛都是一段历程或一条记录，越长越丰盈，像一张会生长的身份证。"},
-    {"no": "13", "name": "待添加", "scope": "您的想法", "icon": "✨",
-     "status": "虚位以待", "main": False, "url": "/wishes",
-     "desc": "这里预留给你——下一个改变生活的产品，由你的愿望开启。"},
-]
+# ══════════════════ 生态底座数据（单一数据源：ecosystem.json） ══════════════════
+# 新增/修改积木只需改 ecosystem.json，服务自动热加载；
+# 也可通过 /api/ecosystem/products 接口增删改（管理员）。
+ECOSYSTEM_FILE = os.path.join(BASE_DIR, "ecosystem.json")
+_eco_cache = {"mtime": None, "data": {}}
 
-HARDWARE = [
-    {"name": "无人机", "icon": "🛸", "desc": "低空采集与配送"},
-    {"name": "3D打印", "icon": "🖨️", "desc": "个性化制造"},
-    {"name": "AI眼镜", "icon": "🕶️", "desc": "第一视角智能"},
-    {"name": "高效喷码器", "icon": "🔫", "desc": "标识与溯源"},
-    {"name": "AI硬件", "icon": "🧠", "desc": "端侧智能设备"},
-    {"name": "手表平台", "icon": "⌚", "desc": "腕上生态入口"},
-]
+
+def load_ecosystem():
+    """读取生态底座数据（按文件修改时间自动热加载）"""
+    try:
+        mtime = os.path.getmtime(ECOSYSTEM_FILE)
+    except OSError:
+        return {}
+    if _eco_cache["mtime"] != mtime:
+        try:
+            with open(ECOSYSTEM_FILE, "r", encoding="utf-8") as f:
+                _eco_cache["data"] = json.load(f)
+            _eco_cache["mtime"] = mtime
+        except (OSError, ValueError) as e:
+            print(f"[底座] ecosystem.json 读取失败：{e}")
+    return _eco_cache["data"]
+
+
+def save_ecosystem(data):
+    """写回底座数据，并让缓存失效"""
+    with open(ECOSYSTEM_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    _eco_cache["mtime"] = None
+
+
+def get_products():
+    return load_ecosystem().get("products", [])
+
+
+def get_hardware():
+    return load_ecosystem().get("hardware", [])
+
+
+def get_main_product():
+    """当前主打产品（矩阵中 main=true 的那位）"""
+    for p in get_products():
+        if p.get("main"):
+            return p
+    return {"name": "资料百事通", "url": MAIN_SITE_URL, "status": "已上线"}
+
+
+def renumber(products):
+    """重排编号为 01..N，并保证「待添加」始终在末位"""
+    products.sort(key=lambda p: p.get("name") == "待添加")
+    for i, p in enumerate(products, 1):
+        p["no"] = f"{i:02d}"
 
 WISH_STATUS = ["待评估", "已纳入规划", "开发中", "已上线", "暂不规划"]
+PRODUCT_STATUS = ["已上线", "开发中", "规划中", "敬请期待", "虚位以待"]
 
 
 # ══════════════════ 数据库 ══════════════════
@@ -224,13 +226,16 @@ def footer_info():
 
 @app.route("/")
 def index():
-    return render_template("index.html", products=PRODUCTS, hardware=HARDWARE,
-                           main_url=MAIN_SITE_URL)
+    eco = load_ecosystem()
+    main = get_main_product()
+    return render_template("index.html", products=get_products(),
+                           hardware=get_hardware(), apis=eco.get("apis", []),
+                           main_product=main, main_url=main.get("url") or MAIN_SITE_URL)
 
 
 @app.route("/wishes")
 def wishes_page():
-    return render_template("wishes.html", products=PRODUCTS)
+    return render_template("wishes.html", products=get_products())
 
 
 @app.route("/login")
@@ -320,34 +325,145 @@ def api_auth_bridge():
     })
 
 
-# ══════════════════ 产品与生态 API ══════════════════
+# ══════════════════ 生态底座 API（供其他程序调用 / 查找 / 新增 / 修改） ══════════════════
+@app.route("/api/ecosystem/manifest")
+def api_ecosystem_manifest():
+    """底座全量数据：其他程序或网页读取生态信息的单一入口"""
+    return jsonify({"ok": True, "manifest": load_ecosystem()})
+
+
+@app.route("/api/ecosystem/search")
+def api_ecosystem_search():
+    """在底座中查找：产品 / 硬件 / 子域名 / 接口"""
+    q = (request.args.get("q") or "").strip().lower()
+    if not q:
+        return jsonify({"ok": False, "msg": "请输入查找关键词"}), 400
+    eco = load_ecosystem()
+
+    def match(*vals):
+        return q in " ".join(str(v) for v in vals).lower()
+
+    hits = []
+    for p in eco.get("products", []):
+        if match(p.get("no"), p.get("name"), p.get("en"), p.get("scope"),
+                 p.get("desc"), p.get("status")):
+            hits.append({"type": "product", "item": p})
+    for h in eco.get("hardware", []):
+        if match(h.get("name"), h.get("desc")):
+            hits.append({"type": "hardware", "item": h})
+    for s in eco.get("subdomains", []):
+        if match(s.get("host"), s.get("target"), s.get("status")):
+            hits.append({"type": "subdomain", "item": s})
+    for a in eco.get("apis", []):
+        if match(a.get("method"), a.get("path"), a.get("desc")):
+            hits.append({"type": "api", "item": a})
+    return jsonify({"ok": True, "query": q, "count": len(hits), "hits": hits})
+
+
+@app.route("/api/ecosystem/products", methods=["POST"])
+@admin_required
+def api_ecosystem_add_product():
+    """新增积木：自动编号，始终插在「待添加」之前"""
+    d = request.get_json(silent=True) or {}
+    name = (d.get("name") or "").strip()
+    if not name:
+        return jsonify({"ok": False, "msg": "请填写积木名称"}), 400
+    eco = load_ecosystem()
+    products = eco.get("products", [])
+    if any(p.get("name") == name for p in products):
+        return jsonify({"ok": False, "msg": "已存在同名积木"}), 400
+    item = {
+        "name": name,
+        "en": (d.get("en") or "").strip(),
+        "scope": (d.get("scope") or "").strip(),
+        "icon": (d.get("icon") or "🧩").strip(),
+        "status": d.get("status") if d.get("status") in PRODUCT_STATUS else "规划中",
+        "main": False,
+        "url": (d.get("url") or "").strip(),
+        "desc": (d.get("desc") or "").strip(),
+    }
+    idx = next((i for i, p in enumerate(products) if p.get("name") == "待添加"), len(products))
+    products.insert(idx, item)
+    renumber(products)
+    eco["products"] = products
+    save_ecosystem(eco)
+    log_op("新增积木", name, session.get("uid"))
+    return jsonify({"ok": True, "msg": f"积木「{name}」已加入矩阵", "item": item})
+
+
+@app.route("/api/ecosystem/products/<no>", methods=["PUT"])
+@admin_required
+def api_ecosystem_update_product(no):
+    """修改积木（按编号）"""
+    d = request.get_json(silent=True) or {}
+    eco = load_ecosystem()
+    products = eco.get("products", [])
+    target = next((p for p in products if p.get("no") == no), None)
+    if not target:
+        return jsonify({"ok": False, "msg": f"未找到编号 {no} 的积木"}), 404
+    if target.get("name") == "待添加":
+        return jsonify({"ok": False, "msg": "「待添加」占位不可修改"}), 400
+    for k in ("name", "en", "scope", "icon", "url", "desc"):
+        if str(d.get(k, "")).strip():
+            target[k] = str(d[k]).strip()
+    if d.get("status") in PRODUCT_STATUS:
+        target["status"] = d["status"]
+    save_ecosystem(eco)
+    log_op("修改积木", f"{no} {target.get('name')}", session.get("uid"))
+    return jsonify({"ok": True, "msg": "已更新", "item": target})
+
+
+@app.route("/api/ecosystem/products/<no>", methods=["DELETE"])
+@admin_required
+def api_ecosystem_delete_product(no):
+    """移除积木：编号自动重排，「待添加」保持在末位"""
+    eco = load_ecosystem()
+    products = eco.get("products", [])
+    target = next((p for p in products if p.get("no") == no), None)
+    if not target:
+        return jsonify({"ok": False, "msg": f"未找到编号 {no} 的积木"}), 404
+    if target.get("name") == "待添加":
+        return jsonify({"ok": False, "msg": "「待添加」占位不可删除"}), 400
+    products.remove(target)
+    renumber(products)
+    eco["products"] = products
+    save_ecosystem(eco)
+    log_op("移除积木", f"{no} {target.get('name')}", session.get("uid"))
+    return jsonify({"ok": True, "msg": f"积木「{target.get('name')}」已移除"})
+
+
 @app.route("/api/products")
 def api_products():
-    return jsonify({"ok": True, "products": PRODUCTS})
+    return jsonify({"ok": True, "products": get_products()})
 
 
 @app.route("/api/brands")
 def api_brands():
-    """生态品牌（梦境三品牌，已编号进产品矩阵 10/11/12）"""
-    return jsonify({"ok": True, "brands": [p for p in PRODUCTS if p.get("en")]})
+    """生态品牌（带英文名的积木）"""
+    return jsonify({"ok": True, "brands": [p for p in get_products() if p.get("en")]})
 
 
 @app.route("/api/ecosystem/status")
 def api_ecosystem_status():
-    """预留接口：供其他程序/子站调用的生态总览"""
+    """生态总览（供其他程序/子站调用）"""
+    eco = load_ecosystem()
+    meta = eco.get("meta", {})
     db = get_db()
     users = db.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]
     wishes = db.execute("SELECT COUNT(*) c FROM wishes").fetchone()["c"]
+    main = get_main_product()
     return jsonify({
         "ok": True,
-        "name": "数字生态家园",
-        "domain": "ecojia.cn",
+        "name": meta.get("name", "数字生态家园"),
+        "domain": meta.get("domain", "ecojia.cn"),
         "version": VERSION,
-        "author": "军哥懂保",
-        "wechat": "xunijiayuan",
-        "main_product": {"name": "资料百事通", "url": MAIN_SITE_URL, "status": "已上线"},
-        "products_count": len(PRODUCTS),
-        "hardware": [h["name"] for h in HARDWARE],
+        "author": meta.get("author", "军哥懂保"),
+        "wechat": meta.get("wechat", "xunijiayuan"),
+        "main_product": {"name": main.get("name", ""),
+                         "url": main.get("url") or MAIN_SITE_URL,
+                         "status": main.get("status", "")},
+        "products_count": len(get_products()),
+        "hardware": [h.get("name", "") for h in get_hardware()],
         "stats": {"users": users, "wishes": wishes},
         "updated_at": now()
     })
