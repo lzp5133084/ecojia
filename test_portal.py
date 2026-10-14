@@ -53,7 +53,7 @@ check("首页含主打产品", "资料百事通" in html)
 check("首页含产品矩阵01-10", "01" in html and "10" in html)
 check("首页含硬件探讨区", "无人机" in html and "AI眼镜" in html)
 check("页脚含作者信息", "军哥懂保" in html and "xunijiayuan" in html)
-check("页脚含版本V1.2", "V1.2" in html)
+check("页脚含版本V1.3", "V1.3" in html)
 
 code, css = req(guest, "GET", "/static/css/style.css")
 check("样式表 200", code == 200 and "黑金" in css)

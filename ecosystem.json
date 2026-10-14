@@ -3,7 +3,7 @@
     "name": "数字生态家园",
     "role": "生态积木底座",
     "domain": "ecojia.cn",
-    "version": "V1.2",
+    "version": "V1.3",
     "author": "军哥懂保",
     "wechat": "xunijiayuan",
     "positioning": "本网站是整个数字生态的底座：所有产品共用统一入口、统一账号、统一数据源；后续新工具以「积木」方式持续加入，加入后自动出现在门户与许愿墙。",
@@ -43,7 +43,7 @@
       "icon": "🗂️",
       "status": "已上线",
       "main": true,
-      "url": "https://72d51d79.r9.vip.cpolar.cn",
+      "url": "http://118.24.173.246:8300",
       "desc": "全民共创式资料共享与智能查询平台——查资料、传资料、赚积分，AI帮您找。",
       "path": "e:\\Chat GPT6\\资料百事通",
       "port": 8300,
@@ -206,8 +206,8 @@
     {
       "host": "ziliao.ecojia.cn",
       "target": "资料百事通",
-      "status": "预留",
-      "note": "上线后由cpolar地址切换为正式域名"
+      "status": "已部署(IP访问)",
+      "note": "服务器已就绪，备案通过后解析启用"
     },
     {
       "host": "lipei.ecojia.cn",
@@ -262,7 +262,8 @@
       "image": "宝塔面板镜像",
       "price": "192元/1年",
       "expire": "2027-10-14",
-      "status": "已购买，SSH(22)/面板(8888)端口已连通，尚未部署"
+      "status": "已部署：门户8400 / 资料百事通8300 / 静态工具8080（nginx），systemd 托管、开机自启",
+      "ssh_user": "ubuntu（Ubuntu 24.04.4 LTS，非宝塔镜像；sudo 免密）"
     },
     "tunnel": {
       "tool": "cpolar",
@@ -270,7 +271,32 @@
       "maps_to": "本机8300端口（资料百事通）",
       "config": "C:\\Users\\Administrator\\.cpolar\\cpolar.yml"
     },
-    "plan": "备案通过后：门户部署到服务器8400端口，资料百事通8300端口，域名解析 ecojia.cn → 门户，ziliao.ecojia.cn → 资料百事通"
+    "plan": "备案通过后：门户部署到服务器8400端口，资料百事通8300端口，域名解析 ecojia.cn → 门户，ziliao.ecojia.cn → 资料百事通",
+    "access": {
+      "portal": "http://118.24.173.246:8400",
+      "ziliao": "http://118.24.173.246:8300",
+      "tools": "http://118.24.173.246:8080",
+      "note": "当前用 IP:端口 访问；ICP备案通过并解析域名后，切换为 ecojia.cn / ziliao.ecojia.cn",
+      "firewall_opened": [
+        "8300",
+        "8400",
+        "8080"
+      ]
+    },
+    "deploy": {
+      "project_root": "/opt/ecojia",
+      "portal_dir": "/opt/ecojia/portal",
+      "ziliao_dir": "/opt/ecojia/ziliao",
+      "tools_dir": "/opt/ecojia/tools",
+      "venv": "/opt/ecojia/venv (Python 3.12.3, Flask 2.2.5, Werkzeug 2.2.3, Pillow)",
+      "services": [
+        "ecojia-portal.service (8400)",
+        "ecojia-ziliao.service (8300)",
+        "nginx (8080 静态工具)"
+      ],
+      "update_cmd": "cd /opt/ecojia/portal && git pull && sudo systemctl restart ecojia-portal",
+      "note": "80 端口被镜像自带的 caddy 占用，本生态全部走独立端口，不受影响"
+    }
   },
   "apis": [
     {
@@ -431,7 +457,7 @@
       "entry": "app.py",
       "run": "python app.py（端口 8300）",
       "port": 8300,
-      "url": "https://72d51d79.r9.vip.cpolar.cn",
+      "url": "http://118.24.173.246:8080/ziliaobaishitong/",
       "size_kb": 143,
       "updated": "2026-10-14",
       "status": "已上线",
@@ -440,47 +466,48 @@
         "注册/登录后进入首页搜索资料",
         "搜索不到时点「我要上传」贡献资料，审核通过即入库",
         "在「我的资料」查看上传记录与积分"
-      ]
+      ],
+      "pages_url": "https://72d51d79.r9.vip.cpolar.cn"
     },
     {
       "no": "T03",
-      "name": "客资雷达 · 智慧客户管理",
+      "name": "智慧客户管理 · 智汇管家",
       "en": "",
       "repo": "customer-management",
       "type": "网页工具（单页HTML）",
       "entry": "index.html",
       "run": "浏览器直接打开 index.html",
       "port": null,
-      "url": "https://lzp5133084.github.io/customer-management/",
+      "url": "http://118.24.173.246:8080/customer-management/",
       "size_kb": 28,
       "updated": "2026-07-13",
       "status": "Pages 可访问",
-      "desc": "小区客户管理系统·智汇管家：客户档案、跟进记录、标签分类。",
+      "desc": "小区客户管理系统（网页版）：客户档案、跟进记录、标签分类与统计分析。",
       "steps": [
         "直接打开网页即可使用（数据保存在本机浏览器）",
         "左侧录入客户信息，右侧查看统计与跟进"
       ],
-      "note": "「客资雷达」名称待您确认是否指本工具"
+      "pages_url": "https://lzp5133084.github.io/customer-management/"
     },
     {
       "no": "T04",
-      "name": "理赔资料助手 · 保险管理",
+      "name": "保险管理 · 保险资料助手",
       "en": "",
       "repo": "insurance-manager",
       "type": "Taro 小程序/网页",
       "entry": "index.html / src",
       "run": "Taro 编译或直接打开 index.html",
       "port": null,
-      "url": "https://lzp5133084.github.io/insurance-manager/",
+      "url": "http://118.24.173.246:8080/insurance-manager/",
       "size_kb": 2158,
       "updated": "2026-07-20",
       "status": "Pages 可访问",
-      "desc": "保险与理赔资料管理：客户保单、理赔材料整理与进度跟踪。",
+      "desc": "保险资料管理（网页/小程序版）：客户保单、理赔材料整理与进度跟踪。",
       "steps": [
         "网页端：直接打开 Pages 链接使用",
         "小程序端：用 Taro 编译对应平台后发布"
       ],
-      "note": "「理赔资料助手」名称待您确认是否指本工具"
+      "pages_url": "https://lzp5133084.github.io/insurance-manager/"
     },
     {
       "no": "T05",
@@ -491,7 +518,7 @@
       "entry": "index.html",
       "run": "浏览器打开或托管静态服务",
       "port": null,
-      "url": "https://lzp5133084.github.io/renjunxue-website/",
+      "url": "http://118.24.173.246:8080/renjunxue-website/",
       "size_kb": 7558,
       "updated": "2026-07-31",
       "status": "Pages 可访问",
@@ -499,7 +526,8 @@
       "steps": [
         "直接打开 Pages 链接浏览",
         "顶部导航切换 首页/人生故事/荣誉相册/案例等板块"
-      ]
+      ],
+      "pages_url": "https://lzp5133084.github.io/renjunxue-website/"
     },
     {
       "no": "T06",
@@ -510,7 +538,7 @@
       "entry": "index.html",
       "run": "浏览器打开或托管静态服务",
       "port": null,
-      "url": "https://lzp5133084.github.io/jungedongbao-website/",
+      "url": "http://118.24.173.246:8080/jungedongbao-website/",
       "size_kb": 27,
       "updated": "2026-07-28",
       "status": "Pages 可访问",
@@ -518,7 +546,8 @@
       "steps": [
         "直接打开 Pages 链接浏览",
         "点右上角「管理」可用内置后台编辑内容"
-      ]
+      ],
+      "pages_url": "https://lzp5133084.github.io/jungedongbao-website/"
     },
     {
       "no": "T07",
@@ -529,7 +558,7 @@
       "entry": "index.html",
       "run": "浏览器打开或托管静态服务",
       "port": null,
-      "url": "https://lzp5133084.github.io/renjunxue-cangku/",
+      "url": "http://118.24.173.246:8080/renjunxue-cangku/",
       "size_kb": 2131,
       "updated": "2026-08-21",
       "status": "Pages 可访问",
@@ -537,7 +566,8 @@
       "steps": [
         "直接打开 Pages 链接浏览",
         "顶部菜单切换 字辈/通讯录/产业/地图 等模块"
-      ]
+      ],
+      "pages_url": "https://lzp5133084.github.io/renjunxue-cangku/"
     },
     {
       "no": "T08",
@@ -548,7 +578,7 @@
       "entry": "index.html",
       "run": "浏览器打开或托管静态服务",
       "port": null,
-      "url": "https://lzp5133084.github.io/ai-hub/",
+      "url": "http://118.24.173.246:8080/ai-hub/",
       "size_kb": 87,
       "updated": "2026-10-14",
       "status": "Pages 可访问·每日刷新",
@@ -556,7 +586,8 @@
       "steps": [
         "直接打开 Pages 链接即可检索模型与 API",
         "仓库内 daily-refresh.bat 可手动/定时刷新数据"
-      ]
+      ],
+      "pages_url": "https://lzp5133084.github.io/ai-hub/"
     },
     {
       "no": "T09",
@@ -567,7 +598,7 @@
       "entry": "index.html",
       "run": "浏览器直接打开 index.html",
       "port": null,
-      "url": "https://lzp5133084.github.io/nine-page-survey/",
+      "url": "http://118.24.173.246:8080/nine-page-survey/",
       "size_kb": 185,
       "updated": "2026-07-16",
       "status": "Pages 可访问",
@@ -575,7 +606,8 @@
       "steps": [
         "打开网页填写问卷",
         "管理端查看/筛选客户，支持导出 Excel、生成问卷二维码"
-      ]
+      ],
+      "pages_url": "https://lzp5133084.github.io/nine-page-survey/"
     },
     {
       "no": "T10",
@@ -586,7 +618,7 @@
       "entry": "index.html / main.py",
       "run": "网页直接打开；桌面端打包为 EXE",
       "port": null,
-      "url": "https://lzp5133084.github.io/heijin-qr-workshop/",
+      "url": "http://118.24.173.246:8080/heijin-qr-workshop/",
       "size_kb": 41,
       "updated": "2026-07-10",
       "status": "Pages 可访问",
@@ -594,7 +626,8 @@
       "steps": [
         "打开网页输入内容→选择样式→生成二维码→下载",
         "桌面端可离线使用（EXE）"
-      ]
+      ],
+      "pages_url": "https://lzp5133084.github.io/heijin-qr-workshop/"
     },
     {
       "no": "T11",
@@ -605,7 +638,7 @@
       "entry": "index.html",
       "run": "网页打开；后端见 backend/",
       "port": null,
-      "url": "https://lzp5133084.github.io/neon-border-tool/",
+      "url": "http://118.24.173.246:8080/neon-border-tool/",
       "size_kb": 68,
       "updated": "2026-07-04",
       "status": "Pages 可访问",
@@ -613,7 +646,8 @@
       "steps": [
         "打开网页上传图片",
         "选择特效参数→生成→下载成品"
-      ]
+      ],
+      "pages_url": "https://lzp5133084.github.io/neon-border-tool/"
     },
     {
       "no": "T12",
@@ -624,7 +658,7 @@
       "entry": "index.html",
       "run": "浏览器直接打开 index.html",
       "port": null,
-      "url": "https://lzp5133084.github.io/neon-outline-tool/",
+      "url": "http://118.24.173.246:8080/neon-outline-tool/",
       "size_kb": 77,
       "updated": "2026-10-07",
       "status": "Pages 可访问",
@@ -632,7 +666,8 @@
       "steps": [
         "打开网页上传或选择素材",
         "调节描边颜色/宽度→导出图片"
-      ]
+      ],
+      "pages_url": "https://lzp5133084.github.io/neon-outline-tool/"
     },
     {
       "no": "T13",
@@ -643,7 +678,7 @@
       "entry": "index.html",
       "run": "浏览器直接打开 index.html",
       "port": null,
-      "url": "https://lzp5133084.github.io/batch-rename-tool/",
+      "url": "http://118.24.173.246:8080/batch-rename-tool/",
       "size_kb": 18,
       "updated": "2026-07-30",
       "status": "Pages 可访问",
@@ -651,7 +686,8 @@
       "steps": [
         "打开网页选择文件",
         "设置重命名规则→预览→执行重命名"
-      ]
+      ],
+      "pages_url": "https://lzp5133084.github.io/batch-rename-tool/"
     },
     {
       "no": "T14",
@@ -662,7 +698,7 @@
       "entry": "index.html / register.html / display.html / control.html",
       "run": "浏览器打开或托管静态服务",
       "port": null,
-      "url": "https://lzp5133084.github.io/live-guest-board/",
+      "url": "http://118.24.173.246:8080/live-guest-board/",
       "size_kb": 64,
       "updated": "2026-07-29",
       "status": "Pages 可访问",
@@ -671,7 +707,8 @@
         "register.html 嘉宾报名登记",
         "display.html 大屏展示嘉宾列表",
         "control.html 后台管理"
-      ]
+      ],
+      "pages_url": "https://lzp5133084.github.io/live-guest-board/"
     },
     {
       "no": "T15",
@@ -682,7 +719,7 @@
       "entry": "index.html",
       "run": "浏览器直接打开 index.html",
       "port": null,
-      "url": "https://lzp5133084.github.io/pk-live-soul-question/",
+      "url": "http://118.24.173.246:8080/pk-live-soul-question/",
       "size_kb": 21,
       "updated": "2026-07-09",
       "status": "Pages 可访问",
@@ -690,7 +727,8 @@
       "steps": [
         "打开网页选择模式与题库分类",
         "点「随机抽取」出题，可复制文案、查看历史"
-      ]
+      ],
+      "pages_url": "https://lzp5133084.github.io/pk-live-soul-question/"
     },
     {
       "no": "T16",
@@ -701,7 +739,7 @@
       "entry": "index.html",
       "run": "浏览器直接打开 index.html",
       "port": null,
-      "url": "https://lzp5133084.github.io/pk-live-tool/",
+      "url": "http://118.24.173.246:8080/pk-live-tool/",
       "size_kb": 4,
       "updated": "2026-07-07",
       "status": "Pages 可访问",
@@ -709,7 +747,8 @@
       "steps": [
         "打开网页选择题库",
         "抽取题目并复制文案"
-      ]
+      ],
+      "pages_url": "https://lzp5133084.github.io/pk-live-tool/"
     },
     {
       "no": "T17",
@@ -730,6 +769,46 @@
         "按界面引导采集与整理语料"
       ],
       "note": "对应产品矩阵 02「语料收集器」"
+    },
+    {
+      "no": "T18",
+      "name": "客资雷达",
+      "en": "",
+      "repo": "",
+      "type": "本地电脑软件（EXE）",
+      "entry": "本地程序",
+      "run": "本机运行（非网页）",
+      "port": null,
+      "url": "",
+      "size_kb": 0,
+      "updated": "—",
+      "status": "本地软件",
+      "desc": "客户资源雷达式管理与跟进提醒的电脑端软件。",
+      "steps": [
+        "在本机安装并启动程序",
+        "按界面录入客户、设置跟进提醒"
+      ],
+      "note": "您确认为本地电脑软件（未托管在 GitHub），本次随 GitHub 搬迁一并登记；如需在线使用，后续可做成网页版接入本生态。"
+    },
+    {
+      "no": "T19",
+      "name": "理赔资料助手",
+      "en": "",
+      "repo": "",
+      "type": "本地电脑软件（EXE）",
+      "entry": "本地程序",
+      "run": "本机运行（非网页）",
+      "port": null,
+      "url": "",
+      "size_kb": 0,
+      "updated": "—",
+      "status": "本地软件",
+      "desc": "理赔材料整理与进度跟踪的电脑端软件。",
+      "steps": [
+        "在本机安装并启动程序",
+        "录入理赔案件与材料清单，跟踪进度"
+      ],
+      "note": "您确认为本地电脑软件（未托管在 GitHub），本次随 GitHub 搬迁一并登记；如需在线使用，后续可做成网页版接入本生态。"
     }
   ],
   "stages": [
@@ -810,10 +889,13 @@
     {
       "date": "2026-10-14",
       "event": "火星平面（huoxingPM）羽毛可视化原型上线 /huoxing，每根绒毛=一条记录，预留 /api/huoxing/records"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "全量部署到腾讯云 118.24.173.246：门户8400 + 资料百事通8300(systemd) + 14个网页工具(nginx 8080)，全部改用 IP:端口 访问"
     }
   ],
   "todos": [
-    "把门户(8400)+资料百事通(8300)+静态HTML工具目录部署到腾讯云 118.24.173.246",
     "统一账号 token 互认（V1.0）",
     "ICP备案通过后绑定 ecojia.cn 域名与 HTTPS",
     "确认三个梦境品牌是否配置子域名",

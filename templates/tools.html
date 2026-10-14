@@ -42,7 +42,7 @@
 
     <div class="tool-foot">
       {% if t.url %}<a class="btn btn-gold btn-sm" href="{{ t.url }}" target="_blank">立即打开 →</a>{% endif %}
-      <a class="btn btn-ghost btn-sm" href="https://github.com/lzp5133084/{{ t.repo }}" target="_blank">源码</a>
+      {% if t.repo %}<a class="btn btn-ghost btn-sm" href="https://github.com/lzp5133084/{{ t.repo }}" target="_blank">源码</a>{% endif %}
       <span class="tool-run">▶ {{ t.run }}</span>
     </div>
   </div>

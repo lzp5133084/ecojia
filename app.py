@@ -32,10 +32,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "ecojia.db")
-VERSION = "V1.2"
+VERSION = "V1.3"
 
-# 资料百事通公网入口（当前 cpolar 隧道，服务器部署后切换为 ziliao.ecojia.cn）
-MAIN_SITE_URL = "https://72d51d79.r9.vip.cpolar.cn"
+# 资料百事通公网入口（已部署到腾讯云服务器；备案后切换为 ziliao.ecojia.cn）
+MAIN_SITE_URL = "http://118.24.173.246:8300"
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
