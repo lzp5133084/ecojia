@@ -20,7 +20,9 @@
     <nav class="nav">
       <a href="/" class="{{ 'active' if request.path=='/' else '' }}">生态主页</a>
       <a href="/#products" >产品矩阵</a>
+      <a href="/tools" class="{{ 'active' if request.path=='/tools' else '' }}">工具清单</a>
       <a href="/wishes" class="{{ 'active' if request.path=='/wishes' else '' }}">许愿墙</a>
+      <a href="/huoxing" class="{{ 'active' if request.path=='/huoxing' else '' }}">火星平面</a>
       {% if user and user.role == 'admin' %}
       <a href="/admin" class="{{ 'active' if request.path=='/admin' else '' }}">管理后台</a>
       {% endif %}

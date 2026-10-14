@@ -53,7 +53,7 @@ check("首页含主打产品", "资料百事通" in html)
 check("首页含产品矩阵01-10", "01" in html and "10" in html)
 check("首页含硬件探讨区", "无人机" in html and "AI眼镜" in html)
 check("页脚含作者信息", "军哥懂保" in html and "xunijiayuan" in html)
-check("页脚含版本V0.1", "V0.1" in html)
+check("页脚含版本V1.2", "V1.2" in html)
 
 code, css = req(guest, "GET", "/static/css/style.css")
 check("样式表 200", code == 200 and "黑金" in css)
@@ -62,6 +62,13 @@ code, html = req(guest, "GET", "/wishes")
 check("许愿页 200", code == 200 and "许愿墙" in html)
 code, html = req(guest, "GET", "/login")
 check("登录页 200", code == 200)
+
+code, html = req(guest, "GET", "/tools")
+check("工具清单页 200", code == 200 and "工具清单与使用说明" in html and "资料百事通" in html)
+check("工具清单含使用说明", "使用说明" in html and "立即打开" in html)
+
+code, html = req(guest, "GET", "/huoxing")
+check("火星平面羽毛页 200", code == 200 and "huoxingPM" in html and "绒毛" in html)
 
 print("═══ 二、统一账号 ═══")
 code, body = req(admin, "POST", "/api/auth/register",
@@ -182,6 +189,9 @@ check("管理员进入后台页面", code == 200 and "管理后台" in html)
 code, html = req(user, "GET", "/admin")
 check("普通用户进后台被拦截", "管理员权限" in html)
 
+code, html = req(admin, "GET", "/admin")
+check("后台含积木管理区(V1.2)", "积木管理" in html and "新增积木" in html and "bf-name" in html)
+
 print("═══ 五、删除与登出 ═══")
 if mine_id:
     code, body = req(user, "DELETE", f"/api/wishes/{mine_id}")
@@ -210,6 +220,15 @@ code, body = req(guest, "GET", "/api/ecosystem/status")
 d = json.loads(body)
 check("生态总览接口", d.get("ok") and d.get("domain") == "ecojia.cn"
       and d["stats"]["users"] == 2)
+
+code, body = req(guest, "GET", "/api/tools")
+d = json.loads(body)
+check("工具清单接口", d.get("ok") and d.get("count") >= 15)
+check("工具清单含在线入口", d.get("online", 0) >= 10)
+
+code, body = req(guest, "GET", "/api/huoxing/records")
+d = json.loads(body)
+check("火星平面羽毛记录接口", d.get("ok") and d.get("count") >= 1)
 
 print("═══ 七、积木底座（ecosystem.json 单一数据源） ═══")
 code, body = req(guest, "GET", "/api/ecosystem/manifest")

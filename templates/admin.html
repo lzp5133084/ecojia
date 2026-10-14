@@ -26,18 +26,52 @@
   </div>
 </div>
 
+<!-- ═══ 积木管理（V1.2 可视化后台）═══ -->
+<section class="admin-card brick-card">
+  <div class="brick-head">
+    <h3>🧩 积木管理 <small>（产品矩阵增删查改 · 改完立即生效，无需改文件）</small></h3>
+    <button class="btn btn-gold btn-sm" onclick="openBrickForm()">＋ 新增积木</button>
+  </div>
+  <p class="admin-tip">新增的积木自动编号并插在「待添加」之前；「待添加」占位不可修改/删除。新增后即时出现在首页产品矩阵与许愿墙下拉框。</p>
+
+  <div id="brick-form" class="brick-form" style="display:none">
+    <h4 id="bf-title">新增积木</h4>
+    <input type="hidden" id="bf-no">
+    <div class="bf-grid">
+      <label>名称 <b>*</b><input id="bf-name" maxlength="20" placeholder="如：智能名片"></label>
+      <label>英文品牌名<input id="bf-en" maxlength="20" placeholder="如：BIGBOX（可空）"></label>
+      <label>适用人群<input id="bf-scope" maxlength="30" placeholder="如：个人 · 家庭"></label>
+      <label>图标<input id="bf-icon" maxlength="4" placeholder="🧩"></label>
+      <label>状态<select id="bf-status"></select></label>
+      <label>入口网址<input id="bf-url" maxlength="200" placeholder="https://…（可空，空则点卡片转许愿）"></label>
+    </div>
+    <label>一句话简介<textarea id="bf-desc" rows="2" maxlength="120" placeholder="20字内说清它是干什么的"></textarea></label>
+    <div class="bf-ops">
+      <button class="btn btn-gold btn-sm" onclick="saveBrick()">💾 保存</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeBrickForm()">取消</button>
+    </div>
+  </div>
+
+  <div id="brick-list" class="brick-list"><div class="empty">加载中…</div></div>
+</section>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
 const STATUS = {{ wish_status | tojson }};
+const PSTATUS = {{ product_status | tojson }};
+const SMAP = {"已上线":"live","开发中":"plan","规划中":"plan","敬请期待":"soon","虚位以待":"open"};
+let BRICKS = [];
 
 async function loadAll(){
-  const [ov, wl, lg] = await Promise.all([
+  const [ov, wl, lg, pr] = await Promise.all([
     api('/api/admin/overview'),
     api('/api/wishes'),
-    api('/api/admin/logs')
+    api('/api/admin/logs'),
+    api('/api/products')
   ]);
+  if(pr.ok) BRICKS = pr.products;
   if(ov.ok){
     document.getElementById('st-users').textContent = ov.stats.users;
     document.getElementById('st-wishes').textContent = ov.stats.wishes;
@@ -76,7 +110,85 @@ async function loadAll(){
   } else {
     lbox.innerHTML = '<div class="empty">暂无日志</div>';
   }
+  renderBricks();
 }
+
+/* ══════════ 积木管理（V1.2 可视化后台）══════════ */
+function renderBricks(){
+  const box = document.getElementById('brick-list');
+  if(!BRICKS.length){ box.innerHTML = '<div class="empty">暂无积木</div>'; return; }
+  box.innerHTML = BRICKS.map(p=>{
+    const fixed = p.name === '待添加';
+    return `<div class="brick-item${p.main?' b-main':''}${fixed?' b-fixed':''}">
+      <span class="brick-no">${p.no}</span>
+      <span class="brick-icon">${p.icon||'🧩'}</span>
+      <div class="brick-info">
+        <div class="brick-name">${escapeHtml(p.name)}
+          ${p.en?`<em class="brick-en">${escapeHtml(p.en)}</em>`:''}
+          <span class="p-status s-${SMAP[p.status]||'plan'}">${p.status}</span>
+          ${p.main?'<span class="brick-flag">主打</span>':''}
+        </div>
+        <div class="brick-meta">${escapeHtml(p.scope||'—')}${p.url?` · <a href="${escapeHtml(p.url)}" target="_blank">${escapeHtml(p.url)}</a>`:''}</div>
+        <div class="brick-desc">${escapeHtml(p.desc||'')}</div>
+      </div>
+      <div class="brick-ops">
+        ${fixed?'<span class="brick-lock">共创占位</span>':`
+        <a href="javascript:void(0)" onclick="editBrick('${p.no}')">修改</a>
+        <a href="javascript:void(0)" class="danger" onclick="delBrick('${p.no}')">删除</a>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+function fillStatus(sel){ sel.innerHTML = PSTATUS.map(s=>`<option>${s}</option>`).join(''); }
+function openBrickForm(){
+  document.getElementById('bf-title').textContent = '新增积木';
+  ['bf-no','bf-name','bf-en','bf-scope','bf-url','bf-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('bf-icon').value = '🧩';
+  fillStatus(document.getElementById('bf-status'));
+  document.getElementById('bf-status').value = '规划中';
+  document.getElementById('brick-form').style.display = 'block';
+  document.getElementById('bf-name').focus();
+}
+function closeBrickForm(){ document.getElementById('brick-form').style.display = 'none'; }
+function editBrick(no){
+  const p = BRICKS.find(x=>x.no===no); if(!p) return;
+  document.getElementById('bf-title').textContent = '修改积木 · ' + p.no + ' ' + p.name;
+  document.getElementById('bf-no').value = p.no;
+  document.getElementById('bf-name').value = p.name||'';
+  document.getElementById('bf-en').value = p.en||'';
+  document.getElementById('bf-scope').value = p.scope||'';
+  document.getElementById('bf-icon').value = p.icon||'🧩';
+  document.getElementById('bf-url').value = p.url||'';
+  document.getElementById('bf-desc').value = p.desc||'';
+  fillStatus(document.getElementById('bf-status'));
+  document.getElementById('bf-status').value = p.status||'规划中';
+  document.getElementById('brick-form').style.display = 'block';
+  document.getElementById('brick-form').scrollIntoView({behavior:'smooth', block:'center'});
+}
+async function saveBrick(){
+  const no = document.getElementById('bf-no').value.trim();
+  const payload = {
+    name: document.getElementById('bf-name').value.trim(),
+    en: document.getElementById('bf-en').value.trim(),
+    scope: document.getElementById('bf-scope').value.trim(),
+    icon: document.getElementById('bf-icon').value.trim()||'🧩',
+    status: document.getElementById('bf-status').value,
+    url: document.getElementById('bf-url').value.trim(),
+    desc: document.getElementById('bf-desc').value.trim()
+  };
+  if(!payload.name){ toast('请填写积木名称', false); return; }
+  const d = no
+    ? await api('/api/ecosystem/products/'+no, {method:'PUT', body: JSON.stringify(payload)})
+    : await api('/api/ecosystem/products', {method:'POST', body: JSON.stringify(payload)});
+  if(d.ok){ toast(d.msg||'已保存'); closeBrickForm(); loadAll(); }
+}
+async function delBrick(no){
+  const p = BRICKS.find(x=>x.no===no);
+  if(!confirm('确定移除积木「'+(p?p.name:'')+'」？编号会自动重排，不可恢复')) return;
+  const d = await api('/api/ecosystem/products/'+no, {method:'DELETE'});
+  if(d.ok){ toast(d.msg||'已移除'); loadAll(); }
+}
+
 async function setStatus(id, status){
   const d = await api('/api/wishes/'+id, {method:'PUT', body: JSON.stringify({status})});
   if(d.ok){ toast('已更新为：'+status); loadAll(); }

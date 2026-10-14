@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}工具清单{% endblock %}
+{% block content %}
+
+<section class="page-head">
+  <h1>🧰 工具清单与使用说明</h1>
+  <p>这里汇总了生态内全部可用的工具（含电脑端程序与网页工具）。
+  共 <b>{{ total }}</b> 个工具，其中 <b>{{ online }}</b> 个可直接在线打开。
+  数据由生态底座 ecosystem.json 统一维护，一处更新全站生效。</p>
+</section>
+
+<div class="tools-bar">
+  <span class="tl-chip">📦 全部 {{ total }}</span>
+  <span class="tl-chip tl-on">🌐 可直接访问 {{ online }}</span>
+  <span class="tl-chip tl-repo">💻 源码托管 GitHub</span>
+  <a class="btn btn-ghost btn-sm" href="/api/tools" target="_blank">数据接口 →</a>
+</div>
+
+<div class="tool-grid">
+  {% for t in tools %}
+  {% set cls = 'live' if ('可访问' in t.status or '已上线' in t.status or '已运行' in t.status) else 'plan' %}
+  <div class="tool-card">
+    <div class="tool-top">
+      <span class="tool-no">{{ t.no }}</span>
+      <span class="p-status s-{{ cls }}">{{ t.status }}</span>
+    </div>
+    <h3 class="tool-name">{{ t.name }}{% if t.en %}<em class="tool-en">{{ t.en }}</em>{% endif %}</h3>
+    <div class="tool-meta">
+      <span class="tm">📦 {{ t.type }}</span>
+      <span class="tm">🕒 {{ t.updated }}</span>
+      <span class="tm">💾 {{ t.size_kb }} KB</span>
+      {% if t.port %}<span class="tm">🔌 端口 {{ t.port }}</span>{% endif %}
+    </div>
+    <p class="tool-desc">{{ t.desc }}</p>
+
+    <div class="tool-steps">
+      <b>使用说明</b>
+      <ol>{% for s in t.steps %}<li>{{ s }}</li>{% endfor %}</ol>
+    </div>
+
+    {% if t.note %}<p class="tool-note">⚠️ {{ t.note }}</p>{% endif %}
+
+    <div class="tool-foot">
+      {% if t.url %}<a class="btn btn-gold btn-sm" href="{{ t.url }}" target="_blank">立即打开 →</a>{% endif %}
+      <a class="btn btn-ghost btn-sm" href="https://github.com/lzp5133084/{{ t.repo }}" target="_blank">源码</a>
+      <span class="tool-run">▶ {{ t.run }}</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

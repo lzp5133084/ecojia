@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}火星平面 · 历程羽毛{% endblock %}
+{% block content %}
+
+<section class="page-head">
+  <h1>🪶 火星平面</h1>
+  <p><b>huoxingPM</b> · 以羽毛为形象的历程记录器 —— 每一根绒毛，都是一段历程。<br>
+  记录越多，羽毛越丰盈，像一张会生长、只属于你的身份证。</p>
+</section>
+
+<div class="fx-banner">
+  <span class="fx-tag">🧪 原型演示</span>
+  当前为示例数据。正式版将由您自己录入，支持增删查改与长期存档。
+  <a href="/api/huoxing/records" target="_blank">查看数据接口 →</a>
+</div>
+
+<div class="fx-layout">
+  <div class="fx-stage">
+    <div class="fx-glow" aria-hidden="true"></div>
+    <svg id="feather" viewBox="0 0 560 700" role="img" aria-label="历程羽毛"></svg>
+    <div class="fx-hint">👉 点击任意一根绒毛，查看那段历程</div>
+  </div>
+
+  <aside class="fx-side">
+    <div id="fx-detail" class="fx-detail">
+      <div class="fx-empty">选择左侧任意一根绒毛<br>即可查看对应的历程记录</div>
+    </div>
+    <div class="fx-listhead">全部记录 · {{ records|length }} 条</div>
+    <div id="fx-list" class="fx-list"></div>
+  </aside>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const RECORDS = {{ records | tojson }};
+const TYPE_COLOR = {"求学":"#7ee2a8","事业":"#f0c75e","家庭":"#ff9ec4",
+                    "成长":"#8a97ff","荣誉":"#ffd76b","新生":"#5ce1e6"};
+const NS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("feather");
+const P0 = [280, 650], C = [232, 340], P2 = [288, 56];
+
+function qpt(t){
+  const m = 1 - t;
+  return [ m*m*P0[0] + 2*m*t*C[0] + t*t*P2[0],
+           m*m*P0[1] + 2*m*t*C[1] + t*t*P2[1] ];
+}
+function el(tag, attrs){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* 羽轴 */
+svg.appendChild(el("path", {
+  d:`M${P0[0]},${P0[1]} Q${C[0]},${C[1]} ${P2[0]},${P2[1]}`,
+  fill:"none", class:"fx-rachis"
+}));
+
+/* 生成绒毛：每根绒毛 = 一条记录（左右各一根） */
+RECORDS.forEach((r, i)=>{
+  const n = RECORDS.length;
+  const t = 0.11 + 0.78 * ((i + 1) / (n + 1));
+  const [ax, ay] = qpt(t);
+  const len = 40 + 64 * (1 - Math.abs(2*t - 1));
+  const col = TYPE_COLOR[r.type] || "#f0c75e";
+
+  [[-1, -0.86], [1, -0.86]].forEach(([sx, sy], k)=>{
+    const ex = ax + sx * len, ey = ay + sy * len;
+    const cx = ax + sx * len * 0.52, cy = ay - 8;
+    const p = el("path", {
+      d:`M${ax},${ay} Q${cx},${cy} ${ex},${ey}`,
+      fill:"none", stroke:col, class:"fx-barb", pathLength:"1"
+    });
+    p.style.animationDelay = (i * 120 + k * 60) + "ms";
+    p.dataset.i = i;
+    p.addEventListener("click", ()=>select(i));
+    svg.appendChild(p);
+  });
+
+  /* 轴上的记录节点 */
+  const dot = el("circle", { cx:ax, cy:ay, r:3.6, fill:col, class:"fx-node", pathLength:"1" });
+  dot.style.animationDelay = (i * 120) + "ms";
+  dot.dataset.i = i;
+  dot.addEventListener("click", ()=>select(i));
+  svg.appendChild(dot);
+});
+
+/* 顶部羽尖光点 */
+const tip = el("circle", { cx:P2[0], cy:P2[1], r:5, fill:"#fff", class:"fx-tip" });
+svg.appendChild(tip);
+
+/* 右侧记录列表 */
+document.getElementById("fx-list").innerHTML = RECORDS.map((r, i)=>`
+  <div class="fx-item" data-i="${i}" onclick="select(${i})">
+    <span class="fx-i-year">${esc(r.date)}</span>
+    <span class="fx-i-title">${esc(r.title)}</span>
+    <span class="fx-i-type" style="--c:${TYPE_COLOR[r.type]||'#f0c75e'}">${esc(r.type)}</span>
+  </div>`).join("");
+
+function select(i){
+  document.querySelectorAll(".fx-barb,.fx-node").forEach(n=>
+    n.classList.toggle("active", +n.dataset.i === i));
+  document.querySelectorAll(".fx-item").forEach((n, k)=>
+    n.classList.toggle("active", k === i));
+  renderDetail(RECORDS[i]);
+}
+
+function renderDetail(r){
+  const col = TYPE_COLOR[r.type] || "#f0c75e";
+  document.getElementById("fx-detail").innerHTML = `
+    <div class="fx-d-top">
+      <span class="fx-d-year">${esc(r.date)}</span>
+      <span class="fx-d-type" style="--c:${col}">${esc(r.type)}</span>
+    </div>
+    <h3 class="fx-d-title">${esc(r.title)}</h3>
+    <p class="fx-d-sum">${esc(r.summary)}</p>
+    <p class="fx-d-det">${esc(r.detail)}</p>`;
+}
+
+/* 默认选中最新一条，展示羽毛的“生长感” */
+select(RECORDS.length - 1);
+</script>
+{% endblock %}

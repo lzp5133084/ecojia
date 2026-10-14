@@ -32,7 +32,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "ecojia.db")
-VERSION = "V0.1"
+VERSION = "V1.2"
 
 # 资料百事通公网入口（当前 cpolar 隧道，服务器部署后切换为 ziliao.ecojia.cn）
 MAIN_SITE_URL = "https://72d51d79.r9.vip.cpolar.cn"
@@ -106,6 +106,30 @@ def renumber(products):
 
 WISH_STATUS = ["待评估", "已纳入规划", "开发中", "已上线", "暂不规划"]
 PRODUCT_STATUS = ["已上线", "开发中", "规划中", "敬请期待", "虚位以待"]
+
+# ══════════════════ 火星平面（huoxingPM）羽毛原型数据 ══════════════════
+# 原型阶段内置示例记录：每一根绒毛 = 一条历程/记录。
+# 正式版将由用户自己录入并由后端持久化（预留 /api/huoxing/records）。
+HUOXING_RECORDS = [
+    {"id": "r01", "date": "2008", "type": "求学", "title": "走出小城",
+     "summary": "背上行囊，第一次看见更大的世界。",
+     "detail": "第一次离开家乡去远方读书，学会独立，也第一次知道世界有多大。"},
+    {"id": "r02", "date": "2014", "type": "事业", "title": "入行保险",
+     "summary": "从零开始，服务第一位客户。",
+     "detail": "带着一腔热忱进入保险行业，把每一份保单都当成一份托付。"},
+    {"id": "r03", "date": "2016", "type": "家庭", "title": "迎来新生命",
+     "summary": "生命里多了一个最重要的人。",
+     "detail": "孩子的到来让生活有了新的重心，也更懂得责任的重量。"},
+    {"id": "r04", "date": "2020", "type": "成长", "title": "第100例理赔",
+     "summary": "明白保险是雪中送炭。",
+     "detail": "经手第100例理赔，看着一个个家庭渡过难关，坚定了从业的意义。"},
+    {"id": "r05", "date": "2024", "type": "荣誉", "title": "年度服务之星",
+     "summary": "十年坚持被看见。",
+     "detail": "连续多年服务客户1000+，获得年度服务之星，感谢每一位信任。"},
+    {"id": "r06", "date": "2026", "type": "新生", "title": "数字生态启航",
+     "summary": "梦想开始生长。",
+     "detail": "启动数字生态家园，希望用科技把温暖带给更多家庭。"},
+]
 
 
 # ══════════════════ 数据库 ══════════════════
@@ -238,6 +262,30 @@ def wishes_page():
     return render_template("wishes.html", products=get_products())
 
 
+@app.route("/huoxing")
+def huoxing_page():
+    """火星平面（huoxingPM）羽毛历程记录 —— 原型：每根绒毛=一条记录"""
+    return render_template("huoxing.html", records=HUOXING_RECORDS)
+
+
+@app.route("/api/huoxing/records")
+def api_huoxing_records():
+    """预留接口：羽毛记录（每根绒毛=一条记录），供其他程序读取"""
+    return jsonify({"ok": True, "count": len(HUOXING_RECORDS),
+                    "records": HUOXING_RECORDS,
+                    "note": "原型数据；正式版将由用户录入并持久化，支持增删查改"})
+
+
+@app.route("/tools")
+def tools_page():
+    """工具清单与使用说明（GitHub 全部可外部访问内容汇总）"""
+    eco = load_ecosystem()
+    tools = eco.get("tools", [])
+    online = [t for t in tools if t.get("url")]
+    return render_template("tools.html", tools=tools,
+                           total=len(tools), online=len(online))
+
+
 @app.route("/login")
 def login_page():
     if session.get("uid"):
@@ -252,7 +300,8 @@ def admin_page():
         return redirect(url_for("login_page"))
     if u["role"] != "admin":
         return render_template("auth.html", deny="该页面需要管理员权限")
-    return render_template("admin.html", wish_status=WISH_STATUS)
+    return render_template("admin.html", wish_status=WISH_STATUS,
+                           product_status=PRODUCT_STATUS)
 
 
 # ══════════════════ 统一账号 API（V0.1本地实现，预留打通） ══════════════════
@@ -441,6 +490,15 @@ def api_products():
 def api_brands():
     """生态品牌（带英文名的积木）"""
     return jsonify({"ok": True, "brands": [p for p in get_products() if p.get("en")]})
+
+
+@app.route("/api/tools")
+def api_tools():
+    """工具清单（GitHub 全部可外部访问内容的汇总），供其他程序调用"""
+    eco = load_ecosystem()
+    tools = eco.get("tools", [])
+    return jsonify({"ok": True, "count": len(tools), "online": len([t for t in tools if t.get("url")]),
+                    "tools": tools})
 
 
 @app.route("/api/ecosystem/status")
