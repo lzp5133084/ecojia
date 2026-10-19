@@ -201,14 +201,14 @@
     {
       "host": "ecojia.cn",
       "target": "数字生态家园（门户总站·底座）",
-      "status": "备案通过",
-      "note": "蜀ICP备2025124820号-2，DNS解析已配置(@/www/ziliao→118.24.173.246)，有效期至2027-10-14"
+      "status": "已上线(HTTPS)",
+      "note": "蜀ICP备2025124820号-2；https://ecojia.cn 与 www 均可访问，Let's Encrypt证书由Caddy自动签发与续期；有效期至2027-10-14"
     },
     {
       "host": "ziliao.ecojia.cn",
       "target": "资料百事通",
-      "status": "已部署(IP访问)",
-      "note": "服务器已就绪，备案通过后解析启用"
+      "status": "已上线(HTTPS)",
+      "note": "https://ziliao.ecojia.cn 可访问，Caddy反代至8300；备案号已挂页脚"
     },
     {
       "host": "lipei.ecojia.cn",
@@ -272,13 +272,17 @@
       "maps_to": "本机8300端口（资料百事通）",
       "config": "C:\\Users\\Administrator\\.cpolar\\cpolar.yml"
     },
-    "plan": "备案通过后：门户部署到服务器8400端口，资料百事通8300端口，域名解析 ecojia.cn → 门户，ziliao.ecojia.cn → 资料百事通",
+    "plan": "【已完成】门户部署到服务器8400端口，资料百事通8300端口，域名解析 ecojia.cn → 门户，ziliao.ecojia.cn → 资料百事通，Caddy 80/443 反代并自动签发 HTTPS",
     "access": {
-      "portal": "http://118.24.173.246:8400",
-      "ziliao": "http://118.24.173.246:8300",
+      "portal": "https://ecojia.cn（正式域名，HTTP自动跳HTTPS）",
+      "ziliao": "https://ziliao.ecojia.cn（正式域名）",
+      "portal_ip": "http://118.24.173.246:8400（备用IP直访）",
+      "ziliao_ip": "http://118.24.173.246:8300（备用IP直访）",
       "tools": "http://118.24.173.246:8080",
-      "note": "当前用 IP:端口 访问；ICP备案通过并解析域名后，切换为 ecojia.cn / ziliao.ecojia.cn",
+      "note": "已切换为正式域名 HTTPS 访问；IP:端口 通道保留作备用",
       "firewall_opened": [
+        "80",
+        "443",
         "8300",
         "8400",
         "8080"
@@ -293,10 +297,12 @@
       "services": [
         "ecojia-portal.service (8400)",
         "ecojia-ziliao.service (8300)",
-        "nginx (8080 静态工具)"
+        "nginx (8080 静态工具)",
+        "caddy (80/443 域名分发+自动HTTPS)"
       ],
       "update_cmd": "cd /opt/ecojia/portal && git pull && sudo systemctl restart ecojia-portal",
-      "note": "80 端口被镜像自带的 caddy 占用，本生态全部走独立端口，不受影响"
+      "gateway": "Caddy 监听80/443，ecojia.cn+www→8400，ziliao.ecojia.cn→8300，自动申请并续期 Let's Encrypt 证书；配置备份 /etc/caddy/Caddyfile.bak.1019",
+      "note": "原镜像自带 caddy 仅占位根目录，已改为域名反向代理网关；宝塔镜像未实际使用"
     }
   },
   "apis": [
@@ -910,11 +916,15 @@
     {
       "date": "2026-10-19",
       "event": "ICP备案通过（仅4天）：网站备案号 蜀ICP备2025124820号-2；DNSPod 添加3条A记录(@/www/ziliao→118.24.173.246)；门户站+资料百事通页脚挂备案号；开始域名分发与HTTPS配置"
+    },
+    {
+      "date": "2026-10-19",
+      "event": "域名正式上线：腾讯云防火墙补放行80/443（此前只开了8300/8400/8080，导致证书签发超时）；Caddy 改配为域名网关，ecojia.cn+www→8400、ziliao.ecojia.cn→8300，Let's Encrypt 三张证书全部签发成功；验证 https://ecojia.cn、https://www.ecojia.cn、https://ziliao.ecojia.cn 均200且证书链受信任，HTTP自动308跳HTTPS"
     }
   ],
   "todos": [
     "统一账号 token 互认（V1.0）",
-    "ICP备案通过后绑定 ecojia.cn 域名与 HTTPS",
+    "公安联网备案（30日内，数据码已生成，有效期至2026-11-18）",
     "确认三个梦境品牌是否配置子域名",
     "V1.0 统一账号 token 互认"
   ],
