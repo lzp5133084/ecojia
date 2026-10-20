@@ -8,7 +8,7 @@
     "wechat": "xunijiayuan",
     "positioning": "本网站是整个数字生态的底座：所有产品共用统一入口、统一账号、统一数据源；后续新工具以「积木」方式持续加入，加入后自动出现在门户与许愿墙。",
     "data_file": "ecosystem.json",
-    "updated_at": "2026-10-14",
+    "updated_at": "2026-10-20",
     "security_note": "本文件为公开数据源，禁止写入任何密码、密钥、Token；服务器与第三方凭据一律存放在腾讯云站内信 / Windows凭据管理器，不落库不落文件。",
     "usage": "其他程序或网页可直接读取本文件（或调用 /api/ecosystem/manifest）获取生态全部信息；新增/修改积木只需改本文件，服务自动热加载。",
     "style": "2027星霓暖赛博风（用户选定，豆包 doubao-seed-2.1-turbo 生成方案）"
@@ -816,6 +816,27 @@
         "录入理赔案件与材料清单，跟踪进度"
       ],
       "note": "您确认为本地电脑软件（未托管在 GitHub），本次随 GitHub 搬迁一并登记；如需在线使用，后续可做成网页版接入本生态。"
+    },
+    {
+      "no": "T20",
+      "name": "视频单帧提取工具",
+      "en": "Video Frame Extractor",
+      "repo": "video-frame-extractor",
+      "type": "Python 桌面程序",
+      "entry": "视频单帧提取工具.py",
+      "run": "python 视频单帧提取工具.py（含 GUI）",
+      "port": null,
+      "url": "",
+      "size_kb": 227,
+      "updated": "2026-10-20",
+      "status": "本地运行·未部署",
+      "desc": "课程录屏/手机操作视频的静止画面清理工具：5档可自定义压缩+阈值单帧提取，一键生成PPT或动态GIF。",
+      "steps": [
+        "安装依赖 pip install -r requirements.txt（需 ffmpeg/ffprobe）",
+        "双击 启动工具.bat 或 python 视频单帧提取工具.py",
+        "登录后选视频→选压缩档位→调静止阈值→开始处理→打开输出目录"
+      ],
+      "note": "多人账号模式（按用户隔离历史记录），支持一键复用历史参数；预留 import/命令行对外接口；后续可做成网页版接入生态。"
     }
   ],
   "stages": [
