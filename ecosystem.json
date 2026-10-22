@@ -8,7 +8,7 @@
     "wechat": "xunijiayuan",
     "positioning": "本网站是整个数字生态的底座：所有产品共用统一入口、统一账号、统一数据源；后续新工具以「积木」方式持续加入，加入后自动出现在门户与许愿墙。",
     "data_file": "ecosystem.json",
-    "updated_at": "2026-10-21",
+    "updated_at": "2026-10-23",
     "security_note": "本文件为公开数据源，禁止写入任何密码、密钥、Token；服务器与第三方凭据一律存放在腾讯云站内信 / Windows凭据管理器，不落库不落文件。",
     "usage": "其他程序或网页可直接读取本文件（或调用 /api/ecosystem/manifest）获取生态全部信息；新增/修改积木只需改本文件，服务自动热加载。",
     "style": "2027星霓暖赛博风（用户选定，豆包 doubao-seed-2.1-turbo 生成方案）"
@@ -876,6 +876,29 @@
         "桌面增强版：克隆仓库后 pip install -r requirements.txt（需 ffmpeg/ffprobe），双击 启动工具.bat，支持 5 档 ffmpeg 压缩与多用户账号管理"
       ],
       "note": "阈值经验：提取太多调大（0.10）、漏页调小（0.03）、课程PPT录屏 0.05~0.10、手机操作演示 0.03~0.06；四角遮罩可过滤摄像头气泡与水印干扰。"
+    },
+    {
+      "no": "T21",
+      "name": "视频单帧提取工具 · VIP 高清原图版",
+      "en": "Video Frame Extractor VIP",
+      "repo": "video-frame-extractor",
+      "type": "网页工具（单页HTML）",
+      "entry": "web/vip.html",
+      "run": "浏览器直接打开",
+      "port": null,
+      "url": "https://tools.ecojia.cn/video-frame-extractor/vip.html",
+      "size_kb": 30,
+      "updated": "2026-10-23",
+      "status": "已上线·HTTPS",
+      "desc": "T20 的原画质迭代升级版：按视频原始分辨率无损抓帧（取消 1280px 压缩限制）、默认 PNG 无损导出、PPT 内图片等比铺满不变形、GIF 按画面停留时长合成，全程本地处理不上传。",
+      "steps": [
+        "打开链接 → 点击或拖入视频 → 选分析精度（5档）与静止阈值 → 点「开始分析提取」",
+        "导出画质三档可选：无损 PNG（推荐）/ 高清 JPG / 省空间 JPG",
+        "结果页逐帧预览（点击放大），支持逐张下载原帧 / 生成原画质 PPT / 生成预览 GIF",
+        "参数与历史自动记忆（本机保存），点历史记录一键复用上次参数"
+      ],
+      "pages_url": "",
+      "note": "与 T20 同仓库共存（web/vip.html）：T20 走轻量压缩适合快速粗筛，T21 走原画质无损适合正式 PPT 产出；每个参数旁有 ? 白话解释。4K 视频帧数多的时候建议选「省空间 JPG」避免内存压力。"
     }
   ],
   "stages": [
@@ -980,6 +1003,10 @@
     {
       "date": "2026-10-19",
       "event": "域名正式上线：腾讯云防火墙补放行80/443（此前只开了8300/8400/8080，导致证书签发超时）；Caddy 改配为域名网关，ecojia.cn+www→8400、ziliao.ecojia.cn→8300，Let's Encrypt 三张证书全部签发成功；验证 https://ecojia.cn、https://www.ecojia.cn、https://ziliao.ecojia.cn 均200且证书链受信任，HTTP自动308跳HTTPS"
+    },
+    {
+      "date": "2026-10-23",
+      "event": "T21 视频单帧提取工具·VIP高清原图版上线：原始分辨率无损抓帧+PNG无损导出+PPT等比不变形，修复 T20 网页版 1280px 分辨率限制与 JPEG88% 画质损失；与 T20 同仓库共存（web/vip.html），工具清单新增入口"
     }
   ],
   "todos": [
