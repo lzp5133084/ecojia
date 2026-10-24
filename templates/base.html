@@ -28,6 +28,7 @@
       <a href="/huoxing" class="{{ 'active' if request.path=='/huoxing' else '' }}">火星平面</a>
       {% if user and user.role == 'admin' %}
       <a href="/admin" class="{{ 'active' if request.path=='/admin' else '' }}">管理后台</a>
+      <a href="/console" class="{{ 'active' if request.path=='/console' else '' }}">统一后台</a>
       {% endif %}
     </nav>
     <div class="user-area">

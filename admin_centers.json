@@ -1,0 +1,129 @@
+[
+  {
+    "id": "portal",
+    "name": "数字生态家园 · 门户后台",
+    "desc": "积木矩阵、许愿墙、操作日志与统一账号管理",
+    "icon": "🧩",
+    "public_url": "https://ecojia.cn",
+    "admin_url": "https://ecojia.cn/admin",
+    "probe": "http://127.0.0.1:8400/api/ecosystem/status",
+    "metrics": [
+      {
+        "label": "积木总数",
+        "path": "products_count"
+      },
+      {
+        "label": "注册用户",
+        "path": "stats.users"
+      }
+    ],
+    "auth": "统一账号",
+    "note": "本站后台，即当前中枢所属门户"
+  },
+  {
+    "id": "ziliao",
+    "name": "资料百事通 · 内容后台",
+    "desc": "资料审核、分类、评论、反馈、用户与 VIP 管理",
+    "icon": "🗂",
+    "public_url": "https://ziliao.ecojia.cn",
+    "admin_url": "https://ziliao.ecojia.cn/admin",
+    "probe": "http://127.0.0.1:8300/api/stats",
+    "metrics": [
+      {
+        "label": "已发布资料",
+        "path": "published_docs"
+      },
+      {
+        "label": "待审资料",
+        "path": "pending_docs"
+      },
+      {
+        "label": "贡献者",
+        "path": "contributors"
+      }
+    ],
+    "auth": "资料站账号",
+    "note": "审核类操作较多，建议与门户账号后续打通"
+  },
+  {
+    "id": "douyin-recruit",
+    "name": "抖音素人娱播招募 · 报名后台",
+    "desc": "在线报名数据管理、页面配置与操作日志",
+    "icon": "📣",
+    "public_url": "https://tools.ecojia.cn/douyin-recruit/",
+    "admin_url": "https://tools.ecojia.cn/douyin-recruit/admin",
+    "probe": "http://127.0.0.1:8503/api/stats",
+    "metrics": [
+      {
+        "label": "报名总数",
+        "path": "data.total"
+      },
+      {
+        "label": "待处理",
+        "path": "data.pending"
+      }
+    ],
+    "auth": "统一账号",
+    "note": "已与规则同步为统一账号"
+  },
+  {
+    "id": "jungedongbao-website",
+    "name": "军哥懂保官网 · 内容后台",
+    "desc": "品牌、案例、荣誉、聊天记录等站点内容可视化编辑",
+    "icon": "💼",
+    "public_url": "https://tools.ecojia.cn/jungedongbao-website/",
+    "admin_url": "https://tools.ecojia.cn/jungedongbao-website/",
+    "probe": "",
+    "metrics": [],
+    "auth": "页面内管理面板",
+    "note": "打开站点后点右上角「⚙️ 管理」进入，数据存浏览器 localStorage"
+  },
+  {
+    "id": "renjunxue-website",
+    "name": "任君学官网 · 管理员模式",
+    "desc": "快捷编辑文字与图片，带编辑历史与撤销",
+    "icon": "✏️",
+    "public_url": "https://tools.ecojia.cn/renjunxue-website/",
+    "admin_url": "https://tools.ecojia.cn/renjunxue-website/",
+    "probe": "",
+    "metrics": [],
+    "auth": "管理员模式（密码 Lzp520520520.）",
+    "note": "隐藏入口：连续点击站点 LOGO 5 次触发"
+  },
+  {
+    "id": "renjunxue-cangku",
+    "name": "任氏家族仓库 · 数据后台",
+    "desc": "家族资讯发布、数据增删查改、导入导出、存档备份、权限管理",
+    "icon": "🏛",
+    "public_url": "https://tools.ecojia.cn/renjunxue-cangku/",
+    "admin_url": "https://tools.ecojia.cn/renjunxue-cangku/",
+    "probe": "",
+    "metrics": [],
+    "auth": "页面内管理后台",
+    "note": "打开站点后切换「管理后台」标签页"
+  },
+  {
+    "id": "luzhouren-clan",
+    "name": "泸州任氏宗亲网 · 站点后台",
+    "desc": "族谱与宗亲内容维护",
+    "icon": "🏯",
+    "public_url": "https://tools.ecojia.cn/luzhouren-clan/",
+    "admin_url": "https://tools.ecojia.cn/luzhouren-clan/admin-login.html",
+    "probe": "",
+    "metrics": [],
+    "auth": "站点独立口令",
+    "note": "纯前端静态后台，数据存浏览器本地"
+  },
+  {
+    "id": "renjunxue-gitee",
+    "name": "任君学 · 个人站后台",
+    "desc": "个人站内容、财务与任务维护",
+    "icon": "🌐",
+    "public_url": "https://tools.ecojia.cn/renjunxue-gitee-io/",
+    "admin_url": "https://tools.ecojia.cn/renjunxue-gitee-io/admin.html",
+    "probe": "",
+    "metrics": [],
+    "auth": "站点独立口令",
+    "note": "纯前端静态后台"
+  }
+]

@@ -680,6 +680,142 @@ def api_admin_logs():
     return jsonify({"ok": True, "logs": [dict(r) for r in rows]})
 
 
+# ══════════════════ 统一后台中枢（各子站后台总入口） ══════════════════
+import urllib.request
+
+HUB_TIMEOUT = 2.5
+HUB_FILE = os.path.join(BASE_DIR, "admin_centers.json")
+_hub_cache = {"mtime": None, "data": []}
+
+
+def load_hub_centers():
+    """统一后台注册表（独立文件，避免 ecosystem.json 被自动化同步覆盖）"""
+    try:
+        mtime = os.path.getmtime(HUB_FILE)
+    except OSError:
+        return []
+    if _hub_cache["mtime"] != mtime:
+        try:
+            with open(HUB_FILE, "r", encoding="utf-8") as f:
+                _hub_cache["data"] = json.load(f)
+            _hub_cache["mtime"] = mtime
+        except (OSError, ValueError) as e:
+            print(f"[中枢] admin_centers.json 读取失败：{e}")
+    return _hub_cache["data"]
+
+
+def save_hub_centers(data):
+    with open(HUB_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    _hub_cache["mtime"] = None
+
+
+def _pick(data, path):
+    cur = data
+    for k in (path or "").split("."):
+        if not k:
+            continue
+        if not isinstance(cur, dict):
+            return None
+        cur = cur.get(k)
+    return cur
+
+
+def probe_center(c):
+    """服务端探测子站状态与指标（仅允许本机回环地址，避免 SSRF）"""
+    url = (c.get("probe") or "").strip()
+    if not url:
+        return "static", {}
+    if not (url.startswith("http://127.0.0.1:") or url.startswith("http://localhost:")):
+        return "unknown", {}
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "EcoJia-Hub/1.0"})
+        with urllib.request.urlopen(req, timeout=HUB_TIMEOUT) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+        metrics = {}
+        for m in c.get("metrics", []):
+            v = _pick(payload, m.get("path"))
+            if v is not None:
+                metrics[m.get("label") or ""] = v
+        return "online", metrics
+    except Exception:
+        return "offline", {}
+
+
+@app.route("/console")
+def console_page():
+    u = current_user()
+    if not u:
+        return redirect(url_for("login_page"))
+    if u["role"] != "admin":
+        return render_template("auth.html", deny="该页面需要管理员权限")
+    return render_template("console.html")
+
+
+@app.route("/api/admin/hub")
+@admin_required
+def api_admin_hub():
+    items = []
+    online = 0
+    static = 0
+    for c in load_hub_centers():
+        status, metrics = probe_center(c)
+        if status == "online":
+            online += 1
+        elif status == "static":
+            static += 1
+        item = dict(c)
+        item["status"] = status
+        item["metrics"] = metrics
+        items.append(item)
+    return jsonify({"ok": True, "centers": items,
+                    "summary": {"total": len(items), "online": online, "static": static}})
+
+
+@app.route("/api/admin/hub/register", methods=["POST"])
+@admin_required
+def api_admin_hub_register():
+    d = request.get_json(silent=True) or {}
+    cid = (d.get("id") or "").strip()
+    name = (d.get("name") or "").strip()
+    if not cid or not name:
+        return jsonify({"ok": False, "msg": "id 与 name 必填"}), 400
+    centers = list(load_hub_centers())
+    item = {
+        "id": cid,
+        "name": name,
+        "desc": (d.get("desc") or "").strip(),
+        "icon": (d.get("icon") or "🧩").strip(),
+        "public_url": (d.get("public_url") or "").strip(),
+        "admin_url": (d.get("admin_url") or "").strip(),
+        "probe": (d.get("probe") or "").strip(),
+        "metrics": d.get("metrics") or [],
+        "auth": (d.get("auth") or "").strip(),
+        "note": (d.get("note") or "").strip(),
+    }
+    idx = next((i for i, c in enumerate(centers) if c.get("id") == cid), -1)
+    if idx >= 0:
+        centers[idx] = item
+    else:
+        centers.append(item)
+    save_hub_centers(centers)
+    log_op("登记统一后台", f"{cid} {name}", session.get("uid"))
+    return jsonify({"ok": True, "msg": f"已登记「{name}」", "item": item})
+
+
+@app.route("/api/admin/hub/<cid>", methods=["DELETE"])
+@admin_required
+def api_admin_hub_delete(cid):
+    centers = list(load_hub_centers())
+    target = next((c for c in centers if c.get("id") == cid), None)
+    if not target:
+        return jsonify({"ok": False, "msg": "未找到该后台"}), 404
+    centers.remove(target)
+    save_hub_centers(centers)
+    log_op("移除统一后台", cid, session.get("uid"))
+    return jsonify({"ok": True, "msg": "已移除"})
+
+
 # ══════════════════ 启动 ══════════════════
 init_db()
 
