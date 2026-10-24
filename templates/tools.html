@@ -34,10 +34,10 @@
     </div>
     <p class="tool-desc">{{ t.desc }}</p>
 
-    <div class="tool-steps">
-      <b>使用说明</b>
+    <details class="tool-steps">
+      <summary><b>使用说明</b><span class="ts-hint">点击展开</span></summary>
       <ol>{% for s in t.steps %}<li>{{ s }}</li>{% endfor %}</ol>
-    </div>
+    </details>
 
     {% if t.note %}<p class="tool-note">{{ icon("alert") }} {{ t.note }}</p>{% endif %}
 
