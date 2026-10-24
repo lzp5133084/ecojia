@@ -1056,6 +1056,25 @@
         "打开链接即可使用"
       ],
       "note": "部署助手 V1.0 自动登记"
+    },
+    {
+      "no": "T30",
+      "name": "理赔资料助手",
+      "en": "",
+      "repo": "claims-doc-assistant",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器打开即用",
+      "port": null,
+      "url": "https://tools.ecojia.cn/claims-doc-assistant/",
+      "size_kb": 48780,
+      "updated": "2026-10-25",
+      "status": "已上线·HTTPS",
+      "desc": "??????:?? OCR ??????????(Tesseract + PaddleOCR ???,????????)",
+      "steps": [
+        "打开链接即可使用"
+      ],
+      "note": "部署助手 V1.0 自动登记"
     }
   ],
   "stages": [
