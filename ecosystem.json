@@ -901,23 +901,25 @@
       "note": "星霓暖赛博风与门户一致；数据为 2026-10-21 全量扫描快照；GitHub Pages 镜像可备用。"
     },
     {
-      "no": "T23",
-      "name": "PK直播灵魂拷问互动工具",
+      "no": "T16",
+      "name": "PK 直播互动工具（旧版）",
       "en": "",
       "repo": "pk-live-tool",
       "type": "网页工具（单页HTML）",
       "entry": "index.html",
-      "run": "浏览器打开即用",
+      "run": "浏览器直接打开 index.html",
       "port": null,
       "url": "https://tools.ecojia.cn/pk-live-tool/",
-      "size_kb": 6,
-      "updated": "2026-10-24",
+      "size_kb": 4,
+      "updated": "2026-10-19",
       "status": "已上线·HTTPS",
-      "desc": "PK直播灵魂拷问&互动游戏工具 破冰预热题库 吃瓜走心题库 拉拢对面大哥题库 收尾留人题库 PK互动小游戏 点击下方【随机抽取】获取PK提问 随",
+      "desc": "PK 直播互动工具早期版本：题库抽取与文案复制（已被 T15 全面升级替代，保留备用）。",
       "steps": [
-        "打开链接即可使用"
+        "打开网页选择题库",
+        "点抽取按钮出题并复制文案"
       ],
-      "note": "部署助手 V1.0 自动登记"
+      "pages_url": "https://lzp5133084.github.io/pk-live-tool/",
+      "note": "建议直接使用 T15「PK 直播灵魂拷问」，功能更全。"
     }
   ],
   "stages": [
