@@ -3,6 +3,33 @@
 {% block title %}工具清单{% endblock %}
 {% block content %}
 
+<!-- 左侧工具速查栏（可拉出/收起） -->
+<button id="toolNavToggle" class="tool-nav-toggle" type="button" aria-label="打开工具列表">
+  <span class="tnt-ic">☰</span><span class="tnt-txt">工具列表</span>
+</button>
+<div id="toolNavMask" class="tool-nav-mask"></div>
+<aside id="toolNav" class="tool-nav" aria-label="工具速查列表">
+  <div class="tn-head">
+    <h2>工具速查</h2>
+    <button id="toolNavClose" class="tn-close" type="button" aria-label="收起列表">✕</button>
+  </div>
+  <input id="toolSearch" class="tn-search" type="search" placeholder="搜索名称 / 编号 / 关键词…" autocomplete="off">
+  <div class="tn-count">匹配 <b id="tnMatch">{{ total }}</b> / {{ total }} 个工具</div>
+  <ul class="tn-list" id="toolNavList">
+    {% for t in tools %}
+    {% set on = '可访问' in t.status or '已上线' in t.status or '已运行' in t.status %}
+    <li>
+      <a href="#tool-{{ t.no }}" class="tn-item" data-no="{{ t.no }}" data-name="{{ t.name }} {{ t.en }}">
+        <span class="tn-dot tn-{{ 'on' if on else 'plan' }}"></span>
+        <span class="tn-no">{{ t.no }}</span>
+        <span class="tn-name">{{ t.name }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  <div class="tn-empty" id="tnEmpty" hidden>未找到匹配的工具</div>
+</aside>
+
 <section class="page-head tools-hero">
   <h1>{{ icon("grid") }}工具清单与使用说明</h1>
   <p>这里汇总了生态内全部可用的工具（含电脑端程序与网页工具）。
@@ -20,7 +47,7 @@
 <div class="tool-grid">
   {% for t in tools %}
   {% set cls = 'live' if ('可访问' in t.status or '已上线' in t.status or '已运行' in t.status) else 'plan' %}
-  <div class="tool-card">
+  <div class="tool-card" id="tool-{{ t.no }}">
     <div class="tool-top">
       <span class="tool-no">{{ t.no }}</span>
       <span class="p-status s-{{ cls }}">{{ t.status }}</span>
@@ -49,5 +76,75 @@
   </div>
   {% endfor %}
 </div>
+
+<script>
+(function () {
+  var nav = document.getElementById('toolNav');
+  var toggle = document.getElementById('toolNavToggle');
+  var closeBtn = document.getElementById('toolNavClose');
+  var mask = document.getElementById('toolNavMask');
+  var search = document.getElementById('toolSearch');
+  var list = document.getElementById('toolNavList');
+  var matchEl = document.getElementById('tnMatch');
+  var emptyEl = document.getElementById('tnEmpty');
+
+  function openNav() {
+    nav.classList.add('open');
+    mask.classList.add('show');
+    toggle.classList.add('hidden');
+    setTimeout(function () { search.focus(); }, 250);
+  }
+  function closeNav() {
+    nav.classList.remove('open');
+    mask.classList.remove('show');
+    toggle.classList.remove('hidden');
+  }
+  toggle.addEventListener('click', openNav);
+  closeBtn.addEventListener('click', closeNav);
+  mask.addEventListener('click', closeNav);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeNav();
+  });
+
+  /* 搜索：同时过滤左侧列表与右侧卡片 */
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.tool-card'));
+  var items = Array.prototype.slice.call(list.querySelectorAll('.tn-item'));
+  var total = cards.length;
+
+  function applyFilter(kw) {
+    kw = kw.trim().toLowerCase();
+    var hit = 0;
+    cards.forEach(function (card) {
+      var text = (card.textContent || '').toLowerCase();
+      var ok = !kw || text.indexOf(kw) !== -1;
+      card.style.display = ok ? '' : 'none';
+      if (ok) hit++;
+    });
+    items.forEach(function (item) {
+      var text = (item.getAttribute('data-no') + ' ' + item.getAttribute('data-name') + ' ' + (item.textContent || '')).toLowerCase();
+      var ok = !kw || text.indexOf(kw) !== -1;
+      item.parentElement.style.display = ok ? '' : 'none';
+    });
+    matchEl.textContent = hit;
+    emptyEl.hidden = hit !== 0;
+  }
+  search.addEventListener('input', function () { applyFilter(search.value); });
+
+  /* 点击列表项：滚动定位 + 高亮闪烁 */
+  list.addEventListener('click', function (e) {
+    var a = e.target.closest('a.tn-item');
+    if (!a) return;
+    e.preventDefault();
+    var card = document.getElementById('tool-' + a.getAttribute('data-no'));
+    if (!card) return;
+    if (card.style.display === 'none') { /* 被过滤掉的卡片先恢复 */ search.value = ''; applyFilter(''); }
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.classList.remove('flash');
+    void card.offsetWidth; /* 重启动画 */
+    card.classList.add('flash');
+    if (window.innerWidth < 900) closeNav(); /* 窄屏自动收起 */
+  });
+})();
+</script>
 
 {% endblock %}
