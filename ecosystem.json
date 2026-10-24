@@ -939,6 +939,25 @@
         "打开链接即可使用"
       ],
       "note": "部署助手 V1.0 自动登记"
+    },
+    {
+      "no": "T24",
+      "name": "自检后端",
+      "en": "",
+      "repo": "zz-selftest-api",
+      "type": "网页工具（后端服务）",
+      "entry": "app.py",
+      "run": "systemd 服务托管",
+      "port": 8501,
+      "url": "https://tools.ecojia.cn/zz-selftest-api/",
+      "size_kb": 0,
+      "updated": "2026-10-24",
+      "status": "已上线·HTTPS",
+      "desc": "部署助手真实自检（Flask 后端）",
+      "steps": [
+        "打开链接即可使用"
+      ],
+      "note": "部署助手 V1.0 自动登记"
     }
   ],
   "stages": [
