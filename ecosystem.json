@@ -999,6 +999,25 @@
         "打开链接即可使用"
       ],
       "note": "部署助手 V1.0 自动登记"
+    },
+    {
+      "no": "T27",
+      "name": "泸州任氏宗亲网",
+      "en": "",
+      "repo": "luzhouren-clan",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器打开即用",
+      "port": null,
+      "url": "https://tools.ecojia.cn/luzhouren-clan/",
+      "size_kb": 354,
+      "updated": "2026-10-24",
+      "status": "已上线·HTTPS",
+      "desc": "传承宗族文化，凝聚血脉亲情。查询族谱、寻根寻亲、了解宗亲动态。",
+      "steps": [
+        "打开链接即可使用"
+      ],
+      "note": "部署助手 V1.0 自动登记"
     }
   ],
   "stages": [
