@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% from "icon_macro.html" import icon %}
+{% block title %}统一后台中枢{% endblock %}
+{% block content %}
+
+<style>
+  .hub-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:22px}
+  .hub-head h1{font-size:30px;letter-spacing:2px;margin:0 0 8px;
+    background:linear-gradient(135deg,#f0c75e,#fff3c4,#d4a437);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .hub-head p{margin:0;color:#8a8577;font-size:13px;letter-spacing:1px}
+  .hub-chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .hub-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;
+    font-size:12px;color:#d8d3c7;background:rgba(240,199,94,.07);border:1px solid rgba(240,199,94,.18)}
+  .hub-chip b{color:#f0c75e;font-weight:700}
+  .hub-tools{display:flex;gap:10px;flex-wrap:wrap}
+  .hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:6px}
+  .hub-card{position:relative;padding:20px;border-radius:16px;overflow:hidden;
+    background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+    border:1px solid rgba(255,255,255,.08);transition:.28s}
+  .hub-card:hover{transform:translateY(-3px);border-color:rgba(240,199,94,.35);
+    box-shadow:0 18px 40px rgba(0,0,0,.45)}
+  .hub-card::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(120% 60% at 100% 0,rgba(240,199,94,.10),transparent 60%)}
+  .hub-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .hub-ico{font-size:22px;line-height:1;filter:drop-shadow(0 0 10px rgba(240,199,94,.35))}
+  .hub-state{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:1px;
+    padding:4px 10px;border-radius:999px;border:1px solid transparent}
+  .hub-state i{width:6px;height:6px;border-radius:50%;display:inline-block}
+  .st-online{color:#7ee2a8;background:rgba(126,226,168,.10);border-color:rgba(126,226,168,.28)}
+  .st-online i{background:#7ee2a8;box-shadow:0 0 8px #7ee2a8}
+  .st-offline{color:#ff7b7b;background:rgba(255,123,123,.10);border-color:rgba(255,123,123,.28)}
+  .st-offline i{background:#ff7b7b;box-shadow:0 0 8px #ff7b7b}
+  .st-static{color:#9ec7ff;background:rgba(158,199,255,.10);border-color:rgba(158,199,255,.26)}
+  .st-static i{background:#9ec7ff}
+  .st-unknown{color:#b9b3a5;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+  .st-unknown i{background:#b9b3a5}
+  .hub-name{font-size:16px;margin:0 0 6px;color:#f3efe4;letter-spacing:.5px}
+  .hub-desc{font-size:12.5px;color:#8a8577;line-height:1.7;margin:0 0 12px;min-height:38px}
+  .hub-metrics{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .hub-metric{padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.07);font-size:11.5px;color:#8a8577}
+  .hub-metric b{display:block;font-size:17px;color:#f0c75e;margin-top:3px;letter-spacing:.5px}
+  .hub-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:12px;
+    border-top:1px dashed rgba(255,255,255,.08)}
+  .hub-note{font-size:11px;color:#6f6a5f;margin:10px 0 0;line-height:1.6}
+  .hub-empty{padding:60px 20px;text-align:center;color:#8a8577;font-size:13px;
+    border:1px dashed rgba(255,255,255,.12);border-radius:16px}
+  .hub-modal{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
+    background:rgba(4,4,6,.72);backdrop-filter:blur(6px);padding:20px}
+  .hub-modal.open{display:flex}
+  .hub-form{width:min(560px,100%);max-height:88vh;overflow:auto;padding:26px;border-radius:18px;
+    background:linear-gradient(180deg,#141416,#0d0d0f);border:1px solid rgba(240,199,94,.22);
+    box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .hub-form h3{margin:0 0 18px;font-size:17px;color:#f0c75e;letter-spacing:1px}
+  .hub-field{margin-bottom:13px}
+  .hub-field label{display:block;font-size:12px;color:#9c9686;margin-bottom:6px;letter-spacing:.5px}
+  .hub-field input,.hub-field textarea{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);color:#f3efe4;
+    font-size:13px;font-family:inherit;outline:none;transition:.2s}
+  .hub-field input:focus,.hub-field textarea:focus{border-color:rgba(240,199,94,.55);
+    box-shadow:0 0 0 3px rgba(240,199,94,.10)}
+  .hub-field textarea{min-height:64px;resize:vertical}
+  .hub-form-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+  .hub-refresh{font-size:11px;color:#6f6a5f;letter-spacing:.5px;align-self:center}
+  .hub-del{color:#ff7b7b !important;border-color:rgba(255,123,123,.28) !important}
+  @media(max-width:640px){.hub-grid{grid-template-columns:1fr}.hub-head h1{font-size:24px}}
+</style>
+
+<section class="hub-head">
+  <div>
+    <h1>{{ icon("grid") }} 统一后台中枢</h1>
+    <p>一个入口 · 统管生态内全部后台 —— 状态实时探测、关键指标聚合、一键直达各站后台</p>
+    <div class="hub-chips" id="hubChips">
+      <span class="hub-chip">接入系统 <b id="sumTotal">--</b></span>
+      <span class="hub-chip">在线 <b id="sumOnline">--</b></span>
+      <span class="hub-chip">静态后台 <b id="sumStatic">--</b></span>
+      <span class="hub-chip">统一账号 <b>lzp5133084</b></span>
+    </div>
+  </div>
+  <div class="hub-tools">
+    <span class="hub-refresh" id="hubTime"></span>
+    <button class="btn btn-ghost btn-sm" onclick="loadHub()">{{ icon("zap") }} 刷新状态</button>
+    <button class="btn btn-gold btn-sm" onclick="openHubForm()">+ 新增接入</button>
+  </div>
+</section>
+
+<div id="hubGrid" class="hub-grid"></div>
+
+<section style="margin-top:34px">
+  <div class="hub-head" style="margin-bottom:14px">
+    <div>
+      <h1 style="font-size:22px">{{ icon("library") }} 全部工具对照 · 查漏补缺</h1>
+      <p>对照工具清单（<span id="toolTotal">--</span> 个），灰色 = 暂未登记后台，点「登记后台」一键补录</p>
+    </div>
+    <div class="hub-tools">
+      <span class="hub-chip">已登记 <b id="chkDone">--</b></span>
+      <span class="hub-chip">未登记 <b id="chkTodo">--</b></span>
+    </div>
+  </div>
+  <div id="toolGrid" class="hub-grid"></div>
+</section>
+
+<div class="hub-modal" id="hubModal">
+  <form class="hub-form" onsubmit="return saveHub(event)">
+    <h3>新增 / 更新接入后台</h3>
+    <div class="hub-field"><label>标识 ID（英文，唯一）</label><input name="id" required placeholder="例如 douyin-recruit"></div>
+    <div class="hub-field"><label>名称</label><input name="name" required placeholder="例如 抖音素人娱播招募 · 报名后台"></div>
+    <div class="hub-field"><label>简介</label><input name="desc" placeholder="一句话说明这个后台管什么"></div>
+    <div class="hub-field"><label>后台地址</label><input name="admin_url" placeholder="https://.../admin"></div>
+    <div class="hub-field"><label>前台地址（可空）</label><input name="public_url" placeholder="https://..."></div>
+    <div class="hub-field"><label>状态探测地址（仅限本机 127.0.0.1 接口，可空）</label><input name="probe" placeholder="http://127.0.0.1:8503/api/stats"></div>
+    <div class="hub-field"><label>指标映射（每行 标签=字段路径，可空）</label><textarea name="metrics" placeholder="报名总数=data.total&#10;待处理=data.pending"></textarea></div>
+    <div class="hub-field"><label>图标 Emoji</label><input name="icon" placeholder="📣" maxlength="4"></div>
+    <div class="hub-field"><label>登录方式说明</label><input name="auth" placeholder="统一账号 / 独立账号"></div>
+    <div class="hub-field"><label>备注</label><input name="note" placeholder="可选"></div>
+    <div class="hub-form-foot">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeHubForm()">取消</button>
+      <button type="submit" class="btn btn-gold btn-sm">保存接入</button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const STATUS_TEXT = {online:'在线', offline:'离线', static:'静态后台', unknown:'未知'};
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function metricsHtml(metrics){
+  const keys = Object.keys(metrics || {});
+  if(!keys.length) return '';
+  return '<div class="hub-metrics">' + keys.map(k =>
+    '<div class="hub-metric">' + esc(k) + '<b>' + esc(metrics[k]) + '</b></div>').join('') + '</div>';
+}
+
+function cardHtml(c){
+  const st = c.status || 'unknown';
+  const metrics = c.metrics || {};
+  const btns = [];
+  if(c.admin_url) btns.push('<a class="btn btn-gold btn-sm" href="' + esc(c.admin_url) + '" target="_blank" rel="noopener">进入后台 ' + '→</a>');
+  if(c.public_url) btns.push('<a class="btn btn-ghost btn-sm" href="' + esc(c.public_url) + '" target="_blank" rel="noopener">打开前台</a>');
+  btns.push('<a class="btn btn-ghost btn-sm hub-del" href="javascript:void(0)" onclick="delHub(\'' + esc(c.id) + '\')">移除</a>');
+  return '' +
+    '<div class="hub-card">' +
+      '<div class="hub-top">' +
+        '<span class="hub-ico">' + esc(c.icon || '🧩') + '</span>' +
+        '<span class="hub-state st-' + st + '"><i></i>' + (STATUS_TEXT[st] || st) + '</span>' +
+      '</div>' +
+      '<h3 class="hub-name">' + esc(c.name) + '</h3>' +
+      '<p class="hub-desc">' + esc(c.desc || '—') + '</p>' +
+      metricsHtml(metrics) +
+      '<div class="hub-foot">' + btns.join('') + '</div>' +
+      (c.note ? '<p class="hub-note">※ ' + esc(c.note) + '</p>' : '') +
+      (c.auth ? '<p class="hub-note">登录：' + esc(c.auth) + '</p>' : '') +
+    '</div>';
+}
+
+function slugOf(url){
+  try{
+    const u = new URL(url);
+    const seg = u.pathname.split('/').filter(Boolean)[0] || u.hostname.split('.')[0];
+    return seg.toLowerCase();
+  }catch(e){ return ''; }
+}
+
+function matchCenter(tool, centers){
+  const slug = slugOf(tool.url || '');
+  const no = (tool.no || '').toLowerCase();
+  return centers.find(c => {
+    const id = (c.id || '').toLowerCase();
+    if(!id) return false;
+    return slug === id || slug.startsWith(id) || id.startsWith(slug) ||
+      (tool.url || '').includes(id) || (c.admin_url || '').includes(slug) ||
+      (c.public_url || '').includes(slug);
+  });
+}
+
+function toolCardHtml(t, center){
+  const done = !!center;
+  const dim = done ? '' : ' style="opacity:.55;filter:saturate(.4)"';
+  const badge = done
+    ? '<span class="hub-state st-online"><i></i>已登记</span>'
+    : '<span class="hub-state st-unknown"><i></i>未登记后台</span>';
+  const btn = done
+    ? '<a class="btn btn-ghost btn-sm" href="' + esc(center.admin_url || t.url) + '" target="_blank" rel="noopener">进入后台</a>'
+    : '<a class="btn btn-gold btn-sm" href="javascript:void(0)" onclick="quickReg(\'' + esc(t.no) + '\')">登记后台</a>';
+  return '' +
+    '<div class="hub-card"' + dim + '>' +
+      '<div class="hub-top"><span class="hub-ico">' + esc(t.icon || '🧰') + '</span>' + badge + '</div>' +
+      '<h3 class="hub-name">' + esc(t.no) + ' · ' + esc(t.name) + '</h3>' +
+      '<p class="hub-desc">' + esc(t.desc || '—') + '</p>' +
+      '<div class="hub-foot">' + btn +
+        '<a class="btn btn-ghost btn-sm" href="' + esc(t.url) + '" target="_blank" rel="noopener">前台</a>' +
+      '</div>' +
+    '</div>';
+}
+
+let _toolsCache = [];
+async function loadTools(centers){
+  const grid = document.getElementById('toolGrid');
+  const d = await api('/api/tools');
+  if(!d.ok){ grid.innerHTML = '<div class="hub-empty">工具清单加载失败</div>'; return; }
+  _toolsCache = d.tools || [];
+  document.getElementById('toolTotal').textContent = _toolsCache.length;
+  let done = 0;
+  const html = _toolsCache.map(t => {
+    const c = matchCenter(t, centers);
+    if(c) done++;
+    return toolCardHtml(t, c);
+  }).join('');
+  grid.innerHTML = html || '<div class="hub-empty">工具清单为空</div>';
+  document.getElementById('chkDone').textContent = done;
+  document.getElementById('chkTodo').textContent = _toolsCache.length - done;
+}
+
+function quickReg(no){
+  const t = _toolsCache.find(x => x.no === no);
+  if(!t) return;
+  openHubForm();
+  const f = document.querySelector('#hubModal form');
+  f.id.value = slugOf(t.url || '') || no.toLowerCase();
+  f.name.value = t.name + ' · 后台';
+  f.desc.value = t.desc || '';
+  f.admin_url.value = t.url || '';
+  f.public_url.value = t.url || '';
+}
+
+async function loadHub(){
+  const grid = document.getElementById('hubGrid');
+  const d = await api('/api/admin/hub');
+  if(!d.ok){ grid.innerHTML = '<div class="hub-empty">' + esc(d.msg || '加载失败') + '</div>'; return; }
+  const centers = d.centers || [];
+  grid.innerHTML = centers.length ? centers.map(cardHtml).join('')
+    : '<div class="hub-empty">还没有登记任何后台，点右上角「新增接入」开始</div>';
+  document.getElementById('sumTotal').textContent = d.summary.total;
+  document.getElementById('sumOnline').textContent = d.summary.online;
+  document.getElementById('sumStatic').textContent = d.summary.static;
+  const now = new Date();
+  document.getElementById('hubTime').textContent = '上次探测 ' +
+    String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+  loadTools(centers);
+}
+
+function openHubForm(){ document.getElementById('hubModal').classList.add('open'); }
+function closeHubForm(){ document.getElementById('hubModal').classList.remove('open'); }
+
+async function saveHub(e){
+  e.preventDefault();
+  const f = e.target;
+  const raw = f.metrics.value.trim();
+  const metrics = raw ? raw.split('\n').map(line => {
+    const i = line.indexOf('=');
+    if(i < 0) return null;
+    return {label: line.slice(0, i).trim(), path: line.slice(i + 1).trim()};
+  }).filter(Boolean) : [];
+  const payload = {
+    id: f.id.value.trim(), name: f.name.value.trim(), desc: f.desc.value.trim(),
+    admin_url: f.admin_url.value.trim(), public_url: f.public_url.value.trim(),
+    probe: f.probe.value.trim(), metrics: metrics,
+    icon: f.icon.value.trim(), auth: f.auth.value.trim(), note: f.note.value.trim()
+  };
+  const d = await api('/api/admin/hub/register', {method:'POST', body: JSON.stringify(payload)});
+  if(d.ok){
+    toast(d.msg);
+    closeHubForm();
+    f.reset();
+    loadHub();
+  }
+  return false;
+}
+
+async function delHub(id){
+  if(!confirm('确认从统一后台移除「' + id + '」？仅解除登记，不会删除该站数据。')) return;
+  const d = await api('/api/admin/hub/' + encodeURIComponent(id), {method:'DELETE'});
+  if(d.ok){ toast(d.msg); loadHub(); }
+}
+
+document.addEventListener('DOMContentLoaded', loadHub);
+setInterval(loadHub, 30000);
+</script>
+{% endblock %}

@@ -1075,6 +1075,28 @@
         "打开链接即可使用"
       ],
       "note": "部署助手 V1.0 自动登记"
+    },
+    {
+      "no": "T31",
+      "name": "抖音素人娱播招募系统",
+      "en": "Douyin Live Recruit",
+      "repo": "",
+      "type": "Flask 网页程序",
+      "entry": "app.py",
+      "run": "flask run（端口 8503）",
+      "port": 8503,
+      "url": "https://tools.ecojia.cn/douyin-recruit/",
+      "size_kb": 152,
+      "updated": "2026-10-24",
+      "status": "已上线·HTTPS",
+      "desc": "抖音素人娱播招募在线报名与运营后台：前台展示招募信息、支持在线报名，后台管理报名数据、页面配置与操作日志。",
+      "steps": [
+        "打开链接进入招募前台，浏览岗位与基地信息",
+        "填写姓名、手机号、岗位与意向，提交在线报名",
+        "管理员进入 /douyin-recruit/admin 登录后台，查看并处理报名",
+        "后台「页面配置」可修改前台文案与联系方式，保存即生效"
+      ],
+      "note": "数据存储于服务器 SQLite（recruit.db）；后台账号与生态统一账号一致。"
     }
   ],
   "stages": [
