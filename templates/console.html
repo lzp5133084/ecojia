@@ -91,11 +91,11 @@
   <div class="hub-head" style="margin-bottom:14px">
     <div>
       <h1 style="font-size:22px">{{ icon("library") }} 全部工具对照 · 查漏补缺</h1>
-      <p>对照工具清单（<span id="toolTotal">--</span> 个），灰色 = 暂未登记后台，点「登记后台」一键补录</p>
+      <p>对照工具清单（<span id="toolTotal">--</span> 个），已登记后台的排在前面，纯工具无需后台</p>
     </div>
     <div class="hub-tools">
-      <span class="hub-chip">已登记 <b id="chkDone">--</b></span>
-      <span class="hub-chip">未登记 <b id="chkTodo">--</b></span>
+      <span class="hub-chip">已登记后台 <b id="chkDone">--</b></span>
+      <span class="hub-chip">纯工具 <b id="chkTodo">--</b></span>
     </div>
   </div>
   <div id="toolGrid" class="hub-grid"></div>
@@ -182,13 +182,13 @@ function matchCenter(tool, centers){
 
 function toolCardHtml(t, center){
   const done = !!center;
-  const dim = done ? '' : ' style="opacity:.55;filter:saturate(.4)"';
+  const dim = done ? '' : ' style="opacity:.42;filter:saturate(.3)"';
   const badge = done
-    ? '<span class="hub-state st-online"><i></i>已登记</span>'
-    : '<span class="hub-state st-unknown"><i></i>未登记后台</span>';
+    ? '<span class="hub-state st-online"><i></i>已登记后台</span>'
+    : '<span class="hub-state st-unknown"><i></i>纯工具 · 无需后台</span>';
   const btn = done
     ? '<a class="btn btn-ghost btn-sm" href="' + esc(center.admin_url || t.url) + '" target="_blank" rel="noopener">进入后台</a>'
-    : '<a class="btn btn-gold btn-sm" href="javascript:void(0)" onclick="quickReg(\'' + esc(t.no) + '\')">登记后台</a>';
+    : '<a class="btn btn-ghost btn-sm" style="font-size:11px" href="javascript:void(0)" onclick="quickReg(\'' + esc(t.no) + '\')">补登后台</a>';
   return '' +
     '<div class="hub-card"' + dim + '>' +
       '<div class="hub-top"><span class="hub-ico">' + esc(t.icon || '🧰') + '</span>' + badge + '</div>' +
@@ -208,12 +208,16 @@ async function loadTools(centers){
   _toolsCache = d.tools || [];
   document.getElementById('toolTotal').textContent = _toolsCache.length;
   let done = 0;
-  const html = _toolsCache.map(t => {
+  const pairs = _toolsCache.map(t => {
     const c = matchCenter(t, centers);
     if(c) done++;
-    return toolCardHtml(t, c);
-  }).join('');
-  grid.innerHTML = html || '<div class="hub-empty">工具清单为空</div>';
+    return [t, c];
+  });
+  // 已登记的排前面，纯工具排后面
+  pairs.sort((a, b) => (b[1] ? 1 : 0) - (a[1] ? 1 : 0));
+  grid.innerHTML = pairs.length
+    ? pairs.map(([t, c]) => toolCardHtml(t, c)).join('')
+    : '<div class="hub-empty">工具清单为空</div>';
   document.getElementById('chkDone').textContent = done;
   document.getElementById('chkTodo').textContent = _toolsCache.length - done;
 }
