@@ -863,3 +863,26 @@ cd /opt/ecojia/ziliao && git pull && sudo systemctl restart ecojia-ziliao
   /console 200、/admin 200、/api/admin/hub 200；
   火星身份证自动铸造 DID: did:mars:ecojia:f03b4554120a43c3e51966f8e4b5df32，创世区块 1。
 现有管理员：lzp5133084（起微）、18180309010（大哥），均为 admin。
+
+────────────────────────────────────────────
+【⑥ 下线 T23 虚拟家园·混元生图】（2026-10-26 完成）
+────────────────────────────────────────────
+背景：军哥判断该工具无价值要求下线。实测数据：混元官网本身不慢
+（服务器侧 0.2s / 本地 0.2s，HTTP 200），真实问题是 iframe 嵌套首屏
+约 9.3s + 必须微信扫码登录，体验断档。尊重决定执行下线。
+执行：
+1. ecosystem.json 删除 T23（31→30，hunyuan 计数 0）
+2. 服务器目录归档至 /opt/ecojia/_archive/hunyuan-realtime-image.*
+   （线上 404，可恢复，未物理删除）
+3. tools 索引页移除 18 号卡片（26→25）
+4. 智能体知识库自动随之更新
+事故记录：首次删索引页卡片时行级正则定位错位，误删 14 号卡片一段，
+  已立即从 .bak 备份恢复并用精确正则重做，校验卡片数 26→25 无误。
+重大发现（务必记住）：服务器有 root crontab 每 5 分钟对
+  /opt/ecojia/portal 执行 git fetch + reset --hard（gitee main），
+  直接改服务器 portal 文件会被覆盖还原！所有门户改动必须走
+  gitee 提交推送。本次已按此流程：对齐 gitee/main（远端已由另一路
+  开发迭代至 eco-bar 20261026b「AI小鸽子」版）→ 仅提交 T23 删除
+  （c9156cf）→ 手动触发同步 → 全面验证通过。
+遗留小瑕疵：远端 FALLBACK_REPLY 示例仍含「混元生图打不开」话术，
+  属另一路开发维护范围，未动。
