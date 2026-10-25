@@ -646,3 +646,211 @@ cd /opt/ecojia/ziliao && git pull && sudo systemctl restart ecojia-ziliao
   证书链信任校验结果 0（受信任）✅
   IP:端口 备用通道 8400/8300 仍正常 ✅
 ════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+【⑤ 生态统一栏 + 网站智能体「小禾」上线】（2026-10-25 完成）
+════════════════════════════════════════════════════════════
+
+【用户需求】
+1. 检查 ecojia.cn 工具清单的所有项目页面，统一加上「返回首页 ecojia.cn」
+   与右上角「登录账户」入口
+2. 为整个 ecojia.cn 做网站智能体：用户提问网站内容问题可解答
+   （如「视频转PPT在哪里」；如「虚拟家园·混元生图打不开」→ AI 先进入
+   检查再修复，再回答）
+3. 智能体支持悬浮球显示 与 浮窗对话 两种效果切换
+
+【排查结论（如实记录）】
+- 门户总站自身导航完整，无需处理
+- tools.ecojia.cn 下 26 个工具站点（共 60 个 HTML 页面）为独立部署，
+  无任何返回首页/登录入口 —— 需统一注入
+- 服务器最新工具清单 T01~T30（30个），比本地旧版多 8 个，
+  已用服务器版覆盖本地 ecosystem.json 完成同步
+- 「虚拟家园·混元生图」(tools.ecojia.cn/hunyuan-realtime-image) 实测
+  当前可打开（渲染出微信扫码登录页）；此前「打不开」主因：
+  首屏加载约 9.3s 偏慢 + 嵌套腾讯混元需扫码登录，用户误判为故障
+- 火山方舟现有 API Key 下无已创建推理接入点（全部404），
+  大模型暂不可直调 → 智能体采用「本地知识库引擎（100%可用）+
+  大模型增强（预留接口，管理后台配置接入点后自动启用）」双层架构
+
+【本次开发内容】
+1. 门户后端 app.py 新增：
+   - /api/agent/chat        智能体对话（知识库引擎优先→大模型兜底）
+   - /api/agent/history     对话记忆（GET回填30条 / DELETE清空）
+   - /api/agent/config      大模型配置（仅管理员，ark接入点）
+   - /api/tools/health      全部27个在线工具并发健康检查
+   - /api/tools/health/<no> 单工具检查（60秒缓存）
+   - CORS 放开 tools/ziliao 子域（携带登录态）
+   - SESSION_COOKIE_DOMAIN=.ecojia.cn 跨子域共享登录（环境变量控制）
+   - agent_chat / agent_config 两张新表
+2. 新增 agent_service.py：别名检索（含口语叫法如「视频转ppt」「混元」）、
+   意图识别（找工具/查故障/清单/作者/许愿/账号）、健康检查引擎、
+   故障自动写运维日志
+3. 新增 static/js/eco-bar.js（黑金2027风统一生态栏）：
+   - 工具页：左上「返回首页」胶囊 + 右上登录状态胶囊（已登录显昵称）
+   - 门户页：自动检测已有导航，只挂智能体不重复画
+   - 右下 AI 悬浮球（呼吸光圈）⇄ 浮窗对话（一点切换）
+   - 名词解析「?」图标（大白话）、首次引导气泡、快捷问题 chips
+   - 对话记忆：localStorage + 服务器双写；三端自适应（移动端底部抽屉）
+4. 混元外壳加固：加载超 15 秒显示自救提示（强制刷新/新窗口打开官网），
+   错误层加「新窗口打开混元官网」按钮
+5. 部署脚本 deploy_ecobar.py（已沉淀为生态部署工具）：
+   chown 修正 → 上传代码 → tools根放 eco-bar.js → 60 个页面幂等注入
+   （全部先备份 .bak_ecobar）→ systemd 加 cookie 域 → 管理员账户
+   （18180309010 已存在并确认 admin）→ 重启验证
+
+【线上验证结果（浏览器实测）】
+- 黑金QR工坊/霓虹轮廓/门户：三元素（返回首页+登录+悬浮球）全部就位
+- 跨子域登录态打通：工具页右上角直接显示「昵称·管理」
+- 问「视频转PPT在哪里」→ 正确回复 T25 工具 + 链接卡片
+- 问「混元生图打不开」→ 智能体实际访问检查后回复「正常可访问」
+  并附混元专属提示（需扫码登录/可直达官网）
+- 悬浮球 ⇄ 浮窗切换、记忆回填均正常
+- 修复记录：健康检查 UA 含中文导致 latin-1 编码报错（全量误判异常），
+  已修复为纯英文 UA，修复后 27/27 全部健康
+
+【预留接口】
+- /api/agent/chat、/api/tools/health 对外开放（其他程序可直接调用）
+- 大模型增强：管理后台 /api/agent/config 填入火山方舟接入点(ep-xxxx)
+  与模型名即启用，无需改代码
+- 接入点获取流程：火山方舟控制台 → 在线推理 → 创建推理接入点
+  → 选 doubao 系列模型 → 复制 ep 开头的接入点 ID
+
+【待办/建议】
+- 军哥有空时在火山方舟创建推理接入点，发我 ep-ID 即可激活大模型
+- tools 索引页与 ecosystem.json 均已同步为最新 30 工具
+
+────────────────────────────────────────────
+【⑤ 补丁轮】三项反馈修复（2026-10-25 完成）
+────────────────────────────────────────────
+反馈1「风格不统一」→ eco-bar.js 新增明暗自适应：检测页面背景亮度，
+  浅色页面（ai-hub/混元等约一半工具站）自动切换白金主题（白底金字），
+  深色页面保持黑金，同源高级感。
+反馈2「多页面重复返回首页和AI智能体」→ 根因：混元/luzhouren-clan/ai-hub
+  等9个页面存在同站iframe嵌套，外壳与内嵌页各注入了一套组件。
+  修复：iframe 内一律不渲染（window.self!==window.top 直接退出），
+  实测混元页已仅剩1个悬浮球+1个胶囊。
+反馈3「API不适配可用本地大模型」→ agent_service 大模型链路升级为
+  双通道：火山方舟(配置接入点后) → 本地 Ollama 自动兜底
+  （/api/chat 与 /v1/chat/completions 双协议兼容，6秒超时，
+  失败冷却300秒不拖慢问答）。后台 /api/agent/config 可配置
+  ollama_url / ollama_model / ark_api_key / ark_model 四项。
+  注：当前服务器 2核1.9G（可用1.1G），跑本地模型有OOM拖垮门户风险，
+  本次未安装 Ollama；升配至 4C4G 以上后执行
+  curl -fsSL https://ollama.com/install.sh | sh && ollama pull qwen2.5:0.5b
+  即可自动启用（服务已留好链路，无需改代码）。
+服务器权限坑记录：/opt/ecojia/portal 部分文件属 root（此前sudo部署残留），
+  sftp 上传报 EACCES → 先 sudo chown -R ubuntu:ubuntu /opt/ecojia 再传。
+验证：混元页组件唯一 PASS / ai-hub 白金主题 PASS / 黑金QR 保持黑金 PASS。
+
+===== 2026-10-25 16:40 灵犀互传屏幕共享修复 =====
+问题:手机微信内置浏览器打开灵犀互传,点屏幕共享报错 navigator.mediaDevices.getDisplayMedia is not a function。
+根因:微信内置浏览器/X5内核不支持getDisplayMedia(屏幕录制API),iOS Safari同样不支持,属浏览器限制非程序BUG。
+修复:app.js新增canScreenShare()能力检测+showScreenShareGuide()中文引导层(复制链接→引导到Chrome/系统浏览器打开);getScreen()与屏幕待命开关调用前预检。已备份并部署到 /opt/ecojia/tools/lan-share-hub/app.js。
+附加:同日将本机Clash Verge从global改为rule模式,国内直连、国外走代理。
+
+════════════════════════════════════════════════════════════
+===== 2026-10-25 18:20 火星平面 · 火星身份证 V1.6（区块链+去中心化） =====
+════════════════════════════════════════════════════════════
+【用户】
+把ecojia.cn火星平面这个页面优化，包括身份信息，历史，成绩，荣耀，难过，开心，纪念，重要事情，
+用区块链及去中心化思维形成火星身份证。
+
+【需求确认（四项决策）】
+1. 使用模式：多用户各自独立（与现有登录体系打通，每人独立身份证/历程链，互不可见）
+2. 交付形态：三端响应式网页（电脑/手机/平板自适应，2027 星霓暖赛博风）
+3. 隐私范围：默认私密，可选公开（每条记录可设「仅自己可见」或「公开见证」）
+4. 部署方式：完成后直接部署到 ecojia.cn 并在线验证
+
+【设计思路（去中心化思维，非公链）】
+- DID：did:mars:ecojia:<32位hex>，首次进入自动铸造，终身不变
+- 内容指纹：payload_hash = SHA-256(规范化JSON，键排序+紧凑格式)
+- 区块哈希：block_hash = SHA-256(block_no|prev_hash|action|record_id|payload_hash|created_at)
+- 区块动作：genesis 创世 / create 新增 / update 修改 / delete 删除 / identity 身份
+- 软删除：删除只留痕不物理清除，旧版本区块永久保留
+- 一键验真：逐块重算 + 当前记录内容与链上指纹比对，能定位到具体哪条被改
+- 数据自持：一键导出「火星护照」JSON（schema ecojia.marsid.passport/1.0），可迁移、可离线保存
+- 公开页：/hx/card/<did>，只展示公开见证记录；私密记录永不外泄；等级按全量计算
+
+【七类历程】
+历史 / 成绩 / 荣耀 / 难过 / 开心 / 纪念 / 重要 —— 各配专属颜色与图标，
+羽毛全景可视化：每根绒毛=一段历程，颜色对应分类。
+
+【身份等级】
+星尘旅人(0) → 赤砂探索者(3) → 环形山行者(7) → 极地守望者(15) → 永恒火星人(30)
+
+【后端改动（app.py V1.5 → V1.6）】
+- 版本 V1.6；引入 hashlib / Response
+- 新增常量 HX_CATEGORIES / HX_CATS / HX_VISIBILITY / HX_LEVELS / PUBLIC_BASE / HX_GENESIS_HASH
+- 新增函数 hx_sha / hx_json / hx_record_payload / hx_identity_payload / hx_new_did /
+  hx_coordinate / hx_level / hx_append_block / hx_identity_for / hx_records_for /
+  hx_stats / hx_verify / hx_demo_chain
+- init_db 新增三表：
+  hx_identity(user_id PK, did UNIQUE, mars_name, bio, avatar_seed, coordinate, public_card, ...)
+  hx_records(id PK, user_id, category, happened_on, title, summary, detail, mood, place,
+             visibility, deleted, payload_hash, block_no, ...)
+  hx_blocks(id PK, user_id, block_no, action, record_id, payload, payload_hash,
+            prev_hash, block_hash, created_at, UNIQUE(user_id, block_no))
+- 路由：
+  GET  /huoxing                     页面
+  GET  /api/huoxing/overview        身份+记录+统计+链状态+区块+分享地址（未登录返回示例）
+  GET  /api/huoxing/records         兼容旧接口
+  POST /api/huoxing/records         新增（+区块）
+  PUT  /api/huoxing/records/<id>    修改（+区块）
+  DELETE /api/huoxing/records/<id>  软删除（+删除区块）
+  PUT  /api/huoxing/identity        改火星名/签名/头像种子/公开开关（+身份区块）
+  GET  /api/huoxing/verify          全链验真
+  GET  /api/huoxing/export          下载 JSON 护照
+  GET  /hx/card/<did>               公开只读身份证页（未公开/不存在 404）
+- 校验：标题1-60、摘要160、详情2000、心情16、地点40、时间支持 2008 / 2008-09 / 2026-10-25
+
+【前端改动】
+- templates/huoxing.html 完全重写（37KB）：身份证卡（全息光泽+网格+头像图案+指纹条）、
+  数据主权面板、七类统计墙、搜索/排序/新增工具栏、SVG 羽毛全景、详情/清单、
+  使用说明四步、名词大白话「?」提示、新增/编辑历程弹窗、身份编辑弹窗
+- templates/huoxing_card.html 新建：SSR 公开身份证页（头像/姓名/签名/等级/坐标/DID/统计/指纹、
+  公开验证面板、公开见证网格、隐私说明、404 空态）
+- static/css/style.css 追加约 600 行 .hx-* / .hxb-* 样式，含三端响应式（1080/720/430px）
+
+【部署】
+- 关键发现：服务器 app.py 为 V1.5，含「统一后台中枢」(/console、/api/admin/hub 等)，
+  本地 V1.6 基线缺该模块 → 部署前将中枢代码段合并进本地 app.py，避免功能回退
+- 关键发现：服务器 style.css 含 tn-* 工具导航样式，本地基线无 →
+  采用「服务器版 style.css + 本地 hx 段」合并上传，避免样式丢失
+- 上传：app.py / templates/huoxing.html / templates/huoxing_card.html / static/css/style.css
+  （原文件均备份为 *.bak.hx）
+- 重启 ecojia-portal，服务 active
+
+【验证结果】
+本地 Playwright（8401）E-H 全流程 PASS：
+  访客 8 分类 / 10 条 / 荣耀筛选 1 条 / 搜索命中 1 条
+  登录 → 新增（公开见证 radio 改点 label 可见区域，解决 span 遮挡 issue）
+  → 修改 → 删除（留痕 toast）→ 编辑身份 → 一键验真（8 区块全部吻合）
+  → 复制公开链接 → 手机端 390×844 scrollWidth=innerWidth（无横向溢出）
+  → 公开页 200，仅公开记录，私密 0 泄漏；控制台无 JS 报错
+线上（https://ecojia.cn）验证 PASS：
+  /huoxing 200；访客示例 10 条；管理员 lzp5133084 登录 → 自动铸造 DID
+  did:mars:ecojia:0405cd109c6f202d500746b18cf48507 + 创世区块
+  验真 ok=True / 链高 1 / issues=[]；导出护照 200（attachment，1709B）
+  公开身份证页 200；不存在 DID 404
+  临时账号全 CRUD：新增公开+私密各 1 条 → 修改 → 验真 → 公开页仅公开可见
+  → 删除 → 验真仍通过；验收后已清理临时账号（数据与用户行一并删除）
+  /console 302（未登录）、/api/admin/hub 正常（中枢功能未回退）
+
+【遗留提示】
+- 管理员 18180309010 的密码不是 Lzp520520520.（用 lzp5133084 / Lzp520520520. 可正常登录，
+  两者均 role=admin）；如需统一为 18180309010 / Lzp520520520.，需另行重置。
+- 本地 e:\Chat GPT6\数字生态家园\ecojia.db 为测试库，含测试账号 hxtest01，不影响线上。
+- 线上 /opt/ecojia/portal/ecojia.db 已自动建好 hx_identity / hx_records / hx_blocks 三表。
+- 截图：e:\Chat GPT6\screenshots\ hx_online_guest.png / hx_online_login.png / hx_online_mobile.png
+
+────────────────────────────────────────────
+【部署方式修正 · 重要】
+本次部署后发现：线上 /opt/ecojia/portal 存在 root 定时任务（每5分钟）：
+  cd /opt/ecojia/portal && git fetch <gitee> main && git reset -q --hard FETCH_HEAD
+即服务器目录会被强制重置为 Gitee 仓库 ren-junxue/ecojia 的 main 分支。
+=> 直接在服务器改文件会在 5 分钟内被覆盖。
+=> 正确流程：改代码 → 提交推送 Gitee main → 服务器 git reset --hard 同步 → 重启服务。
+本次已按此流程执行：提交 f332300，服务器同步后 app.py 67082B / style.css 71690B /
+  huoxing.html 37389B / huoxing_card.html 7873B，服务 active，/huoxing 200。
+另修复：.hx-loading 的 display:flex 覆盖了 [hidden] 默认隐藏，
+  导致加载提示「正在读取火星档案…」一直残留 → 增加 .hx-loading[hidden]{display:none}。
