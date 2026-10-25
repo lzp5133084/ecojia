@@ -922,25 +922,6 @@
       "note": "星霓暖赛博风与门户一致；数据为 2026-10-21 全量扫描快照；GitHub Pages 镜像可备用。"
     },
     {
-      "no": "T23",
-      "name": "虚拟家园",
-      "en": "",
-      "repo": "hunyuan-realtime-image",
-      "type": "网页工具（单页HTML）",
-      "entry": "index.html",
-      "run": "浏览器打开即用",
-      "port": null,
-      "url": "https://tools.ecojia.cn/hunyuan-realtime-image/",
-      "size_kb": 106,
-      "updated": "2026-10-24",
-      "status": "已上线·HTTPS",
-      "desc": "Hunyuan Realtime Image - 2027 Tech UI Window",
-      "steps": [
-        "打开链接即可使用"
-      ],
-      "note": "部署助手 V1.0 自动登记"
-    },
-    {
       "no": "T24",
       "name": "修复网络",
       "en": "Network Fix",
