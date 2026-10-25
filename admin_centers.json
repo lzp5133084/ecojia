@@ -75,8 +75,8 @@
     "admin_url": "https://tools.ecojia.cn/jungedongbao-website/",
     "probe": "",
     "metrics": [],
-    "auth": "页面内管理面板",
-    "note": "打开站点后点右上角「⚙️ 管理」进入，数据存浏览器 localStorage"
+    "auth": "无密码 · 打开页面即可编辑",
+    "note": "管理面板无口令保护，任何人打开即可改内容；建议加登录锁"
   },
   {
     "id": "renjunxue-website",
@@ -99,8 +99,8 @@
     "admin_url": "https://tools.ecojia.cn/renjunxue-cangku/",
     "probe": "",
     "metrics": [],
-    "auth": "统一账号 lzp5133084",
-    "note": "打开站点后切换「管理后台」标签页"
+    "auth": "统一账号 lzp5133084（总管理员）",
+    "note": "分支管理员仍为独立子账号（hejiang），由总管理员在后台维护"
   },
   {
     "id": "luzhouren-clan",
@@ -112,7 +112,7 @@
     "probe": "",
     "metrics": [],
     "auth": "统一账号 lzp5133084",
-    "note": "纯前端静态后台，数据存浏览器本地"
+    "note": "已移除验证码，登录后直达 admin.html"
   },
   {
     "id": "renjunxue-gitee",
@@ -123,7 +123,7 @@
     "admin_url": "https://tools.ecojia.cn/renjunxue-gitee-io/admin.html",
     "probe": "",
     "metrics": [],
-    "auth": "站点独立口令",
-    "note": "纯前端静态后台"
+    "auth": "无鉴权 · 页面可直接打开",
+    "note": "运营后台无登录校验，链接公开即可访问；建议加统一账号锁"
   }
 ]
