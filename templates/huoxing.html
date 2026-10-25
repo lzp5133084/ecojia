@@ -1,127 +1,881 @@
 {% extends "base.html" %}
 {% from "icon_macro.html" import icon %}
-{% block title %}火星平面 · 历程羽毛{% endblock %}
+{% block title %}火星平面 · 火星身份证{% endblock %}
 {% block content %}
 
-<section class="page-head">
-  <h1>{{ icon("feather") }}火星平面</h1>
-  <p><b>huoxingPM</b> · 以羽毛为形象的历程记录器 —— 每一根绒毛，都是一段历程。<br>
-  记录越多，羽毛越丰盈，像一张会生长、只属于你的身份证。</p>
+<section class="page-head hx-head">
+  <div class="hx-kicker"><span class="hx-kicker-dot"></span>火星平面 · 身份链</div>
+  <h1>{{ icon("feather") }}火星身份证</h1>
+  <p>一根羽毛，一段历程。身份由你自己铸造，故事由你自己书写，写下的每一个字都会被链式存证。<br>
+  历史、成绩、荣耀、难过、开心、纪念、重要事情 —— 都值得被认真收藏。</p>
+  <div class="hx-head-meta">
+    <span>版本 {{ footer.version }}</span><i>·</i>
+    <span>程序大小 {{ footer.size }}</span><i>·</i>
+    <span>最后保存 {{ footer.saved }}</span><i>·</i>
+    <span>作者：军哥懂保</span><i>·</i>
+    <span>微信：xunijiayuan</span>
+  </div>
 </section>
 
-<div class="fx-banner">
-  <span class="fx-tag">{{ icon("flask") }} 原型演示</span>
-  当前为示例数据。正式版将由您自己录入，支持增删查改与长期存档。
-  <a href="/api/huoxing/records" target="_blank">查看数据接口 {{ icon("external") }}</a>
+{% if not user %}
+<div class="hx-guestbar">
+  <span class="hx-guest-tag">访客预览</span>
+  <span>你正在查看一张示例火星身份证。登录后即可铸造自己的身份证，记录只属于你的历程。</span>
+  <a class="btn btn-gold btn-sm" href="/login">登录 / 注册</a>
+</div>
+{% endif %}
+
+<div id="hxLoading" class="hx-loading"><span class="hx-loading-dot"></span>正在读取火星档案…</div>
+
+<div id="hxApp" class="hx-app" hidden>
+
+  <!-- ══════════ 身份证 + 数据主权 ══════════ -->
+  <section class="hx-top">
+    <div class="hx-idcard" id="hxIdCard"></div>
+
+    <aside class="hx-own">
+      <div class="hx-own-head">
+        <h3>{{ icon("shieldlock") }} 数据主权</h3>
+        <button class="hx-q" type="button" data-tip="你的数据归你：可随时导出成 JSON 护照、离线保存、迁移到别处；平台只是见证人，不是数据的主人。">?</button>
+      </div>
+      <div id="hxChainBox" class="hx-chain-box"></div>
+      <div class="hx-own-actions">
+        <button class="btn btn-gold btn-sm" id="hxAdd1" type="button">{{ icon("pluscircle") }} 新增历程</button>
+        <button class="btn btn-ghost btn-sm" id="hxEditIdentity" type="button">{{ icon("sliders") }} 编辑身份</button>
+        <button class="btn btn-ghost btn-sm" id="hxVerify" type="button">{{ icon("shieldlock") }} 一键验真</button>
+        <button class="btn btn-ghost btn-sm" id="hxExport" type="button">{{ icon("save") }} 导出护照</button>
+        <button class="btn btn-ghost btn-sm" id="hxShare" type="button">{{ icon("link") }} 复制公开链接</button>
+      </div>
+      <div class="hx-share-row">
+        <span class="hx-share-label">公开身份证</span>
+        <code id="hxShareUrl" class="hx-share-url">—</code>
+      </div>
+      <div class="hx-own-note">
+        <span class="hx-own-note-dot"></span>
+        <span>链式存证只记录「内容指纹」，不保存密码；私密历程不会出现在公开页。</span>
+      </div>
+      <div class="hx-block-title">最近存证区块</div>
+      <div id="hxBlockList" class="hx-blocklist"></div>
+    </aside>
+  </section>
+
+  <!-- ══════════ 七类历程统计 ══════════ -->
+  <section class="hx-cats" id="hxCats" aria-label="历程分类"></section>
+
+  <!-- ══════════ 搜索 / 排序 / 新增 ══════════ -->
+  <section class="hx-toolbar">
+    <div class="hx-search">
+      {{ icon("search") }}
+      <input id="hxSearch" type="search" placeholder="搜索标题、摘要、地点…" autocomplete="off">
+    </div>
+    <div class="hx-toolbar-right">
+      <select id="hxSort" class="hx-select" aria-label="排序方式">
+        <option value="asc">时间正序</option>
+        <option value="desc">时间倒序</option>
+        <option value="new">最近录入</option>
+      </select>
+      <button class="btn btn-gold btn-sm" id="hxAdd2" type="button">{{ icon("pluscircle") }} 新增历程</button>
+    </div>
+  </section>
+
+  <!-- ══════════ 羽毛全景 + 详情清单 ══════════ -->
+  <section class="hx-main">
+    <div class="hx-stage">
+      <div class="hx-stage-head">
+        <div class="hx-stage-title">{{ icon("feather") }} 羽毛全景 <em id="hxFilterLabel">全部历程</em></div>
+        <button class="hx-q" type="button" data-tip="羽毛的每一根绒毛代表一段历程，颜色对应分类；记录越多，羽毛越丰盈。点击绒毛即可查看详情。">?</button>
+      </div>
+      <div class="hx-glow" aria-hidden="true"></div>
+      <svg id="feather" viewBox="0 0 560 720" role="img" aria-label="历程羽毛"></svg>
+      <div class="hx-hint">{{ icon("bulb") }} 点击任意一根绒毛，查看那段历程</div>
+    </div>
+
+    <aside class="hx-side">
+      <div id="hxDetail" class="hx-detail"></div>
+      <div class="hx-listhead">
+        <span>历程清单</span>
+        <em id="hxCount">0 条</em>
+      </div>
+      <div id="hxList" class="hx-list"></div>
+    </aside>
+  </section>
+
+  <!-- ══════════ 使用说明 + 名词大白话 ══════════ -->
+  <section class="hx-guide">
+    <div class="hx-guide-head">
+      <h3>{{ icon("bulb") }} 使用说明与操作指引</h3>
+      <span>四步上手，越用越完整</span>
+    </div>
+    <div class="hx-steps">
+      <div class="hx-step">
+        <b>01</b>
+        <h4>铸造身份</h4>
+        <p>首次进入自动生成唯一身份标识；点「编辑身份」可改火星名、签名和头像。</p>
+      </div>
+      <div class="hx-step">
+        <b>02</b>
+        <h4>记录七类历程</h4>
+        <p>历史、成绩、荣耀、难过、开心、纪念、重要。点「新增历程」填写，时间可精确到年月日。</p>
+      </div>
+      <div class="hx-step">
+        <b>03</b>
+        <h4>自动链式存证</h4>
+        <p>每次新增或修改都会生成内容指纹并接上一条，像把日记一页页装订起来。</p>
+      </div>
+      <div class="hx-step">
+        <b>04</b>
+        <h4>导出与分享</h4>
+        <p>「导出护照」得到完整 JSON；「公开链接」只展示你设为公开见证的历程。</p>
+      </div>
+    </div>
+    <div class="hx-terms">
+      <div class="hx-term">
+        <span>火星身份证</span>
+        <button class="hx-q" type="button" data-tip="一张只属于你的数字身份卡：有唯一编号、火星坐标、身份等级和全部历程，记录越多越丰盈。">?</button>
+        <p>你的数字身份卡，随记录成长。</p>
+      </div>
+      <div class="hx-term">
+        <span>身份标识（DID）</span>
+        <button class="hx-q" type="button" data-tip="去中心化身份标识，简单说就是你在火星上的唯一身份证号。一次生成、终身不变，由你自己持有。">?</button>
+        <p>终身不变的唯一身份编号。</p>
+      </div>
+      <div class="hx-term">
+        <span>链式存证</span>
+        <button class="hx-q" type="button" data-tip="每写一条记录就生成一枚指纹，并把上一条的指纹一起打包。改动任何一页，后面的指纹都会对不上，所以能证明内容没被篡改。">?</button>
+        <p>一条接一条，改一个字就露馅。</p>
+      </div>
+      <div class="hx-term">
+        <span>哈希指纹</span>
+        <button class="hx-q" type="button" data-tip="把内容压成一串固定长度的字符。内容变一个字，指纹就完全不同，用来证明「没被改过」。">?</button>
+        <p>内容的数字指纹，一改就变。</p>
+      </div>
+      <div class="hx-term">
+        <span>去中心化</span>
+        <button class="hx-q" type="button" data-tip="数据不锁在平台手里：你能随时导出、离线保存、迁移到别处。平台只做见证，不做主人。">?</button>
+        <p>数据自持，随时带走。</p>
+      </div>
+      <div class="hx-term">
+        <span>公开见证</span>
+        <button class="hx-q" type="button" data-tip="只把某几条历程设为公开，它们才会出现在可分享的公开身份证页；私密历程永远不公开。">?</button>
+        <p>想公开哪条，由你决定。</p>
+      </div>
+    </div>
+  </section>
 </div>
 
-<div class="fx-layout">
-  <div class="fx-stage">
-    <div class="fx-glow" aria-hidden="true"></div>
-    <svg id="feather" viewBox="0 0 560 700" role="img" aria-label="历程羽毛"></svg>
-    <div class="fx-hint">{{ icon("bulb") }} 点击任意一根绒毛，查看那段历程</div>
-  </div>
-
-  <aside class="fx-side">
-    <div id="fx-detail" class="fx-detail">
-      <div class="fx-empty">选择左侧任意一根绒毛<br>即可查看对应的历程记录</div>
+<!-- ══════════ 历程编辑弹窗 ══════════ -->
+<div class="hx-modal" id="hxModal" hidden>
+  <div class="hx-modal-card">
+    <div class="hx-modal-head">
+      <h3 id="hxModalTitle">新增历程</h3>
+      <button class="hx-modal-close" type="button" data-close="hxModal" aria-label="关闭">✕</button>
     </div>
-    <div class="fx-listhead">全部记录 · {{ records|length }} 条</div>
-    <div id="fx-list" class="fx-list"></div>
-  </aside>
+    <form id="hxForm" class="hx-form">
+      <input type="hidden" id="fId" value="">
+      <div class="hx-field hx-field-full">
+        <label>历程分类 <button class="hx-q" type="button" data-tip="选一个最贴近的分类即可，之后随时可以修改。">?</button></label>
+        <div class="hx-pick" id="fCatPick"></div>
+      </div>
+      <div class="hx-field">
+        <label for="fDate">发生时间 <span class="hx-required">*</span></label>
+        <input id="fDate" type="text" maxlength="10" placeholder="例如 2014-03" required>
+        <div class="hx-field-note">支持 2008 / 2008-09 / 2026-10-25 三种写法</div>
+      </div>
+      <div class="hx-field">
+        <label for="fMood">当时心情</label>
+        <div class="hx-pick hx-pick-mini" id="fMoodPick"></div>
+      </div>
+      <div class="hx-field hx-field-full">
+        <label for="fTitle">标题 <span class="hx-required">*</span></label>
+        <input id="fTitle" type="text" maxlength="60" placeholder="给这段历程起个名字" required>
+      </div>
+      <div class="hx-field hx-field-full">
+        <label for="fSummary">一句话摘要</label>
+        <input id="fSummary" type="text" maxlength="160" placeholder="用一句话记住它">
+      </div>
+      <div class="hx-field hx-field-full">
+        <label for="fDetail">完整故事</label>
+        <textarea id="fDetail" rows="5" maxlength="2000" placeholder="发生了什么？当时在想什么？多年后再看，想对那时的自己说什么？"></textarea>
+      </div>
+      <div class="hx-field">
+        <label for="fPlace">地点</label>
+        <input id="fPlace" type="text" maxlength="40" placeholder="例如：泸州 · 长江边">
+      </div>
+      <div class="hx-field">
+        <label>可见范围</label>
+        <div class="hx-vis">
+          <label class="hx-vis-item"><input type="radio" name="fVis" value="private" checked><span>{{ icon("lock") }} 仅自己可见</span></label>
+          <label class="hx-vis-item"><input type="radio" name="fVis" value="public"><span>{{ icon("eye") }} 公开见证</span></label>
+        </div>
+        <div class="hx-field-note">公开后才会出现在可分享的公开身份证页</div>
+      </div>
+      <div class="hx-form-foot">
+        <span class="hx-form-tip">保存时会自动生成内容指纹并写入链上</span>
+        <div class="hx-form-btns">
+          <button class="btn btn-ghost btn-sm" type="button" data-close="hxModal">取消</button>
+          <button class="btn btn-gold btn-sm" type="submit" id="hxFormSave">保存并存证</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════ 身份编辑弹窗 ══════════ -->
+<div class="hx-modal" id="hxIdModal" hidden>
+  <div class="hx-modal-card hx-modal-sm">
+    <div class="hx-modal-head">
+      <h3>编辑火星身份</h3>
+      <button class="hx-modal-close" type="button" data-close="hxIdModal" aria-label="关闭">✕</button>
+    </div>
+    <form id="hxIdForm" class="hx-form">
+      <div class="hx-id-edit-avatar">
+        <div id="hxAvatarPreview" class="hx-avatar hx-avatar-sm"></div>
+        <button class="btn btn-ghost btn-sm" type="button" id="hxRegenAvatar">{{ icon("sparkles") }} 换一个图案</button>
+      </div>
+      <div class="hx-field hx-field-full">
+        <label for="idName">火星名 <span class="hx-required">*</span></label>
+        <input id="idName" type="text" maxlength="20" placeholder="你的火星名字" required>
+        <div class="hx-field-note">最多 20 个字，会显示在身份证正面</div>
+      </div>
+      <div class="hx-field hx-field-full">
+        <label for="idBio">一句话签名</label>
+        <input id="idBio" type="text" maxlength="120" placeholder="想让别人记住你的一句话">
+      </div>
+      <div class="hx-field hx-field-full">
+        <label class="hx-toggle-line">
+          <input type="checkbox" id="idPublic">
+          <span>开启公开身份证页</span>
+          <button class="hx-q" type="button" data-tip="开启后，别人可以通过公开链接看到你的火星名、身份等级，以及你设为「公开见证」的历程。">?</button>
+        </label>
+        <div class="hx-field-note">关闭后公开链接立即失效，私密历程始终不公开</div>
+      </div>
+      <div class="hx-form-foot">
+        <span class="hx-form-tip">身份资料的变更也会生成一个存证区块</span>
+        <div class="hx-form-btns">
+          <button class="btn btn-ghost btn-sm" type="button" data-close="hxIdModal">取消</button>
+          <button class="btn btn-gold btn-sm" type="submit">保存身份</button>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
 
 {% endblock %}
 
 {% block scripts %}
 <script>
-const RECORDS = {{ records | tojson }};
-const TYPE_COLOR = {"求学":"#7ee2a8","事业":"#f0c75e","家庭":"#ff9ec4",
-                    "成长":"#8a97ff","荣誉":"#ffd76b","新生":"#5ce1e6"};
-const NS = "http://www.w3.org/2000/svg";
-const svg = document.getElementById("feather");
-const P0 = [280, 650], C = [232, 340], P2 = [288, 56];
+(function(){
+  const IS_LOGIN = {{ 'true' if user else 'false' }};
+  const NS = "http://www.w3.org/2000/svg";
+  const MOODS = ["开心","幸福","骄傲","感恩","平静","怀念","难过","坚定"];
+  const ACTION_LABEL = {genesis:"创世", create:"新增", update:"修改", delete:"删除", identity:"身份"};
+  let DATA = null;
+  let filterCat = "全部";
+  let keyword = "";
+  let sortMode = "asc";
+  let selectedId = null;
 
-function qpt(t){
-  const m = 1 - t;
-  return [ m*m*P0[0] + 2*m*t*C[0] + t*t*P2[0],
-           m*m*P0[1] + 2*m*t*C[1] + t*t*P2[1] ];
-}
-function el(tag, attrs){
-  const e = document.createElementNS(NS, tag);
-  for(const k in attrs) e.setAttribute(k, attrs[k]);
-  return e;
-}
-function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  const $ = (id)=>document.getElementById(id);
+  const esc = (s)=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+                     .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
-/* 羽轴 */
-svg.appendChild(el("path", {
-  d:`M${P0[0]},${P0[1]} Q${C[0]},${C[1]} ${P2[0]},${P2[1]}`,
-  fill:"none", class:"fx-rachis"
-}));
+  function svgEl(tag, attrs){
+    const e = document.createElementNS(NS, tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
 
-/* 生成绒毛：每根绒毛 = 一条记录（左右各一根） */
-RECORDS.forEach((r, i)=>{
-  const n = RECORDS.length;
-  const t = 0.11 + 0.78 * ((i + 1) / (n + 1));
-  const [ax, ay] = qpt(t);
-  const len = 40 + 64 * (1 - Math.abs(2*t - 1));
-  const col = TYPE_COLOR[r.type] || "#f0c75e";
+  function catMeta(key){
+    return (DATA.categories.find(c=>c.key===key) || {color:"#f472b6", desc:""});
+  }
 
-  [[-1, -0.86], [1, -0.86]].forEach(([sx, sy], k)=>{
-    const ex = ax + sx * len, ey = ay + sy * len;
-    const cx = ax + sx * len * 0.52, cy = ay - 8;
-    const p = el("path", {
-      d:`M${ax},${ay} Q${cx},${cy} ${ex},${ey}`,
-      fill:"none", stroke:col, class:"fx-barb", pathLength:"1"
+  /* ---------- 头像：由身份种子生成的对称图案 ---------- */
+  function hashSeed(str){
+    let h = 2166136261;
+    for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function identicon(seed){
+    const h = hashSeed(String(seed || "mars"));
+    const palette = ["#f472b6","#c084fc","#5ce1e6","#ffd76b","#7ee2a8","#ff9ec4","#8a97ff"];
+    const main = palette[h % palette.length];
+    const sub = palette[(h >> 5) % palette.length];
+    let bits = h.toString(2).padStart(32,"0") + hashSeed(seed+"x").toString(2).padStart(32,"0");
+    const cells = 6, gap = 2, size = 100;
+    const s = (size - gap*(cells-1)) / cells;
+    let rects = "";
+    for(let y=0;y<cells;y++){
+      for(let x=0;x<cells/2;x++){
+        const i = y*(cells/2)+x;
+        if(bits[i] === "1"){
+          const color = ((x+y)%3===0) ? sub : main;
+          const xx = x*(s+gap);
+          const mirror = (cells-1-x)*(s+gap);
+          rects += `<rect x="${xx}" y="${y*(s+gap)}" width="${s}" height="${s}" rx="2" fill="${color}"/>`;
+          if(x !== cells-1-x) rects += `<rect x="${mirror}" y="${y*(s+gap)}" width="${s}" height="${s}" rx="2" fill="${color}"/>`;
+        }
+      }
+    }
+    return `<svg viewBox="0 0 ${size} ${size}" xmlns="${NS}"><rect width="${size}" height="${size}" fill="#170e26"/>${rects}</svg>`;
+  }
+
+  /* ---------- 顶部身份证 ---------- */
+  function renderIdCard(){
+    const idt = DATA.identity;
+    const s = DATA.stats;
+    const demo = DATA.demo;
+    const fp = fingerprintBars(idt.did);
+    const levelTip = s.next_level
+      ? `再记录 ${s.next_need} 条，升级为「${s.next_level}」`
+      : "已达到最高身份等级";
+    $("hxIdCard").innerHTML = `
+      <div class="hx-id-top">
+        <span class="hx-id-brand">火星公民身份证</span>
+        <span class="hx-id-chip">${demo ? "示例身份" : "链上存证"}</span>
+      </div>
+      <div class="hx-id-main">
+        <div class="hx-avatar">${identicon(idt.avatar_seed || idt.did)}</div>
+        <div class="hx-id-info">
+          <h2 class="hx-id-name">${esc(idt.mars_name) || "未命名火星人"}</h2>
+          <p class="hx-id-bio">${esc(idt.bio) || "还没有写下签名"}</p>
+          <div class="hx-id-tags">
+            <span class="hx-tag-level">${esc(s.level)}</span>
+            <span class="hx-tag-coord">${esc(idt.coordinate)}</span>
+          </div>
+        </div>
+      </div>
+      <div class="hx-levelbar">
+        <div class="hx-levelbar-fill" style="width:${levelPercent(s)}%"></div>
+        <span>${levelTip}</span>
+      </div>
+      <div class="hx-did-row">
+        <span class="hx-did-label">身份标识</span>
+        <code>${esc(idt.did)}</code>
+        <button class="hx-mini-btn" type="button" onclick="window.hxCopy('${esc(idt.did)}')">复制</button>
+      </div>
+      <div class="hx-id-stats">
+        <div class="hx-id-stat"><b>${s.total}</b><span>段历程</span></div>
+        <div class="hx-id-stat"><b>${DATA.chain.height}</b><span>链上区块</span></div>
+        <div class="hx-id-stat"><b>${s.public}</b><span>公开见证</span></div>
+        <div class="hx-id-stat"><b>${idt.days || 0}</b><span>在地球日</span></div>
+      </div>
+      <div class="hx-id-foot">
+        <div class="hx-fingerprint" aria-hidden="true">${fp}</div>
+        <div class="hx-id-foot-text">
+          <span>签发于 ${esc(String(idt.created_at||"").slice(0,10))}</span>
+          <span>ecojia.cn · 军哥懂保</span>
+        </div>
+      </div>`;
+  }
+
+  function levelPercent(s){
+    if(!s.next_level) return 100;
+    const bands = [0,3,7,15,30];
+    const idx = bands.findIndex((v,i)=> i<bands.length-1 && s.total>=v && s.total<bands[i+1]);
+    if(idx<0) return 100;
+    const start = bands[idx], end = bands[idx+1];
+    return Math.max(6, Math.min(98, Math.round((s.total-start)/(end-start)*100)));
+  }
+
+  function fingerprintBars(seed){
+    let h = "";
+    const s = String(seed||"");
+    for(let i=0;i<24;i++){
+      const n = hashSeed(s+"|"+i) % 256;
+      h += `<i style="height:${6 + (n%22)}px;opacity:${0.45 + (n%55)/100}"></i>`;
+    }
+    return h;
+  }
+
+  /* ---------- 数据主权 / 链状态 ---------- */
+  function renderOwn(){
+    const c = DATA.chain || {};
+    const demo = DATA.demo;
+    let statusCls = "ok", statusTxt = "链上存证正常";
+    if(demo){ statusCls = "demo"; statusTxt = "示例链（登录后写入真实的链）"; }
+    if(!demo && c && c.ok === false){ statusCls = "bad"; statusTxt = "检测到异常，建议立即导出备份"; }
+
+    $("hxChainBox").innerHTML = `
+      <div class="hx-chain-line">
+        <span class="hx-chain-dot ${statusCls}"></span>
+        <b>${statusTxt}</b>
+        <em>链高 ${c.height || 0}</em>
+      </div>
+      <div class="hx-chain-head">
+        <span>最新区块指纹</span>
+        <code>${esc((c.head||"").slice(0,24)) || "尚未生成"}${c.head ? "…" : ""}</code>
+      </div>
+      ${c.checked ? `<div class="hx-chain-check">已逐块核验 ${c.checked} 个区块${c.ok===false?"，发现问题："+esc((c.issues||[]).join("；")):""}</div>` : ""}`;
+
+    const url = DATA.share_url || "";
+    $("hxShareUrl").textContent = url || (DATA.identity.public_card ? "生成中…" : "未开启公开见证");
+
+    const blocks = DATA.blocks || [];
+    if(!blocks.length){
+      $("hxBlockList").innerHTML = `<div class="hx-block-empty">${demo ? "示例模式暂不展示真实区块" : "还没有区块，写下第一段历程吧"}</div>`;
+    } else {
+      $("hxBlockList").innerHTML = blocks.map(b=>`
+        <div class="hx-block-item">
+          <span class="hx-block-no">#${b.block_no}</span>
+          <span class="hx-block-act">${ACTION_LABEL[b.action] || esc(b.action)}</span>
+          <code>${esc(String(b.block_hash).slice(0,10))}…</code>
+          <em>${esc(String(b.created_at).slice(5,16))}</em>
+        </div>`).join("");
+    }
+
+    $("hxShare").disabled = false;
+    $("hxExport").disabled = false;
+  }
+
+  /* ---------- 分类统计 ---------- */
+  function renderCats(){
+    const box = $("hxCats");
+    const total = DATA.stats.total;
+    let html = `
+      <button class="hx-cat hx-cat-all ${filterCat==="全部"?"active":""}" type="button" data-cat="全部" style="--c:#f9a8d4">
+        <span class="hx-cat-top"><span class="hx-cat-name">全部历程</span><b>${total}</b></span>
+        <span class="hx-cat-desc">七个分类都在这里</span>
+      </button>`;
+    html += DATA.categories.map(c=>{
+      const n = DATA.stats.by_category[c.key] || 0;
+      return `<button class="hx-cat ${filterCat===c.key?"active":""}" type="button" data-cat="${esc(c.key)}" style="--c:${c.color}">
+        <span class="hx-cat-top"><span class="hx-cat-dot"></span><span class="hx-cat-name">${esc(c.key)}</span><b>${n}</b></span>
+        <span class="hx-cat-desc">${esc(c.desc)}</span>
+      </button>`;
+    }).join("");
+    box.innerHTML = html;
+    box.querySelectorAll(".hx-cat").forEach(el=>{
+      el.addEventListener("click", ()=>{
+        filterCat = el.dataset.cat;
+        renderAll();
+      });
     });
-    p.style.animationDelay = (i * 120 + k * 60) + "ms";
-    p.dataset.i = i;
-    p.addEventListener("click", ()=>select(i));
-    svg.appendChild(p);
+  }
+
+  /* ---------- 过滤后的记录 ---------- */
+  function visibleRecords(){
+    let arr = DATA.records.slice();
+    if(filterCat !== "全部") arr = arr.filter(r=>r.category===filterCat);
+    const kw = keyword.trim().toLowerCase();
+    if(kw) arr = arr.filter(r=>`${r.title} ${r.summary} ${r.detail} ${r.place} ${r.mood}`.toLowerCase().includes(kw));
+    if(sortMode==="desc") arr.sort((a,b)=> String(b.happened_on).localeCompare(String(a.happened_on)));
+    else if(sortMode==="new") arr.sort((a,b)=> String(b.created_at||"").localeCompare(String(a.created_at||"")));
+    else arr.sort((a,b)=> String(a.happened_on).localeCompare(String(b.happened_on)));
+    return arr;
+  }
+
+  function findRecord(id){
+    return DATA.records.find(r=>String(r.id)===String(id));
+  }
+
+  /* ---------- 羽毛绘制 ---------- */
+  function renderFeather(){
+    const svg = $("feather");
+    svg.innerHTML = "";
+    const arr = visibleRecords();
+    const P0 = [280, 674], C = [226, 360], P2 = [286, 46];
+    const qpt = (t)=>{
+      const m = 1-t;
+      return [m*m*P0[0] + 2*m*t*C[0] + t*t*P2[0],
+              m*m*P0[1] + 2*m*t*C[1] + t*t*P2[1]];
+    };
+    const rachis = svgEl("path", {
+      d:`M${P0[0]},${P0[1]} Q${C[0]},${C[1]} ${P2[0]},${P2[1]}`,
+      fill:"none", class:"hxb-rachis"
+    });
+    svg.appendChild(rachis);
+
+    if(!arr.length){
+      const t = svgEl("text", {x:280, y:360, "text-anchor":"middle", class:"hxb-empty-text"});
+      t.textContent = "这里还没有历程，点「新增历程」写下第一段";
+      svg.appendChild(t);
+      return;
+    }
+
+    arr.forEach((r, i)=>{
+      const n = arr.length;
+      const t = n === 1 ? 0.56 : 0.12 + 0.76 * (i/(n-1));
+      const [ax, ay] = qpt(t);
+      const len = 46 + 74 * (1 - Math.abs(2*t - 1));
+      const meta = catMeta(r.category);
+      const col = meta.color || "#f472b6";
+      const active = String(r.id)===String(selectedId);
+
+      [[-1,-0.9],[1,-0.9]].forEach(([sx, sy], k)=>{
+        const ex = ax + sx*len, ey = ay + sy*len;
+        const cx = ax + sx*len*0.5, cy = ay - 10;
+        const p = svgEl("path", {
+          d:`M${ax},${ay} Q${cx},${cy} ${ex},${ey}`,
+          fill:"none", stroke:col,
+          class:"hxb-barb" + (active ? " active" : ""),
+          pathLength:"1"
+        });
+        p.style.animationDelay = (i*70 + k*30) + "ms";
+        p.addEventListener("click", ()=>selectRecord(r.id));
+        svg.appendChild(p);
+      });
+
+      const g = svgEl("g", {class:"hxb-node-wrap", "data-id":r.id});
+      const halo = svgEl("circle", {cx:ax, cy:ay, r:active?9:6, fill:col, opacity:active?0.22:0.12, class:"hxb-halo"});
+      const dot = svgEl("circle", {cx:ax, cy:ay, r:active?4.6:3.4, fill:col, class:"hxb-node"});
+      g.appendChild(halo); g.appendChild(dot);
+      g.style.animationDelay = (i*70) + "ms";
+      g.addEventListener("click", ()=>selectRecord(r.id));
+      svg.appendChild(g);
+
+      if(n <= 14){
+        const label = svgEl("text", {
+          x: ax + (i%2 ? 14 : -14), y: ay + 4,
+          "text-anchor": i%2 ? "start" : "end",
+          class:"hxb-label"
+        });
+        label.textContent = String(r.happened_on).slice(0,4);
+        svg.appendChild(label);
+      }
+    });
+
+    const tip = svgEl("circle", {cx:P2[0], cy:P2[1], r:5, fill:"#fff", class:"hxb-tip"});
+    svg.appendChild(tip);
+  }
+
+  /* ---------- 清单与详情 ---------- */
+  function renderList(){
+    const arr = visibleRecords();
+    $("hxCount").textContent = `${arr.length} 条`;
+    $("hxFilterLabel").textContent = filterCat === "全部" ? "全部历程" : filterCat + " · 历程";
+    if(!arr.length){
+      $("hxList").innerHTML = `<div class="hx-list-empty">没有找到符合条件的历程<br><span>换个关键词，或点「全部历程」看看</span></div>`;
+      return;
+    }
+    $("hxList").innerHTML = arr.map(r=>{
+      const meta = catMeta(r.category);
+      const active = String(r.id)===String(selectedId);
+      return `<button class="hx-item ${active?"active":""}" type="button" data-id="${esc(r.id)}" style="--c:${meta.color}">
+        <span class="hx-item-date">${esc(r.happened_on)}</span>
+        <span class="hx-item-main">
+          <span class="hx-item-title">${esc(r.title)}</span>
+          <span class="hx-item-sub">${esc(r.summary) || " "}</span>
+        </span>
+        <span class="hx-item-cat">${esc(r.category)}</span>
+        <span class="hx-item-vis" title="${r.visibility==="public"?"公开见证":"仅自己可见"}">${r.visibility==="public"?"公":"私"}</span>
+      </button>`;
+    }).join("");
+    $("hxList").querySelectorAll(".hx-item").forEach(el=>{
+      el.addEventListener("click", ()=>selectRecord(el.dataset.id));
+    });
+  }
+
+  function renderDetail(){
+    const box = $("hxDetail");
+    const r = findRecord(selectedId);
+    if(!r){
+      box.innerHTML = `<div class="hx-detail-empty">点左侧任意一根绒毛<br>或下方清单，查看那段历程</div>`;
+      return;
+    }
+    const meta = catMeta(r.category);
+    const editable = DATA.login && !DATA.demo;
+    box.innerHTML = `
+      <div class="hx-d-top">
+        <span class="hx-d-date">${esc(r.happened_on)}</span>
+        <span class="hx-d-cat" style="--c:${meta.color}">${esc(r.category)}</span>
+      </div>
+      <h3 class="hx-d-title">${esc(r.title)}</h3>
+      ${r.summary ? `<p class="hx-d-sum">${esc(r.summary)}</p>` : ""}
+      ${r.detail ? `<p class="hx-d-det">${esc(r.detail)}</p>` : ""}
+      <div class="hx-d-meta">
+        ${r.mood ? `<span>心情：${esc(r.mood)}</span>` : ""}
+        ${r.place ? `<span>地点：${esc(r.place)}</span>` : ""}
+        <span>${r.visibility==="public" ? "公开见证" : "仅自己可见"}</span>
+      </div>
+      <div class="hx-d-chain">
+        <span class="hx-d-chain-label">内容指纹</span>
+        <code>${esc(r.hash || r.short_hash || "")}</code>
+      </div>
+      <div class="hx-d-chain">
+        <span class="hx-d-chain-label">链上区块</span>
+        <code>#${esc(r.block_no)} · ${r.demo ? "示例" : "已存证"}</code>
+      </div>
+      ${editable ? `<div class="hx-d-ops">
+        <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxEditRecord('${esc(r.id)}')">{{ icon("pencil") }} 修改</button>
+        <button class="btn btn-ghost btn-sm hx-danger" type="button" onclick="window.hxDeleteRecord('${esc(r.id)}')">{{ icon("trash") }} 删除</button>
+      </div>` : `<div class="hx-d-demo">${DATA.demo ? "示例历程 · 登录后即可建自己的档案" : ""}</div>`}`;
+  }
+
+  function selectRecord(id){
+    selectedId = id;
+    renderFeather();
+    renderList();
+    renderDetail();
+  }
+
+  function renderAll(){
+    const arr = visibleRecords();
+    if(!arr.length){
+      selectedId = null;
+    }else if(!arr.some(r=>String(r.id)===String(selectedId))){
+      selectedId = arr[arr.length-1].id;
+    }
+    renderIdCard();
+    renderOwn();
+    renderCats();
+    renderFeather();
+    renderList();
+    renderDetail();
+  }
+
+  /* ---------- 复制 / 登录拦截 ---------- */
+  window.hxCopy = async function(text){
+    try{
+      await navigator.clipboard.writeText(text);
+      toast("已复制到剪贴板");
+    }catch(e){
+      const ta = document.createElement("textarea");
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand("copy"); toast("已复制到剪贴板"); }
+      catch(_){ toast("复制失败，请手动选择", false); }
+      document.body.removeChild(ta);
+    }
+  };
+
+  function needLogin(){
+    if(DATA && DATA.login) return false;
+    toast("请先登录，才能书写自己的火星身份证", false);
+    setTimeout(()=>{ location.href = "/login"; }, 900);
+    return true;
+  }
+
+  /* ---------- 弹窗 ---------- */
+  function openModal(id){ $(id).hidden = false; document.body.classList.add("hx-lock"); }
+  function closeModal(id){
+    $(id).hidden = true;
+    if(document.querySelectorAll(".hx-modal:not([hidden])").length===0){
+      document.body.classList.remove("hx-lock");
+    }
+  }
+  document.querySelectorAll("[data-close]").forEach(b=>{
+    b.addEventListener("click", ()=>closeModal(b.dataset.close));
+  });
+  document.querySelectorAll(".hx-modal").forEach(m=>{
+    m.addEventListener("click", (e)=>{ if(e.target===m) closeModal(m.id); });
+  });
+  document.addEventListener("keydown", (e)=>{
+    if(e.key==="Escape") document.querySelectorAll(".hx-modal:not([hidden])").forEach(m=>closeModal(m.id));
   });
 
-  /* 轴上的记录节点 */
-  const dot = el("circle", { cx:ax, cy:ay, r:3.6, fill:col, class:"fx-node", pathLength:"1" });
-  dot.style.animationDelay = (i * 120) + "ms";
-  dot.dataset.i = i;
-  dot.addEventListener("click", ()=>select(i));
-  svg.appendChild(dot);
-});
+  function renderPickers(){
+    $("fCatPick").innerHTML = DATA.categories.map(c=>
+      `<button class="hx-pick-item" type="button" data-cat="${esc(c.key)}" style="--c:${c.color}"><i></i>${esc(c.key)}</button>`
+    ).join("");
+    $("fMoodPick").innerHTML = MOODS.map(m=>
+      `<button class="hx-pick-item hx-pick-mood" type="button" data-mood="${esc(m)}">${esc(m)}</button>`
+    ).join("");
+    $("fCatPick").querySelectorAll(".hx-pick-item").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        $("fCatPick").querySelectorAll(".hx-pick-item").forEach(x=>x.classList.remove("active"));
+        b.classList.add("active");
+      });
+    });
+    $("fMoodPick").querySelectorAll(".hx-pick-item").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        const on = b.classList.contains("active");
+        $("fMoodPick").querySelectorAll(".hx-pick-item").forEach(x=>x.classList.remove("active"));
+        if(!on) b.classList.add("active");
+      });
+    });
+  }
 
-/* 顶部羽尖光点 */
-const tip = el("circle", { cx:P2[0], cy:P2[1], r:5, fill:"#fff", class:"fx-tip" });
-svg.appendChild(tip);
+  function pickValue(box, attr){
+    const el = box.querySelector(".active");
+    return el ? el.dataset[attr] : "";
+  }
 
-/* 右侧记录列表 */
-document.getElementById("fx-list").innerHTML = RECORDS.map((r, i)=>`
-  <div class="fx-item" data-i="${i}" onclick="select(${i})">
-    <span class="fx-i-year">${esc(r.date)}</span>
-    <span class="fx-i-title">${esc(r.title)}</span>
-    <span class="fx-i-type" style="--c:${TYPE_COLOR[r.type]||'#f0c75e'}">${esc(r.type)}</span>
-  </div>`).join("");
+  function openRecordModal(rec){
+    if(needLogin()) return;
+    $("hxModalTitle").textContent = rec ? "修改历程" : "新增历程";
+    $("fId").value = rec ? rec.id : "";
+    $("fDate").value = rec ? rec.happened_on : new Date().toISOString().slice(0,7);
+    $("fTitle").value = rec ? rec.title : "";
+    $("fSummary").value = rec ? rec.summary || "" : "";
+    $("fDetail").value = rec ? rec.detail || "" : "";
+    $("fPlace").value = rec ? rec.place || "" : "";
+    document.querySelectorAll("input[name=fVis]").forEach(x=>{
+      x.checked = rec ? rec.visibility === x.value : x.value === "private";
+    });
+    const cat = rec ? rec.category : "历史";
+    $("fCatPick").querySelectorAll(".hx-pick-item").forEach(x=>{
+      x.classList.toggle("active", x.dataset.cat === cat);
+    });
+    $("fMoodPick").querySelectorAll(".hx-pick-item").forEach(x=>{
+      x.classList.toggle("active", !!rec && x.dataset.mood === rec.mood);
+    });
+    openModal("hxModal");
+    setTimeout(()=>$("fTitle").focus(), 60);
+  }
 
-function select(i){
-  document.querySelectorAll(".fx-barb,.fx-node").forEach(n=>
-    n.classList.toggle("active", +n.dataset.i === i));
-  document.querySelectorAll(".fx-item").forEach((n, k)=>
-    n.classList.toggle("active", k === i));
-  renderDetail(RECORDS[i]);
-}
+  window.hxEditRecord = function(id){
+    const rec = findRecord(id);
+    if(rec) openRecordModal(rec);
+  };
 
-function renderDetail(r){
-  const col = TYPE_COLOR[r.type] || "#f0c75e";
-  document.getElementById("fx-detail").innerHTML = `
-    <div class="fx-d-top">
-      <span class="fx-d-year">${esc(r.date)}</span>
-      <span class="fx-d-type" style="--c:${col}">${esc(r.type)}</span>
-    </div>
-    <h3 class="fx-d-title">${esc(r.title)}</h3>
-    <p class="fx-d-sum">${esc(r.summary)}</p>
-    <p class="fx-d-det">${esc(r.detail)}</p>`;
-}
+  window.hxDeleteRecord = async function(id){
+    const rec = findRecord(id);
+    if(!rec) return;
+    if(!confirm(`确定删除「${rec.title}」吗？\n删除后会从时间线移除，但链上会留下删除痕迹。`)) return;
+    const d = await api(`/api/huoxing/records/${rec.id}`, {method:"DELETE"});
+    if(d.ok){
+      toast(d.msg || "已删除");
+      selectedId = null;
+      await load(true);
+    }
+  };
 
-/* 默认选中最新一条，展示羽毛的“生长感” */
-select(RECORDS.length - 1);
+  /* ---------- 新增 / 修改提交 ---------- */
+  $("hxForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    const id = $("fId").value;
+    const cat = pickValue($("fCatPick"), "cat");
+    if(!cat){ toast("请选择一个历程分类", false); return; }
+    const vis = document.querySelector("input[name=fVis]:checked");
+    const body = {
+      category: cat,
+      happened_on: $("fDate").value.trim(),
+      title: $("fTitle").value.trim(),
+      summary: $("fSummary").value.trim(),
+      detail: $("fDetail").value.trim(),
+      mood: pickValue($("fMoodPick"), "mood"),
+      place: $("fPlace").value.trim(),
+      visibility: vis ? vis.value : "private"
+    };
+    if(!body.title){ toast("请填写标题", false); return; }
+    const btn = $("hxFormSave");
+    btn.disabled = true;
+    const d = await api(id ? `/api/huoxing/records/${id}` : "/api/huoxing/records", {
+      method: id ? "PUT" : "POST",
+      body: JSON.stringify(body)
+    });
+    btn.disabled = false;
+    if(d.ok){
+      closeModal("hxModal");
+      toast(d.msg || "已保存");
+      if(!id){
+        filterCat = "全部";
+        keyword = "";
+        $("hxSearch").value = "";
+        sortMode = "asc";
+        $("hxSort").value = "asc";
+      }
+      selectedId = d.record ? d.record.id : null;
+      await load(true);
+    }
+  });
+
+  /* ---------- 身份编辑 ---------- */
+  let tempSeed = "";
+  function fillIdentityForm(){
+    const idt = DATA.identity;
+    $("idName").value = idt.mars_name || "";
+    $("idBio").value = idt.bio || "";
+    $("idPublic").checked = !!idt.public_card;
+    tempSeed = idt.avatar_seed || idt.did;
+    $("hxAvatarPreview").innerHTML = identicon(tempSeed);
+  }
+  $("hxEditIdentity").addEventListener("click", ()=>{
+    if(needLogin()) return;
+    fillIdentityForm();
+    openModal("hxIdModal");
+  });
+  $("hxRegenAvatar").addEventListener("click", ()=>{
+    tempSeed = Math.random().toString(36).slice(2,14);
+    $("hxAvatarPreview").innerHTML = identicon(tempSeed);
+  });
+  $("hxIdForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    const name = $("idName").value.trim();
+    if(!name){ toast("请填写火星名", false); return; }
+    const d = await api("/api/huoxing/identity", {
+      method:"PUT",
+      body: JSON.stringify({mars_name:name, bio:$("idBio").value.trim(),
+                            avatar_seed:tempSeed, public_card:$("idPublic").checked})
+    });
+    if(d.ok){
+      closeModal("hxIdModal");
+      toast(d.msg || "身份已更新");
+      await load(true);
+    }
+  });
+
+  /* ---------- 验真 / 导出 / 分享 ---------- */
+  $("hxVerify").addEventListener("click", async ()=>{
+    const d = await api("/api/huoxing/verify");
+    if(!d.ok) return;
+    const c = d.chain;
+    if(c.ok){
+      toast(`验真通过：${c.checked} 个区块全部吻合，最新指纹 ${String(c.head).slice(0,10)}…`);
+    }else{
+      toast(`发现 ${ (c.issues||[]).length } 处异常，建议立即导出备份`, false);
+    }
+    await load(true);
+  });
+
+  $("hxExport").addEventListener("click", ()=>{
+    if(needLogin()) return;
+    location.href = "/api/huoxing/export";
+  });
+
+  $("hxShare").addEventListener("click", ()=>{
+    if(needLogin()) return;
+    const url = DATA.share_url;
+    if(!url){
+      toast("公开身份证已关闭，请先在「编辑身份」中开启", false);
+      return;
+    }
+    window.hxCopy(url);
+  });
+
+  /* ---------- 交互绑定 ---------- */
+  $("hxAdd1").addEventListener("click", ()=>openRecordModal(null));
+  $("hxAdd2").addEventListener("click", ()=>openRecordModal(null));
+  let searchTimer = null;
+  $("hxSearch").addEventListener("input", (e)=>{
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(()=>{ keyword = e.target.value; renderFeather(); renderList(); renderDetail(); }, 160);
+  });
+  $("hxSort").addEventListener("change", (e)=>{ sortMode = e.target.value; renderFeather(); renderList(); });
+  document.addEventListener("click", (e)=>{
+    const q = e.target.closest(".hx-q");
+    if(q){
+      e.stopPropagation();
+      const was = q.classList.contains("show");
+      document.querySelectorAll(".hx-q.show").forEach(x=>x.classList.remove("show"));
+      if(!was) q.classList.add("show");
+    }else{
+      document.querySelectorAll(".hx-q.show").forEach(x=>x.classList.remove("show"));
+    }
+  });
+
+  /* ---------- 加载 ---------- */
+  async function load(silent){
+    if(!silent) $("hxLoading").hidden = false;
+    const d = await api("/api/huoxing/overview");
+    if(!d.ok){
+      $("hxLoading").innerHTML = "读取失败，请刷新页面重试";
+      return;
+    }
+    DATA = d;
+    $("hxLoading").hidden = true;
+    $("hxApp").hidden = false;
+    renderPickers();
+    if(selectedId == null){
+      const arr = visibleRecords();
+      selectedId = arr.length ? arr[arr.length-1].id : null;
+    }
+    renderAll();
+    if(!silent){
+      document.querySelectorAll(".hx-q").forEach(q=>{ q.setAttribute("aria-label", q.dataset.tip || "名词解释"); });
+    }
+  }
+
+  load();
+})();
 </script>
 {% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% from "icon_macro.html" import icon %}
+{% block title %}火星身份证 · 公开见证{% endblock %}
+{% block content %}
+
+{% if identity %}
+<section class="page-head hx-head">
+  <div class="hx-kicker"><span class="hx-kicker-dot"></span>公开火星身份证 · 可分享 · 可验证</div>
+  <h1>{{ icon("feather") }}{{ identity.mars_name }} 的火星身份证</h1>
+  <p>这枚身份证由本人自主铸造，只展示主人设为「公开见证」的历程。<br>
+  所有内容均可通过链上指纹核验，未经本人允许的私密历程不会出现在这里。</p>
+</section>
+
+<section class="hx-top">
+  <div class="hx-idcard">
+    <div class="hx-id-top">
+      <span class="hx-id-brand">火星公民身份证</span>
+      <span class="hx-id-chip">{{ "链上已验真" if chain and chain.ok else "待核验" }}</span>
+    </div>
+    <div class="hx-id-main">
+      <div class="hx-avatar" id="pubAvatar" data-seed="{{ identity.avatar_seed or identity.did }}"></div>
+      <div class="hx-id-info">
+        <h2 class="hx-id-name">{{ identity.mars_name }}</h2>
+        <p class="hx-id-bio">{{ identity.bio or "这位火星公民还没有写下签名" }}</p>
+        <div class="hx-id-tags">
+          <span class="hx-tag-level">{{ identity.level or "星尘旅人" }}</span>
+          <span class="hx-tag-coord">{{ identity.coordinate }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="hx-did-row">
+      <span class="hx-did-label">身份标识</span>
+      <code>{{ identity.did }}</code>
+      <button class="hx-mini-btn" type="button" onclick="navigator.clipboard&&navigator.clipboard.writeText('{{ identity.did }}').then(function(){toast('已复制身份标识')})">复制</button>
+    </div>
+    <div class="hx-id-stats">
+      <div class="hx-id-stat"><b>{{ stats.total if stats else 0 }}</b><span>公开历程</span></div>
+      <div class="hx-id-stat"><b>{{ stats.by_category.values() | select("gt", 0) | list | length if stats else 0 }}</b><span>分类覆盖</span></div>
+      <div class="hx-id-stat"><b>{{ "通过" if chain and chain.ok else "待核验" }}</b><span>链上核验</span></div>
+      <div class="hx-id-stat"><b>{{ identity.days or 0 }}</b><span>在地球日</span></div>
+    </div>
+    <div class="hx-id-foot">
+      <div class="hx-fingerprint" id="pubFingerprint" data-seed="{{ chain.head if chain else identity.did }}" aria-hidden="true"></div>
+      <div class="hx-id-foot-text">
+        <span>签发于 {{ identity.created_at[:10] }}</span>
+        <span>ecojia.cn · 军哥懂保</span>
+      </div>
+    </div>
+  </div>
+
+  <aside class="hx-own">
+    <div class="hx-own-head">
+      <h3>{{ icon("shieldlock") }} 公开验证</h3>
+      <button class="hx-q" type="button" data-tip="这是一张只读的公开身份证页，任何人都能通过链上指纹核验内容有没有被改动。">?</button>
+    </div>
+    <div class="hx-chain-box">
+      <div class="hx-chain-line">
+        <span class="hx-chain-dot {{ 'ok' if chain and chain.ok else 'bad' }}"></span>
+        <b>{{ "全链内容完整" if chain and chain.ok else "内容待核验" }}</b>
+        <em>公开见证 {{ stats.public if stats else 0 }} 条</em>
+      </div>
+      <div class="hx-chain-head">
+        <span>最新区块指纹</span>
+        <code>{{ (chain.head[:24] + "…") if chain and chain.head else "尚无" }}</code>
+      </div>
+      {% if chain and chain.checked %}
+      <div class="hx-chain-check">已逐块核验全部区块{% if not chain.ok %}，发现问题：{{ chain.issues | join("；") }}{% endif %}</div>
+      {% endif %}
+    </div>
+    <div class="hx-public-note">
+      <p><b>为什么可以相信？</b>每条公开历程写入时都会生成内容指纹，并与上一条首尾相连。改动任何一个字，后面的指纹都会对不上。</p>
+      <p><b>隐私怎么保护？</b>公开页只读取「公开见证」的记录，私密内容始终只属于主人自己。</p>
+    </div>
+    <div class="hx-own-actions">
+      <a class="btn btn-gold btn-sm" href="/huoxing">{{ icon("feather") }} 我也要铸造身份证</a>
+    </div>
+  </aside>
+</section>
+
+<section class="hx-public-records">
+  <div class="hx-guide-head">
+    <h3>{{ icon("star") }} 公开见证的历程</h3>
+    <span>{{ records|length }} 条</span>
+  </div>
+  {% if records %}
+  <div class="hx-public-grid">
+    {% for r in records %}
+    <article class="hx-public-item" style="--c:{{ r.color }}">
+      <div class="hx-public-item-top">
+        <span class="hx-public-date">{{ r.happened_on }}</span>
+        <span class="hx-public-cat">{{ r.category }}</span>
+      </div>
+      <h4>{{ r.title }}</h4>
+      {% if r.summary %}<p class="hx-public-sum">{{ r.summary }}</p>{% endif %}
+      {% if r.detail %}<p class="hx-public-det">{{ r.detail }}</p>{% endif %}
+      <div class="hx-public-meta">
+        {% if r.mood %}<span>心情：{{ r.mood }}</span>{% endif %}
+        {% if r.place %}<span>地点：{{ r.place }}</span>{% endif %}
+        <span>区块 #{{ r.block_no }}</span>
+      </div>
+      <div class="hx-public-hash">指纹 {{ r.hash[:24] }}…</div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="hx-public-empty">
+    <b>还没有公开的历程</b>
+    <span>主人把故事留给了自己，这也是一种温柔。</span>
+  </div>
+  {% endif %}
+</section>
+
+{% else %}
+<section class="hx-public-empty-page">
+  <div class="hx-avatar hx-avatar-lg" aria-hidden="true">?</div>
+  <h1>这枚火星身份证暂时打不开</h1>
+  <p>{{ reason }}</p>
+  <a class="btn btn-gold" href="/huoxing">{{ icon("feather") }} 返回火星平面</a>
+</section>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  const NS = "http://www.w3.org/2000/svg";
+  function hashSeed(str){
+    let h = 2166136261;
+    for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function identicon(seed){
+    const h = hashSeed(String(seed || "mars"));
+    const palette = ["#f472b6","#c084fc","#5ce1e6","#ffd76b","#7ee2a8","#ff9ec4","#8a97ff"];
+    const main = palette[h % palette.length];
+    const sub = palette[(h >> 5) % palette.length];
+    let bits = h.toString(2).padStart(32,"0") + hashSeed(seed+"x").toString(2).padStart(32,"0");
+    const cells = 6, gap = 2, size = 100;
+    const s = (size - gap*(cells-1)) / cells;
+    let rects = "";
+    for(let y=0;y<cells;y++){
+      for(let x=0;x<cells/2;x++){
+        const i = y*(cells/2)+x;
+        if(bits[i] === "1"){
+          const color = ((x+y)%3===0) ? sub : main;
+          const xx = x*(s+gap), mirror = (cells-1-x)*(s+gap);
+          rects += `<rect x="${xx}" y="${y*(s+gap)}" width="${s}" height="${s}" rx="2" fill="${color}"/>`;
+          if(x !== cells-1-x) rects += `<rect x="${mirror}" y="${y*(s+gap)}" width="${s}" height="${s}" rx="2" fill="${color}"/>`;
+        }
+      }
+    }
+    return `<svg viewBox="0 0 ${size} ${size}" xmlns="${NS}"><rect width="${size}" height="${size}" fill="#170e26"/>${rects}</svg>`;
+  }
+  const av = document.getElementById("pubAvatar");
+  if(av) av.innerHTML = identicon(av.dataset.seed);
+  const fp = document.getElementById("pubFingerprint");
+  if(fp){
+    const seed = fp.dataset.seed || "mars";
+    let html = "";
+    for(let i=0;i<24;i++){
+      const n = hashSeed(seed+"|"+i) % 256;
+      html += `<i style="height:${6+(n%22)}px;opacity:${0.45+(n%55)/100}"></i>`;
+    }
+    fp.innerHTML = html;
+  }
+  document.addEventListener("click", (e)=>{
+    const q = e.target.closest(".hx-q");
+    if(q){
+      e.stopPropagation();
+      const was = q.classList.contains("show");
+      document.querySelectorAll(".hx-q.show").forEach(x=>x.classList.remove("show"));
+      if(!was) q.classList.add("show");
+    }else{
+      document.querySelectorAll(".hx-q.show").forEach(x=>x.classList.remove("show"));
+    }
+  });
+})();
+</script>
+{% endblock %}
