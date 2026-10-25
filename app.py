@@ -34,7 +34,7 @@ import agent_service
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "ecojia.db")
-VERSION = "V1.6"
+VERSION = "V1.7"
 
 # 资料百事通公网入口（已部署到腾讯云服务器；备案后切换为 ziliao.ecojia.cn）
 MAIN_SITE_URL = "http://118.24.173.246:8300"
@@ -257,9 +257,18 @@ def hx_json(obj):
 
 
 def hx_record_payload(rec):
-    """一条历程的存证内容（只包含需要防篡改的字段）"""
-    return hx_json({k: rec.get(k) or "" for k in
-                    ("category", "happened_on", "title", "summary", "detail", "mood", "place", "visibility")})
+    """一条历程的存证内容（只包含需要防篡改的字段）。
+    时间胶囊：仅当设定了 unlock_at 时才并入指纹，保证 V1.6 旧记录哈希不变。"""
+    keys = ["category", "happened_on", "title", "summary", "detail", "mood", "place", "visibility"]
+    if (rec.get("unlock_at") or "").strip():
+        keys.append("unlock_at")
+    return hx_json({k: rec.get(k) or "" for k in keys})
+
+
+def hx_capsule_locked(rec):
+    """时间胶囊是否仍在封存中（设定了未来解锁日期且今天尚未到期）"""
+    ua = (rec.get("unlock_at") or "").strip()
+    return bool(ua) and ua > now()[:10]
 
 
 def hx_identity_payload(ident):
@@ -398,6 +407,89 @@ def hx_demo_chain(records):
     return {"ok": True, "height": len(records), "head": prev, "demo": True, "checked": len(records)}
 
 
+# ══════════════════ V1.7 扩展：见证人 / 家庭链 / 遗产 / 提醒 ══════════════════
+def hx_identity_brief(user_id):
+    """轻量身份卡（供家庭链/见证人列表展示）"""
+    row = get_db().execute("SELECT did, mars_name, avatar_seed, public_card "
+                           "FROM hx_identity WHERE user_id=?", (user_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def hx_witnesses_for_records(user_id, record_ids):
+    """一组记录的见证人列表：record_id -> [见证信息]"""
+    if not record_ids:
+        return {}
+    marks = ",".join("?" * len(record_ids))
+    rows = get_db().execute(
+        f"SELECT w.*, i.mars_name, i.did, i.avatar_seed FROM hx_witness w "
+        f"JOIN hx_identity i ON i.user_id=w.witness_uid "
+        f"WHERE w.record_id IN ({marks}) AND w.status!='declined' "
+        f"ORDER BY w.id ASC", list(record_ids)).fetchall()
+    out = {}
+    for r in rows:
+        d = dict(r)
+        d.pop("witness_uid", None)
+        out.setdefault(d["record_id"], []).append(d)
+    return out
+
+
+def hx_witness_inbox(user_id):
+    """待我见证的邀请（别人邀请我签名的记录）"""
+    rows = get_db().execute(
+        "SELECT w.*, r.title, r.category, r.happened_on, i.mars_name AS owner_name, i.did AS owner_did "
+        "FROM hx_witness w "
+        "JOIN hx_records r ON r.id=w.record_id AND r.deleted=0 "
+        "JOIN hx_identity i ON i.user_id=w.owner_uid "
+        "WHERE w.witness_uid=? AND w.status='pending' ORDER BY w.id DESC", (user_id,)).fetchall()
+    return [dict(r) for r in rows]
+
+
+def hx_family_for(user_id):
+    """家庭链：我发起的 + 对方发起的（已确认的双向可见）"""
+    db = get_db()
+    rows = db.execute(
+        "SELECT * FROM hx_family WHERE user_id=? OR family_uid=? ORDER BY id DESC",
+        (user_id, user_id)).fetchall()
+    out = []
+    for r in rows:
+        d = dict(r)
+        other_uid = d["family_uid"] if d["user_id"] == user_id else d["user_id"]
+        ident = hx_identity_brief(other_uid)
+        if not ident:
+            continue
+        d["other"] = ident
+        d["direction"] = "out" if d["user_id"] == user_id else "in"
+        if d["status"] == "confirmed":
+            d["other_public_count"] = db.execute(
+                "SELECT COUNT(*) c FROM hx_records WHERE user_id=? AND deleted=0 "
+                "AND visibility='public'", (other_uid,)).fetchone()["c"]
+        out.append(d)
+    return out
+
+
+def hx_monthly_nudge(user_id):
+    """月度提醒：本月还没有任何记录，且已到下旬（20号之后），提醒收藏本月"""
+    today = now()
+    if int(today[8:10]) < 20:
+        return None
+    month = today[:7]
+    c = get_db().execute(
+        "SELECT COUNT(*) c FROM hx_records WHERE user_id=? AND deleted=0 "
+        "AND substr(created_at,1,7)=?", (user_id, month)).fetchone()["c"]
+    if c > 0:
+        return None
+    return {"month": month,
+            "text": f"{int(month[5:7])} 月快过完了，这个月有什么值得收藏的？",
+            "hint": "一句话也行，AI 记录助手可以帮你整理成完整历程"}
+
+
+def hx_annual_years(records):
+    """有记录的年份列表（供年报入口选择）"""
+    years = sorted({str(r.get("happened_on", ""))[:4] for r in records
+                    if str(r.get("happened_on", ""))[:4].isdigit()}, reverse=True)
+    return years
+
+
 # ══════════════════ 数据库 ══════════════════
 def get_db():
     if "db" not in g:
@@ -481,6 +573,8 @@ def init_db():
         mood        TEXT DEFAULT '',
         place       TEXT DEFAULT '',
         visibility  TEXT NOT NULL DEFAULT 'private',
+        unlock_at   TEXT DEFAULT '',
+        ai_draft    INTEGER NOT NULL DEFAULT 0,
         deleted     INTEGER NOT NULL DEFAULT 0,
         payload_hash TEXT DEFAULT '',
         block_no    INTEGER NOT NULL DEFAULT 0,
@@ -502,7 +596,48 @@ def init_db():
         UNIQUE(user_id, block_no)
     );
     CREATE INDEX IF NOT EXISTS idx_hx_blocks_user ON hx_blocks(user_id, block_no);
+    CREATE TABLE IF NOT EXISTS hx_witness (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        record_id   INTEGER NOT NULL,
+        owner_uid   INTEGER NOT NULL,
+        witness_uid INTEGER NOT NULL,
+        statement   TEXT DEFAULT '',
+        status      TEXT NOT NULL DEFAULT 'pending',
+        sign_hash   TEXT DEFAULT '',
+        block_no    INTEGER NOT NULL DEFAULT 0,
+        created_at  TEXT NOT NULL,
+        signed_at   TEXT DEFAULT ''
+    );
+    CREATE INDEX IF NOT EXISTS idx_hx_witness_w ON hx_witness(witness_uid, status);
+    CREATE INDEX IF NOT EXISTS idx_hx_witness_r ON hx_witness(record_id, status);
+    CREATE TABLE IF NOT EXISTS hx_family (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id      INTEGER NOT NULL,
+        family_uid   INTEGER NOT NULL,
+        relation     TEXT DEFAULT '家人',
+        status       TEXT NOT NULL DEFAULT 'pending',
+        created_at   TEXT NOT NULL,
+        confirmed_at TEXT DEFAULT '',
+        UNIQUE(user_id, family_uid)
+    );
+    CREATE INDEX IF NOT EXISTS idx_hx_family_u ON hx_family(family_uid, status);
+    CREATE TABLE IF NOT EXISTS hx_legacy (
+        user_id        INTEGER PRIMARY KEY,
+        heir_did       TEXT DEFAULT '',
+        heir_name      TEXT DEFAULT '',
+        inactive_years INTEGER NOT NULL DEFAULT 3,
+        scope          TEXT NOT NULL DEFAULT '纪念',
+        note           TEXT DEFAULT '',
+        updated_at     TEXT NOT NULL
+    );
     """)
+    # —— V1.7 兼容迁移：老库补列（新列已在 CREATE TABLE 中，老库走 ALTER） ——
+    for col, ddl in (("unlock_at", "TEXT DEFAULT ''"),
+                     ("ai_draft", "INTEGER NOT NULL DEFAULT 0")):
+        try:
+            db.execute(f"ALTER TABLE hx_records ADD COLUMN {col} {ddl}")
+        except sqlite3.Error:
+            pass  # 列已存在
     db.commit()
     db.close()
 
@@ -593,11 +728,18 @@ def huoxing_page():
     return render_template("huoxing.html")
 
 
-def hx_record_out(rec):
-    """输出给前端的记录：附带内容指纹与短指纹"""
+def hx_record_out(rec, mask_locked=False):
+    """输出给前端的记录：附带内容指纹与短指纹。
+    时间胶囊未到期时可遮罩正文（本人总览用），导出护照时不遮罩。"""
     d = dict(rec)
     d["hash"] = hx_sha(hx_record_payload(d))
     d["short_hash"] = d["hash"][:12]
+    d["locked"] = hx_capsule_locked(d)
+    if mask_locked and d["locked"]:
+        d["summary"] = ""
+        d["detail"] = ""
+        d["mood"] = ""
+        d["place"] = ""
     return d
 
 
@@ -642,19 +784,30 @@ def api_huoxing_overview():
 
     ident = hx_identity_for(u)
     raw = hx_records_for(u["id"])
-    records = [hx_record_out(r) for r in raw]
+    records = [hx_record_out(r, mask_locked=True) for r in raw]
     stats = hx_stats(raw)
     chain = hx_verify(u["id"])
     ident_out = dict(ident)
     ident_out.update({"level": stats["level"], "next_level": stats["next_level"],
                       "next_need": stats["next_need"],
                       "days": hx_days_since(ident["created_at"])})
+    wit_map = hx_witnesses_for_records(u["id"], [r["id"] for r in raw])
+    for r in records:
+        r["witnesses"] = wit_map.get(r["id"], [])
+    legacy = get_db().execute("SELECT * FROM hx_legacy WHERE user_id=?",
+                              (u["id"],)).fetchone()
     return jsonify({
         "ok": True, "login": True, "demo": False,
         "identity": ident_out, "records": records,
         "categories": HX_CATEGORIES, "stats": stats,
         "chain": chain, "blocks": hx_blocks_out(u["id"]),
         "share_url": f"{PUBLIC_BASE}/hx/card/{ident['did']}" if ident.get("public_card") else "",
+        "nudge": hx_monthly_nudge(u["id"]),
+        "witness_inbox": hx_witness_inbox(u["id"]),
+        "family": hx_family_for(u["id"]),
+        "legacy": dict(legacy) if legacy else None,
+        "annual_years": hx_annual_years(raw),
+        "capsule_count": len([r for r in raw if hx_capsule_locked(r)]),
     })
 
 
@@ -690,11 +843,20 @@ def hx_validate_record(rec):
     import re
     if not re.match(r"^\d{4}(-\d{1,2}){0,2}$", rec["happened_on"]):
         return "时间格式：2008 / 2008-09 / 2026-10-25"
+    ua = rec.get("unlock_at") or ""
+    if ua:
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", ua):
+            return "时间胶囊解锁日期格式：2027-01-01"
+        if ua <= now()[:10]:
+            return "时间胶囊的解锁日期需要设在未来"
     return ""
 
 
 def hx_record_form(d, base=None):
     base = base or {}
+    unlock = d.get("unlock_at")
+    if unlock is None:
+        unlock = base.get("unlock_at") or ""
     return {
         "category": (d.get("category") or base.get("category") or "").strip(),
         "happened_on": (d.get("happened_on") or base.get("happened_on") or "").strip(),
@@ -706,6 +868,7 @@ def hx_record_form(d, base=None):
         "mood": (d.get("mood") if d.get("mood") is not None else base.get("mood") or "").strip(),
         "place": (d.get("place") if d.get("place") is not None else base.get("place") or "").strip(),
         "visibility": (d.get("visibility") or base.get("visibility") or "private").strip(),
+        "unlock_at": (unlock or "").strip(),
     }
 
 
@@ -722,12 +885,15 @@ def api_hx_record_create():
     db = get_db()
     hx_identity_for(u)  # 确保首次使用时已铸造身份
     ts = now()
+    ai_draft = 1 if d.get("ai_draft") else 0
     cur = db.execute(
         "INSERT INTO hx_records(user_id, category, happened_on, title, summary, detail, "
-        "mood, place, visibility, deleted, payload_hash, block_no, created_at, updated_at) "
-        "VALUES(?,?,?,?,?,?,?,?,?,0,'',0,?,?)",
+        "mood, place, visibility, unlock_at, ai_draft, deleted, payload_hash, block_no, "
+        "created_at, updated_at) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?,0,'',0,?,?)",
         (u["id"], rec["category"], rec["happened_on"], rec["title"], rec["summary"],
-         rec["detail"], rec["mood"], rec["place"], rec["visibility"], ts, ts))
+         rec["detail"], rec["mood"], rec["place"], rec["visibility"],
+         rec["unlock_at"], ai_draft, ts, ts))
     rid = cur.lastrowid
     payload = hx_record_payload(rec)
     block = hx_append_block(db, u["id"], "create", rid, payload)
@@ -737,7 +903,7 @@ def api_hx_record_create():
     log_op("火星身份证·新增历程", f"{rec['category']}·{rec['title']}", u["id"])
     row = db.execute("SELECT * FROM hx_records WHERE id=?", (rid,)).fetchone()
     return jsonify({"ok": True, "msg": "历程已写入，并生成新的区块",
-                    "record": hx_record_out(row), "block": block})
+                    "record": hx_record_out(row, mask_locked=True), "block": block})
 
 
 @app.route("/api/huoxing/records/<int:rid>", methods=["PUT"])
@@ -759,16 +925,20 @@ def api_hx_record_update(rid):
     ts = now()
     payload = hx_record_payload(rec)
     block = hx_append_block(db, u["id"], "update", rid, payload)
+    ai_draft = row["ai_draft"] if "ai_draft" in row.keys() else 0
+    if d.get("ai_draft"):
+        ai_draft = 1
     db.execute("UPDATE hx_records SET category=?, happened_on=?, title=?, summary=?, detail=?, "
-               "mood=?, place=?, visibility=?, payload_hash=?, block_no=?, updated_at=? WHERE id=?",
+               "mood=?, place=?, visibility=?, unlock_at=?, ai_draft=?, payload_hash=?, "
+               "block_no=?, updated_at=? WHERE id=?",
                (rec["category"], rec["happened_on"], rec["title"], rec["summary"], rec["detail"],
-                rec["mood"], rec["place"], rec["visibility"], block["payload_hash"],
-                block["block_no"], ts, rid))
+                rec["mood"], rec["place"], rec["visibility"], rec["unlock_at"], ai_draft,
+                block["payload_hash"], block["block_no"], ts, rid))
     db.commit()
     log_op("火星身份证·修改历程", f"ID:{rid} {rec['title']}", u["id"])
     row = db.execute("SELECT * FROM hx_records WHERE id=?", (rid,)).fetchone()
     return jsonify({"ok": True, "msg": "修改已存证，旧版本仍可追溯",
-                    "record": hx_record_out(row), "block": block})
+                    "record": hx_record_out(row, mask_locked=True), "block": block})
 
 
 @app.route("/api/huoxing/records/<int:rid>", methods=["DELETE"])
@@ -849,17 +1019,21 @@ def api_hx_export():
         records.append(d)
     blocks = [dict(r) for r in get_db().execute(
         "SELECT * FROM hx_blocks WHERE user_id=? ORDER BY block_no ASC", (u["id"],)).fetchall()]
+    witnesses = [dict(r) for r in get_db().execute(
+        "SELECT * FROM hx_witness WHERE owner_uid=? OR witness_uid=?",
+        (u["id"], u["id"])).fetchall()]
     passport = {
-        "schema": "ecojia.marsid.passport/1.0",
+        "schema": "ecojia.marsid.passport/1.1",
         "issuer": "数字生态家园 · ecojia.cn",
         "author": "军哥懂保（微信：xunijiayuan）",
         "exported_at": now(),
         "identity": ident,
         "records": records,
+        "witnesses": witnesses,
         "blocks": blocks,
         "chain": hx_verify(u["id"]),
-        "verify_rule": "payload_hash = SHA-256(规范化JSON)；block_hash = SHA-256(区块号|前块哈希|动作|记录ID|内容指纹|时间)",
-        "note": "本护照归你所有，可离线保存、备份或迁移到任何兼容系统；平台不锁定你的数据。",
+        "verify_rule": "payload_hash = SHA-256(规范化JSON)；block_hash = SHA-256(区块号|前块哈希|动作|记录ID|内容指纹|时间)；设定了 unlock_at 的时间胶囊记录会把 unlock_at 并入指纹",
+        "note": "本护照归你所有，可离线保存、备份或迁移到任何兼容系统；平台不锁定你的数据。可在 ecojia.cn/hx/verify 页上传本文件离线验真。",
     }
     data = json.dumps(passport, ensure_ascii=False, indent=2)
     fname = f"mars-passport-{ident['did'].split(':')[-1][:8]}.json"
@@ -877,9 +1051,15 @@ def huoxing_public(did):
                                stats=None, chain=None, reason="这枚火星身份证不存在，或主人已关闭公开见证。"), 404
     ident = dict(row)
     owner = db.execute("SELECT nickname FROM users WHERE id=?", (row["user_id"],)).fetchone()
-    records = [hx_record_out(r) for r in hx_records_for(row["user_id"], only_public=True)]
+    # 公开页排除封存中的时间胶囊（到期前连标题都不公开）
+    pub_raw = [r for r in hx_records_for(row["user_id"], only_public=True)
+               if not hx_capsule_locked(r)]
+    records = [hx_record_out(r) for r in pub_raw]
     for r in records:
         r["color"] = HX_COLOR.get(r["category"], "#f472b6")
+    wit_map = hx_witnesses_for_records(row["user_id"], [r["id"] for r in pub_raw])
+    for r in records:
+        r["witnesses"] = [w for w in wit_map.get(r["id"], []) if w["status"] == "signed"]
     stats = hx_stats(records)
     full_stats = hx_stats(hx_records_for(row["user_id"]))
     ident.update({"level": full_stats["level"], "next_level": full_stats["next_level"],
@@ -889,6 +1069,369 @@ def huoxing_public(did):
     return render_template("huoxing_card.html", identity=ident, records=records,
                            stats=stats, chain=chain,
                            owner=owner["nickname"] if owner else "")
+
+
+# ══════════════════ V1.7 · 见证人机制（自证 → 互证） ══════════════════
+HX_WITNESS_CATS = ("荣耀", "重要")  # 只有这两类历程可邀请见证人
+
+
+def hx_find_user_by_did(did):
+    row = get_db().execute("SELECT user_id FROM hx_identity WHERE did=?",
+                           ((did or "").strip(),)).fetchone()
+    return row["user_id"] if row else None
+
+
+@app.route("/api/huoxing/records/<int:rid>/witness", methods=["POST"])
+@login_required
+def api_hx_witness_invite(rid):
+    """邀请另一位火星居民做见证人：对方签名后，签名哈希写入对方的链"""
+    u = current_user()
+    db = get_db()
+    row = db.execute("SELECT * FROM hx_records WHERE id=? AND deleted=0", (rid,)).fetchone()
+    if not row or row["user_id"] != u["id"]:
+        return jsonify({"ok": False, "msg": "历程不存在或不属于你"}), 404
+    if row["category"] not in HX_WITNESS_CATS:
+        return jsonify({"ok": False, "msg": "只有「荣耀 / 重要」类历程可以邀请见证人"}), 400
+    d = request.get_json(silent=True) or {}
+    wuid = hx_find_user_by_did(d.get("did"))
+    if not wuid:
+        return jsonify({"ok": False, "msg": "没有找到这枚身份标识，请核对对方的 DID"}), 404
+    if wuid == u["id"]:
+        return jsonify({"ok": False, "msg": "不能邀请自己做见证人"}), 400
+    statement = (d.get("statement") or "").strip()[:200]
+    dup = db.execute("SELECT 1 FROM hx_witness WHERE record_id=? AND witness_uid=? "
+                     "AND status!='declined'", (rid, wuid)).fetchone()
+    if dup:
+        return jsonify({"ok": False, "msg": "已经邀请过这位见证人了"}), 400
+    cur = db.execute(
+        "INSERT INTO hx_witness(record_id, owner_uid, witness_uid, statement, status, created_at) "
+        "VALUES(?,?,?,?, 'pending', ?)", (rid, u["id"], wuid, statement, now()))
+    db.commit()
+    log_op("火星身份证·邀请见证人", f"记录ID:{rid}", u["id"])
+    return jsonify({"ok": True, "msg": "邀请已发出，等待对方签名见证",
+                    "witness_id": cur.lastrowid})
+
+
+@app.route("/api/huoxing/witness/<int:wid>/sign", methods=["POST"])
+@login_required
+def api_hx_witness_sign(wid):
+    """见证人签名：签名哈希 = 记录指纹 + 见证人DID + 见证语，写入见证人自己的链"""
+    u = current_user()
+    db = get_db()
+    w = db.execute("SELECT * FROM hx_witness WHERE id=?", (wid,)).fetchone()
+    if not w or w["witness_uid"] != u["id"]:
+        return jsonify({"ok": False, "msg": "邀请不存在"}), 404
+    if w["status"] != "pending":
+        return jsonify({"ok": False, "msg": "该邀请已处理过"}), 400
+    rec = db.execute("SELECT * FROM hx_records WHERE id=? AND deleted=0",
+                     (w["record_id"],)).fetchone()
+    if not rec:
+        return jsonify({"ok": False, "msg": "原历程已被删除"}), 404
+    d = request.get_json(silent=True) or {}
+    statement = (d.get("statement") or w["statement"] or "").strip()[:200]
+    wident = hx_identity_for(u)  # 确保见证人已铸造身份
+    oident = hx_identity_brief(w["owner_uid"]) or {}
+    ts = now()
+    sign_hash = hx_sha(f"witness|{rec['payload_hash']}|{wident['did']}|{statement}|{ts}")
+    payload = hx_json({"type": "witness", "record_id": rec["id"],
+                       "record_hash": rec["payload_hash"], "owner_did": oident.get("did", ""),
+                       "witness_did": wident["did"], "statement": statement,
+                       "sign_hash": sign_hash})
+    block = hx_append_block(db, u["id"], "witness", rec["id"], payload)
+    db.execute("UPDATE hx_witness SET status='signed', statement=?, sign_hash=?, block_no=?, "
+               "signed_at=? WHERE id=?", (statement, sign_hash, block["block_no"], ts, wid))
+    db.commit()
+    log_op("火星身份证·签名见证", f"记录ID:{rec['id']}", u["id"])
+    return jsonify({"ok": True, "msg": "已签名见证，签名指纹写入你的身份链",
+                    "sign_hash": sign_hash, "block": block})
+
+
+@app.route("/api/huoxing/witness/<int:wid>/decline", methods=["POST"])
+@login_required
+def api_hx_witness_decline(wid):
+    """婉拒见证邀请（不上链，仅更新状态）"""
+    u = current_user()
+    db = get_db()
+    w = db.execute("SELECT * FROM hx_witness WHERE id=?", (wid,)).fetchone()
+    if not w or w["witness_uid"] != u["id"]:
+        return jsonify({"ok": False, "msg": "邀请不存在"}), 404
+    if w["status"] != "pending":
+        return jsonify({"ok": False, "msg": "该邀请已处理过"}), 400
+    db.execute("UPDATE hx_witness SET status='declined' WHERE id=?", (wid,))
+    db.commit()
+    return jsonify({"ok": True, "msg": "已婉拒这次见证邀请"})
+
+
+# ══════════════════ V1.7 · AI 记录助手（口述 → 历程草稿） ══════════════════
+HX_AI_PROMPT = (
+    "你是「火星身份证」的记录助手。用户口述了一段回忆，请整理成一条历程，"
+    "只输出严格 JSON，不要输出任何其他文字：\n"
+    '{"category":"历史/成绩/荣耀/难过/开心/纪念/重要 七选一",'
+    '"title":"不超过18字的标题",'
+    '"summary":"一句话摘要，不超过50字",'
+    '"detail":"润色后的完整故事，100-260字，第一人称，温暖克制",'
+    '"mood":"开心/幸福/骄傲/感恩/平静/怀念/难过/坚定 选一",'
+    '"happened_on":"能推断时间则输出 YYYY 或 YYYY-MM 或 YYYY-MM-DD，否则空字符串"}\n'
+    "用户口述："
+)
+
+
+def hx_ai_fallback(text):
+    """大模型不可用时的本地启发式草稿：关键词归类 + 简单模板"""
+    kw = {"荣耀": ["奖", "表彰", "第一", "冠军", "荣誉", "证书", "认可"],
+          "成绩": ["完成", "达成", "通过", "考上", "签约", "突破", "学会"],
+          "难过": ["失去", "失败", "离别", "遗憾", "生病", "挫折"],
+          "开心": ["开心", "快乐", "旅行", "聚会", "惊喜", "笑"],
+          "纪念": ["纪念", "周年", "照片", "遗物", "生日", "怀念"],
+          "重要": ["决定", "选择", "转折", "创业", "结婚", "搬家", "入行"]}
+    cat = "历史"
+    for k, words in kw.items():
+        if any(w in text for w in words):
+            cat = k
+            break
+    title = text.strip().replace("\n", " ")[:18] or "一段历程"
+    return {"category": cat, "title": title,
+            "summary": text.strip()[:50], "detail": text.strip()[:260],
+            "mood": "", "happened_on": "", "fallback": True}
+
+
+@app.route("/api/huoxing/ai_draft", methods=["POST"])
+@login_required
+def api_hx_ai_draft():
+    """AI 记录助手：口述一句话 → 分类/标题/摘要/详情草稿，人工确认后入链"""
+    d = request.get_json(silent=True) or {}
+    text = (d.get("text") or "").strip()
+    if not (4 <= len(text) <= 500):
+        return jsonify({"ok": False, "msg": "先说 4-500 个字的一段话"}), 400
+    draft, via = None, "local"
+    cfg = _agent_cfg()
+    if agent_service.llm_enabled(cfg):
+        ok, reply = agent_service.call_llm(
+            [{"role": "user", "content": HX_AI_PROMPT + text}], cfg, max_tokens=600)
+        if ok:
+            try:
+                i, j = reply.find("{"), reply.rfind("}")
+                draft = json.loads(reply[i:j + 1])
+                via = "ark"
+            except (ValueError, json.JSONDecodeError):
+                draft = None
+    if not draft:
+        draft = hx_ai_fallback(text)
+    if draft.get("category") not in HX_CATS:
+        draft["category"] = hx_ai_fallback(text)["category"]
+    draft["title"] = (draft.get("title") or "")[:60]
+    draft["summary"] = (draft.get("summary") or "")[:160]
+    draft["detail"] = (draft.get("detail") or "")[:2000]
+    log_op("火星身份证·AI草稿", f"来源:{via}", session.get("uid"))
+    return jsonify({"ok": True, "draft": draft, "via": via,
+                    "msg": "草稿已生成，请核对后保存入链" if via == "ark"
+                           else "云端大模型未配置，已用本地智能整理；可在管理后台配置 ARK 提升效果"})
+
+
+# ══════════════════ V1.7 · 家庭链（家庭记忆链） ══════════════════
+@app.route("/api/huoxing/family", methods=["POST"])
+@login_required
+def api_hx_family_invite():
+    """关联家人：输入对方 DID，对方确认后双向入链"""
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    fuid = hx_find_user_by_did(d.get("did"))
+    if not fuid:
+        return jsonify({"ok": False, "msg": "没有找到这枚身份标识，请核对家人的 DID"}), 404
+    if fuid == u["id"]:
+        return jsonify({"ok": False, "msg": "不能关联自己"}), 400
+    relation = (d.get("relation") or "家人").strip()[:12]
+    db = get_db()
+    dup = db.execute("SELECT 1 FROM hx_family WHERE (user_id=? AND family_uid=?) OR "
+                     "(user_id=? AND family_uid=?)", (u["id"], fuid, fuid, u["id"])).fetchone()
+    if dup:
+        return jsonify({"ok": False, "msg": "你们已经在家庭链中了"}), 400
+    db.execute("INSERT INTO hx_family(user_id, family_uid, relation, status, created_at) "
+               "VALUES(?,?,?,'pending',?)", (u["id"], fuid, relation, now()))
+    db.commit()
+    log_op("火星身份证·家庭链邀请", f"关系:{relation}", u["id"])
+    return jsonify({"ok": True, "msg": "邀请已发出，等家人确认后就挂上家庭记忆链"})
+
+
+@app.route("/api/huoxing/family/<int:fid>/accept", methods=["POST"])
+@login_required
+def api_hx_family_accept(fid):
+    """家人确认：双向确认，双方链上各写一个 family 区块"""
+    u = current_user()
+    db = get_db()
+    f = db.execute("SELECT * FROM hx_family WHERE id=?", (fid,)).fetchone()
+    if not f or f["family_uid"] != u["id"]:
+        return jsonify({"ok": False, "msg": "邀请不存在"}), 404
+    if f["status"] != "pending":
+        return jsonify({"ok": False, "msg": "该邀请已处理过"}), 400
+    my = hx_identity_for(u)
+    other = hx_identity_brief(f["user_id"]) or {}
+    ts = now()
+    db.execute("UPDATE hx_family SET status='confirmed', confirmed_at=? WHERE id=?", (ts, fid))
+    for uid, me_did, other_did in ((u["id"], my["did"], other.get("did", "")),
+                                   (f["user_id"], other.get("did", ""), my["did"])):
+        hx_append_block(db, uid, "family", 0, hx_json(
+            {"type": "family", "relation": f["relation"],
+             "me": me_did, "family": other_did}))
+    db.commit()
+    log_op("火星身份证·家庭链确认", f"关系:{f['relation']}", u["id"])
+    return jsonify({"ok": True, "msg": "家庭记忆链已挂上，双方的链都留下了这一刻"})
+
+
+@app.route("/api/huoxing/family/<int:fid>", methods=["DELETE"])
+@login_required
+def api_hx_family_remove(fid):
+    """解除家庭链关联（任一方可操作；链上历史不删，仅解除关联）"""
+    u = current_user()
+    db = get_db()
+    f = db.execute("SELECT * FROM hx_family WHERE id=?", (fid,)).fetchone()
+    if not f or (f["user_id"] != u["id"] and f["family_uid"] != u["id"]):
+        return jsonify({"ok": False, "msg": "关联不存在"}), 404
+    db.execute("DELETE FROM hx_family WHERE id=?", (fid,))
+    db.commit()
+    log_op("火星身份证·解除家庭链", f"ID:{fid}", u["id"])
+    return jsonify({"ok": True, "msg": "已解除关联（链上历史仍可追溯）"})
+
+
+# ══════════════════ V1.7 · 数字遗产约定 ══════════════════
+@app.route("/api/huoxing/legacy", methods=["PUT"])
+@login_required
+def api_hx_legacy_set():
+    """设置数字遗产约定：指定继承人 DID；账号多年不活跃时，「纪念」类按约定移交"""
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    heir_did = (d.get("heir_did") or "").strip()
+    heir_name = (d.get("heir_name") or "").strip()[:20]
+    note = (d.get("note") or "").strip()[:200]
+    try:
+        years = int(d.get("inactive_years") or 3)
+    except (TypeError, ValueError):
+        years = 3
+    years = max(1, min(10, years))
+    db = get_db()
+    if not heir_did:  # 清空约定
+        db.execute("DELETE FROM hx_legacy WHERE user_id=?", (u["id"],))
+        hx_append_block(db, u["id"], "legacy", 0, hx_json({"type": "legacy", "action": "clear"}))
+        db.commit()
+        log_op("火星身份证·撤销遗产约定", "", u["id"])
+        return jsonify({"ok": True, "msg": "遗产约定已撤销"})
+    heir_uid = hx_find_user_by_did(heir_did)
+    if not heir_uid:
+        return jsonify({"ok": False, "msg": "没有找到继承人 DID，请先让对方铸造火星身份证"}), 404
+    if heir_uid == u["id"]:
+        return jsonify({"ok": False, "msg": "继承人不能是自己"}), 400
+    ts = now()
+    db.execute("INSERT INTO hx_legacy(user_id, heir_did, heir_name, inactive_years, scope, note, updated_at) "
+               "VALUES(?,?,?,?,?,'纪念',?) "
+               "ON CONFLICT(user_id) DO UPDATE SET heir_did=excluded.heir_did, "
+               "heir_name=excluded.heir_name, inactive_years=excluded.inactive_years, "
+               "note=excluded.note, updated_at=excluded.updated_at",
+               (u["id"], heir_did, heir_name, years, note, ts))
+    ident = hx_identity_for(u)
+    hx_append_block(db, u["id"], "legacy", 0, hx_json(
+        {"type": "legacy", "owner_did": ident["did"], "heir_did": heir_did,
+         "inactive_years": years, "scope": "纪念"}))
+    db.commit()
+    log_op("火星身份证·遗产约定", f"继承人:{heir_name or heir_did[:18]}", u["id"])
+    return jsonify({"ok": True, "msg": "遗产约定已写入你的身份链"})
+
+
+# ══════════════════ V1.7 · 护照互认验证器（任何人可离线验真） ══════════════════
+@app.route("/hx/verify")
+def huoxing_verify_page():
+    """护照验证器：上传火星护照 JSON，本地重算指纹验证真伪（无需登录）"""
+    return render_template("huoxing_verify.html")
+
+
+@app.route("/api/huoxing/passport_verify", methods=["POST"])
+def api_hx_passport_verify():
+    """服务端护照验真（前端 JS 验真的备用通道）：重算区块链 + 记录指纹"""
+    d = request.get_json(silent=True) or {}
+    p = d.get("passport")
+    if not isinstance(p, dict) or "blocks" not in p:
+        return jsonify({"ok": False, "msg": "护照文件不完整"}), 400
+    issues = []
+    prev = HX_GENESIS_HASH
+    blocks = sorted(p.get("blocks", []), key=lambda b: b.get("block_no", 0))
+    for b in blocks:
+        if b.get("prev_hash") != prev:
+            issues.append(f"第 {b.get('block_no')} 块与上一块衔接断裂")
+        if hx_sha(b.get("payload", "")) != b.get("payload_hash"):
+            issues.append(f"第 {b.get('block_no')} 块内容指纹被改动")
+        expect = hx_sha(f"{b.get('block_no')}|{b.get('prev_hash')}|{b.get('action')}|"
+                        f"{b.get('record_id') or 0}|{b.get('payload_hash')}|{b.get('created_at')}")
+        if expect != b.get("block_hash"):
+            issues.append(f"第 {b.get('block_no')} 块区块哈希不匹配")
+        prev = b.get("block_hash", "")
+    latest = {}
+    for b in blocks:
+        if b.get("action") in ("create", "update") and b.get("record_id"):
+            latest[b["record_id"]] = b["payload_hash"]
+    for rec in p.get("records", []):
+        if latest.get(rec.get("id")) and latest[rec["id"]] != hx_sha(hx_record_payload(rec)):
+            issues.append(f"记录「{rec.get('title', '?')}」与链上指纹不一致")
+    head = blocks[-1]["block_hash"] if blocks else ""
+    chain_head = (p.get("chain") or {}).get("head", "")
+    if chain_head and head and chain_head != head:
+        issues.append("护照记载的链头与区块重算结果不一致")
+    return jsonify({"ok": True, "valid": not issues, "issues": issues[:8],
+                    "height": len(blocks), "head": head,
+                    "records": len(p.get("records", [])),
+                    "mars_name": (p.get("identity") or {}).get("mars_name", ""),
+                    "did": (p.get("identity") or {}).get("did", "")})
+
+
+# ══════════════════ V1.7 · 年度火星年报 ══════════════════
+def hx_annual_data(user_id, year, only_public=False):
+    """汇总某一年的年报素材：当年历程、分类统计、等级成长"""
+    all_recs = hx_records_for(user_id)
+    if only_public:
+        all_recs = [r for r in all_recs
+                    if r.get("visibility") == "public" and not hx_capsule_locked(r)]
+    yrecs = [hx_record_out(r) for r in all_recs if str(r["happened_on"]).startswith(str(year))]
+    for r in yrecs:
+        r["color"] = HX_COLOR.get(r["category"], "#f472b6")
+    before = len([r for r in all_recs if str(r["happened_on"])[:4] < str(year)])
+    after = before + len(yrecs)
+    by = {c: 0 for c in HX_CATS}
+    for r in yrecs:
+        if r["category"] in by:
+            by[r["category"]] += 1
+    return {"year": year, "records": sorted(yrecs, key=lambda x: x["happened_on"]),
+            "by_category": by, "total": len(yrecs),
+            "level_before": hx_level(before)[0], "level_after": hx_level(after)[0],
+            "level_grew": hx_level(before)[0] != hx_level(after)[0]}
+
+
+@app.route("/huoxing/annual/<int:year>")
+def huoxing_annual(year):
+    """我的年度火星年报（含私密记录，仅本人可见）"""
+    u = current_user()
+    if not u:
+        return redirect(url_for("login_page"))
+    ident = hx_identity_for(u)
+    data = hx_annual_data(u["id"], year)
+    ident = dict(ident)
+    ident.update({"level": hx_stats(hx_records_for(u["id"]))["level"]})
+    return render_template("huoxing_annual.html", identity=ident, data=data,
+                           public_url=f"{PUBLIC_BASE}/hx/annual/{ident['did']}/{year}",
+                           categories=HX_CATEGORIES, mine=True)
+
+
+@app.route("/hx/annual/<path:did>/<int:year>")
+def huoxing_annual_public(did, year):
+    """公开年报海报页：只展示公开且已解锁的历程，可分享"""
+    db = get_db()
+    row = db.execute("SELECT * FROM hx_identity WHERE did=?", (did,)).fetchone()
+    if not row or not row["public_card"]:
+        return render_template("huoxing_card.html", identity=None, records=[],
+                               stats=None, chain=None,
+                               reason="这份年报不存在，或主人已关闭公开见证。"), 404
+    data = hx_annual_data(row["user_id"], year, only_public=True)
+    ident = dict(row)
+    ident.update({"level": hx_stats(hx_records_for(row["user_id"]))["level"]})
+    return render_template("huoxing_annual.html", identity=ident, data=data,
+                           public_url="", categories=HX_CATEGORIES, mine=False)
 
 
 @app.route("/tools")

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% from "icon_macro.html" import icon %}
+{% block title %}{{ data.year }} 年度火星年报 · {{ identity.mars_name }}{% endblock %}
+{% block content %}
+
+<section class="page-head hx-head">
+  <div class="hx-kicker"><span class="hx-kicker-dot"></span>年度火星年报 · 一年一羽</div>
+  <h1>{{ icon("feather") }}{{ identity.mars_name }} 的 {{ data.year }} 年</h1>
+  <p>{% if mine %}这是只属于你的年度回顾，含私密历程；点「复制公开年报链接」分享的版本只含公开历程。{% else %}这份年报由本人自主生成，只展示「公开见证」的历程。{% endif %}</p>
+  <div class="hx-head-meta">
+    <span>版本 {{ footer.version }}</span><i>·</i>
+    <span>作者：军哥懂保</span><i>·</i>
+    <span>微信：xunijiayuan</span>
+  </div>
+</section>
+
+<section class="hx-annual-hero">
+  <div class="hx-annual-card">
+    <div class="hx-annual-year">{{ data.year }}</div>
+    <div class="hx-annual-name">{{ identity.mars_name }}</div>
+    <div class="hx-annual-levels">
+      <span class="hx-tag-level">{{ data.level_before }}</span>
+      <span class="hx-annual-arrow">→</span>
+      <span class="hx-tag-level">{{ data.level_after }}</span>
+      {% if data.level_grew %}<em class="hx-annual-grew">等级跃迁</em>{% endif %}
+    </div>
+    <div class="hx-annual-total"><b>{{ data.total }}</b><span>段历程被珍藏</span></div>
+    <div class="hx-fingerprint hx-annual-fp" id="annualFp" data-seed="{{ identity.did }}|{{ data.year }}"></div>
+  </div>
+
+  <div class="hx-annual-side">
+    <div class="hx-stage-head">
+      <div class="hx-stage-title">{{ icon("feather") }} {{ data.year }} 羽毛形态
+        <button class="hx-q" type="button" data-tip="这一年写下的每一段历程，都是羽毛上的一根绒毛。记录越多，羽毛越丰盈。">?</button>
+      </div>
+    </div>
+    <svg id="annualFeather" viewBox="0 0 560 720" role="img" aria-label="年度羽毛"></svg>
+  </div>
+</section>
+
+<section class="hx-annual-cats">
+  {% for c in categories %}
+  <div class="hx-annual-cat" style="--c:{{ c.color }}">
+    <span class="hx-cat-dot"></span>
+    <span class="hx-cat-name">{{ c.key }}</span>
+    <b>{{ data.by_category.get(c.key, 0) }}</b>
+  </div>
+  {% endfor %}
+</section>
+
+{% if mine %}
+<section class="hx-annual-actions">
+  <a class="btn btn-ghost btn-sm" href="/huoxing">{{ icon("feather") }} 返回火星平面</a>
+  {% if public_url %}
+  <button class="btn btn-gold btn-sm" type="button" onclick="hxCopyUrl('{{ public_url }}')">{{ icon("link") }} 复制公开年报链接</button>
+  {% endif %}
+  <button class="btn btn-ghost btn-sm" type="button" onclick="window.print()">{{ icon("save") }} 打印 / 存为海报</button>
+</section>
+{% endif %}
+
+<section class="hx-public-records">
+  <div class="hx-guide-head">
+    <h3>{{ icon("star") }} {{ data.year }} 年的历程</h3>
+    <span>{{ data.records|length }} 条</span>
+  </div>
+  {% if data.records %}
+  <div class="hx-public-grid">
+    {% for r in data.records %}
+    <article class="hx-public-item" style="--c:{{ r.color }}">
+      <div class="hx-public-item-top">
+        <span class="hx-public-date">{{ r.happened_on }}</span>
+        <span class="hx-public-cat">{{ r.category }}</span>
+      </div>
+      <h4>{{ r.title }}</h4>
+      {% if r.summary %}<p class="hx-public-sum">{{ r.summary }}</p>{% endif %}
+      {% if r.detail %}<p class="hx-public-det">{{ r.detail }}</p>{% endif %}
+      <div class="hx-public-meta">
+        {% if r.mood %}<span>心情：{{ r.mood }}</span>{% endif %}
+        {% if r.place %}<span>地点：{{ r.place }}</span>{% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="hx-public-empty">
+    <b>{{ data.year }} 年还没有留下历程</b>
+    <span>{% if mine %}回到火星平面，补记一段属于这一年的故事吧。{% else %}主人把这一年留给了自己。{% endif %}</span>
+  </div>
+  {% endif %}
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  const NS = "http://www.w3.org/2000/svg";
+  const RECORDS = {{ data.records | tojson }};
+  function hashSeed(str){
+    let h = 2166136261;
+    for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function svgEl(tag, attrs){
+    const e = document.createElementNS(NS, tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  /* 年度羽毛：与火星平面同一套绘制逻辑 */
+  const svg = document.getElementById("annualFeather");
+  const P0 = [280, 674], C = [226, 360], P2 = [286, 46];
+  const qpt = (t)=>{
+    const m = 1-t;
+    return [m*m*P0[0] + 2*m*t*C[0] + t*t*P2[0], m*m*P0[1] + 2*m*t*C[1] + t*t*P2[1]];
+  };
+  svg.appendChild(svgEl("path", {d:`M${P0[0]},${P0[1]} Q${C[0]},${C[1]} ${P2[0]},${P2[1]}`, fill:"none", class:"hxb-rachis"}));
+  RECORDS.forEach((r, i)=>{
+    const n = RECORDS.length;
+    const t = n === 1 ? 0.56 : 0.12 + 0.76 * (i/(n-1));
+    const [ax, ay] = qpt(t);
+    const len = 46 + 74 * (1 - Math.abs(2*t - 1));
+    [[-1,-0.9],[1,-0.9]].forEach(([sx, sy], k)=>{
+      const p = svgEl("path", {
+        d:`M${ax},${ay} Q${ax + sx*len*0.5},${ay - 10} ${ax + sx*len},${ay + sy*len}`,
+        fill:"none", stroke:r.color, class:"hxb-barb", pathLength:"1"
+      });
+      p.style.animationDelay = (i*90 + k*40) + "ms";
+      svg.appendChild(p);
+    });
+    const dot = svgEl("circle", {cx:ax, cy:ay, r:3.4, fill:r.color, class:"hxb-node"});
+    svg.appendChild(dot);
+  });
+  if(!RECORDS.length){
+    const t = svgEl("text", {x:280, y:360, "text-anchor":"middle", class:"hxb-empty-text"});
+    t.textContent = "这一年的羽毛还在生长";
+    svg.appendChild(t);
+  }
+  const fp = document.getElementById("annualFp");
+  if(fp){
+    const seed = fp.dataset.seed;
+    let html = "";
+    for(let i=0;i<24;i++){
+      const n = hashSeed(seed+"|"+i) % 256;
+      html += `<i style="height:${6+(n%22)}px;opacity:${0.45+(n%55)/100}"></i>`;
+    }
+    fp.innerHTML = html;
+  }
+  document.addEventListener("click", (e)=>{
+    const q = e.target.closest(".hx-q");
+    if(q){
+      e.stopPropagation();
+      const was = q.classList.contains("show");
+      document.querySelectorAll(".hx-q.show").forEach(x=>x.classList.remove("show"));
+      if(!was) q.classList.add("show");
+    }else{
+      document.querySelectorAll(".hx-q.show").forEach(x=>x.classList.remove("show"));
+    }
+  });
+})();
+async function hxCopyUrl(url){
+  try{
+    await navigator.clipboard.writeText(url);
+    toast("公开年报链接已复制，可分享给朋友");
+  }catch(e){
+    toast("复制失败，请手动复制地址栏链接", false);
+  }
+}
+</script>
+<style>
+@media print {
+  .topbar, .footer, .hx-annual-actions, .aurora, .stardust, .grid-bg { display: none !important; }
+  body { background: #fff !important; }
+}
+</style>
+{% endblock %}
