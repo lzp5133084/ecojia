@@ -75,8 +75,8 @@
     "admin_url": "https://tools.ecojia.cn/jungedongbao-website/",
     "probe": "",
     "metrics": [],
-    "auth": "无密码 · 打开页面即可编辑",
-    "note": "管理面板无口令保护，任何人打开即可改内容；建议加登录锁"
+    "auth": "统一密码 Lzp520520520.",
+    "note": "点「⚙️ 管理」需输入管理密码，会话内免密"
   },
   {
     "id": "renjunxue-website",
@@ -123,7 +123,7 @@
     "admin_url": "https://tools.ecojia.cn/renjunxue-gitee-io/admin.html",
     "probe": "",
     "metrics": [],
-    "auth": "无鉴权 · 页面可直接打开",
-    "note": "运营后台无登录校验，链接公开即可访问；建议加统一账号锁"
+    "auth": "统一账号 lzp5133084",
+    "note": "已加账号密码登录门，会话内免密"
   }
 ]
