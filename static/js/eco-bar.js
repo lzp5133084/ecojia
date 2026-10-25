@@ -1,12 +1,12 @@
 /* ============================================================
    生态栏 eco-bar.js · 数字生态家园统一注入组件 V1.0
    作者：军哥懂保（微信：xunijiayuan）
-   能力：返回首页 + 登录状态 + AI智能体「小禾」悬浮球/浮窗对话
+   能力：返回首页 + 登录状态 + AI智能体「小鸽子」悬浮球/浮窗对话
    用法：<script src="/eco-bar.js" defer></script>
    ============================================================ */
 (function () {
   "use strict";
-  window.__ecoBarVer = "20261026a";
+  window.__ecoBarVer = "20261026b";
   if (window.__ecoBarLoaded) return; window.__ecoBarLoaded = true;
   // iframe 内不渲染（避免外壳页+内嵌页出现两套组件）
   if (window.self !== window.top) return;
@@ -175,12 +175,12 @@
   var wrap = document.createElement("div"); wrap.id = "ecoBarWrap";
   // 所有页面统一：只渲染悬浮球 + 浮窗（返回首页/登录入口已植入浮窗内）
   wrap.innerHTML = `
-<div class="eb-ball" id="ebBall" title="生态智能体·小禾">
- <span class="eb-ai">AI</span><span class="eb-sub">小禾</span></div>
+<div class="eb-ball" id="ebBall" title="生态智能体·小鸽子">
+ <span class="eb-ai">AI</span><span class="eb-sub">小鸽子</span></div>
 <div class="eb-panel hide" id="ebPanel">
  <div class="eb-head">
-  <div class="eb-logo">禾</div>
-  <div class="eb-title"><b>生态智能体 · 小禾</b><span>找工具 · 查故障 · 答疑问</span></div>
+  <div class="eb-logo">鸽</div>
+  <div class="eb-title"><b>生态智能体 · 小鸽子</b><span>找工具 · 查故障 · 答疑问</span></div>
   <button class="eb-hbtn" id="ebDict" title="名词解析（大白话）">?</button>
   <button class="eb-hbtn" id="ebClear" title="清空本会话记录">🗑</button>
   <button class="eb-hbtn" id="ebFold" title="收起为悬浮球">—</button>
@@ -400,7 +400,7 @@
   if (!localStorage.getItem("eco_tip_seen")) {
     setTimeout(function () {
       var tip = document.createElement("div"); tip.className = "eb-tip";
-      tip.innerHTML = "<b>👋 我是小禾</b>找不到工具？页面打不开？点我直接问～";
+      tip.innerHTML = "<b>👋 我是小鸽子</b>找不到工具？页面打不开？点我直接问～";
       tip.onclick = function () { hideTip(); ball.click(); };
       document.body.appendChild(tip);
       setTimeout(hideTip, 12000);
@@ -467,7 +467,7 @@
       }).catch(greet);
   }
   function greet() {
-    addMsg("ai", "您好呀！我是生态智能体「小禾」🌱\n找不到工具、页面打不开、不会用……都可以问我。我会先去服务器上检查，再回答您。");
+    addMsg("ai", "您好呀！我是生态智能体「小鸽子」🕊️\n找不到工具、页面打不开、不会用……都可以问我。我会先去服务器上检查，再回答您。");
     setChips(["视频转PPT工具在哪？", "虚拟家园打不开", "一共有哪些工具？", "怎么联系军哥？"]);
   }
   function setChips(list) {
@@ -503,7 +503,7 @@
       } else { addMsg("ai", "😥 出了点小状况：" + (d.msg || "请稍后再试")); }
     }).catch(function () {
       tp.remove(); sending = false;
-      addMsg("ai", "😥 网络不太顺，没联系上小禾。请检查网络后再试，或稍等片刻。");
+      addMsg("ai", "😥 网络不太顺，没联系上小鸽子。请检查网络后再试，或稍等片刻。");
     });
   }
   document.getElementById("ebSend").onclick = send;
