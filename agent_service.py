@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 ════════════════════════════════════════════════════════════
- 生态智能体「小禾」服务模块 V1.0
+ 生态智能体「小鸽子」服务模块 V1.0
  作者：军哥懂保（微信：xunijiayuan）
 ════════════════════════════════════════════════════════════
  职责：
@@ -260,7 +260,7 @@ def agent_answer(message, eco, page_url="", health_checker=None):
 
     # 1) 打招呼
     if RE_GREET.search(msg):
-        return (f"您好呀！我是生态智能体「小禾」🌱\n\n"
+        return (f"您好呀！我是生态智能体「小鸽子」🕊️\n\n"
                 f"我熟悉 **{meta.get('name','数字生态家园')}** 的全部 {len(tools)} 个工具和 {len(products)} 位生态成员，可以帮您：\n"
                 f"- 🔍 找工具：比如「视频转PPT在哪」\n"
                 f"- 🩺 查故障：比如「混元生图打不开」，我会先去检查再回答\n"
@@ -269,7 +269,7 @@ def agent_answer(message, eco, page_url="", health_checker=None):
 
     # 2) 问智能体自己
     if RE_WHO.search(msg):
-        return ("我是「小禾」，数字生态家园的网站智能体 🌱\n\n"
+        return ("我是「小鸽子」，数字生态家园的网站智能体 🕊️\n\n"
                 "我住在每个页面的右下角，负责帮您找工具、查状态、答疑问。"
                 "我的知识来自生态底座 ecosystem.json，由军哥懂保持续维护。"), "who", [], None
 
@@ -396,7 +396,7 @@ def agent_answer(message, eco, page_url="", health_checker=None):
 
 
 FALLBACK_REPLY = (
-    "这个问题我还在学习中 🌱\n\n"
+    "这个问题我还在学习中 🕊️\n\n"
     "我目前最擅长这些：\n"
     "- 🔍 **找工具**：「视频转PPT在哪」「二维码工具怎么用》\n"
     "- 🩺 **查故障**：「混元生图打不开」（我会实际检查后再回答）\n"
