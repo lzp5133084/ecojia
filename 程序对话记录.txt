@@ -854,3 +854,12 @@ cd /opt/ecojia/ziliao && git pull && sudo systemctl restart ecojia-ziliao
   huoxing.html 37389B / huoxing_card.html 7873B，服务 active，/huoxing 200。
 另修复：.hx-loading 的 display:flex 覆盖了 [hidden] 默认隐藏，
   导致加载提示「正在读取火星档案…」一直残留 → 增加 .hx-loading[hidden]{display:none}。
+
+──── 2026-10-25 18:35 管理员账号统一 ────
+用户：「增加管理员就可以了」
+处理：服务器 ecojia.db 中 18180309010 用户角色确认为 admin，
+  密码重置为 Lzp520520520.（werkzeug 哈希写入，不存明文）。
+验证：https://ecojia.cn 登录 200 → 昵称「大哥」role=admin；
+  /console 200、/admin 200、/api/admin/hub 200；
+  火星身份证自动铸造 DID: did:mars:ecojia:f03b4554120a43c3e51966f8e4b5df32，创世区块 1。
+现有管理员：lzp5133084（起微）、18180309010（大哥），均为 admin。
