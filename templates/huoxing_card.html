@@ -98,6 +98,13 @@
         {% if r.place %}<span>地点：{{ r.place }}</span>{% endif %}
         <span>区块 #{{ r.block_no }}</span>
       </div>
+      {% if r.witnesses %}
+      <div class="hx-public-wit">
+        {% for w in r.witnesses %}
+        <span class="hx-public-wit-item" title="签名指纹 {{ w.sign_hash[:24] }}…">✓ {{ w.mars_name }} 已见证{% if w.statement %}：「{{ w.statement }}」{% endif %}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
       <div class="hx-public-hash">指纹 {{ r.hash[:24] }}…</div>
     </article>
     {% endfor %}

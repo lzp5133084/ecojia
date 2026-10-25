@@ -29,6 +29,26 @@
 
 <div id="hxApp" class="hx-app" hidden>
 
+  <!-- ══════════ 月度提醒（V1.7） ══════════ -->
+  <div id="hxNudge" class="hx-nudge" hidden>
+    <span class="hx-nudge-dot"></span>
+    <div class="hx-nudge-text">
+      <b id="hxNudgeText"></b>
+      <span id="hxNudgeHint"></span>
+    </div>
+    <button class="btn btn-gold btn-sm" id="hxNudgeGo" type="button">{{ icon("sparkles") }} 现在记录</button>
+    <button class="hx-nudge-close" id="hxNudgeClose" type="button" aria-label="本月不再提醒">✕</button>
+  </div>
+
+  <!-- ══════════ 见证收件箱（V1.7） ══════════ -->
+  <section id="hxWitInbox" class="hx-witinbox" hidden>
+    <div class="hx-witinbox-head">
+      <h3>{{ icon("users") }} 待你见证 <em id="hxWitCount"></em></h3>
+      <button class="hx-q" type="button" data-tip="别的火星居民邀请你为他们的「荣耀 / 重要」时刻签名作证。签名后，签名指纹会写入你自己的身份链 —— 这是互证，不是点赞。">?</button>
+    </div>
+    <div id="hxWitList" class="hx-witlist"></div>
+  </section>
+
   <!-- ══════════ 身份证 + 数据主权 ══════════ -->
   <section class="hx-top">
     <div class="hx-idcard" id="hxIdCard"></div>
@@ -41,11 +61,18 @@
       <div id="hxChainBox" class="hx-chain-box"></div>
       <div class="hx-own-actions">
         <button class="btn btn-gold btn-sm" id="hxAdd1" type="button">{{ icon("pluscircle") }} 新增历程</button>
+        <button class="btn btn-gold btn-sm" id="hxAiOpen" type="button">{{ icon("sparkles") }} AI 记录助手</button>
         <button class="btn btn-ghost btn-sm" id="hxEditIdentity" type="button">{{ icon("sliders") }} 编辑身份</button>
         <button class="btn btn-ghost btn-sm" id="hxVerify" type="button">{{ icon("shieldlock") }} 一键验真</button>
         <button class="btn btn-ghost btn-sm" id="hxExport" type="button">{{ icon("save") }} 导出护照</button>
         <button class="btn btn-ghost btn-sm" id="hxShare" type="button">{{ icon("link") }} 复制公开链接</button>
       </div>
+      <div class="hx-own-actions hx-own-actions2">
+        <button class="btn btn-ghost btn-sm" id="hxAnnualOpen" type="button">{{ icon("star") }} 年度火星年报</button>
+        <button class="btn btn-ghost btn-sm" id="hxLegacyOpen" type="button">{{ icon("heart") }} 数字遗产约定</button>
+        <a class="btn btn-ghost btn-sm" href="/hx/verify" target="_blank" rel="noopener">{{ icon("shieldlock") }} 护照验证器</a>
+      </div>
+      <div id="hxLegacyLine" class="hx-legacy-line" hidden></div>
       <div class="hx-share-row">
         <span class="hx-share-label">公开身份证</span>
         <code id="hxShareUrl" class="hx-share-url">—</code>
@@ -58,6 +85,23 @@
       <div id="hxBlockList" class="hx-blocklist"></div>
     </aside>
   </section>
+
+  <!-- ══════════ 家庭链（V1.7） ══════════ -->
+  <section class="hx-family" id="hxFamilySec">
+    <div class="hx-guide-head">
+      <h3>{{ icon("users") }} 家庭记忆链</h3>
+      <button class="hx-q" type="button" data-tip="把家人的火星身份证关联起来，形成家庭记忆链。确认关联后，彼此的公开历程可以在家庭圈里看到；关联这件事本身会写入双方的身份链。">?</button>
+      <span id="hxFamilyCount"></span>
+    </div>
+    <div id="hxFamilyList" class="hx-family-list"></div>
+    <div class="hx-family-add">
+      <input id="hxFamilyDid" type="text" placeholder="家人的身份标识 did:mars:ecojia:…" maxlength="80">
+      <input id="hxFamilyRel" type="text" placeholder="关系，如：爱人 / 儿子 / 父亲" maxlength="12">
+      <button class="btn btn-gold btn-sm" id="hxFamilyAdd" type="button">{{ icon("pluscircle") }} 关联家人</button>
+    </div>
+    <div class="hx-field-note">家人确认后，关联会写入双方的身份链；任一方都可以随时解除。</div>
+  </section>
+
 
   <!-- ══════════ 七类历程统计 ══════════ -->
   <section class="hx-cats" id="hxCats" aria-label="历程分类"></section>
@@ -159,6 +203,36 @@
         <button class="hx-q" type="button" data-tip="只把某几条历程设为公开，它们才会出现在可分享的公开身份证页；私密历程永远不公开。">?</button>
         <p>想公开哪条，由你决定。</p>
       </div>
+      <div class="hx-term">
+        <span>时间胶囊</span>
+        <button class="hx-q" type="button" data-tip="给一段历程设定未来解锁日期。在那天到来之前，正文被封存，连你自己也看不到（标题可见）。就像给未来的自己写信。">?</button>
+        <p>写给未来的一封信。</p>
+      </div>
+      <div class="hx-term">
+        <span>见证人</span>
+        <button class="hx-q" type="button" data-tip="「荣耀 / 重要」类历程可邀请另一位火星居民签名作证。对方的签名指纹会写入对方的身份链，自证升级为互证。">?</button>
+        <p>让重要时刻有人作证。</p>
+      </div>
+      <div class="hx-term">
+        <span>家庭记忆链</span>
+        <button class="hx-q" type="button" data-tip="把家人的火星身份证关联起来，彼此的公开历程在家庭圈里可见；关联这件事会写入双方的身份链。">?</button>
+        <p>一家人的故事连在一起。</p>
+      </div>
+      <div class="hx-term">
+        <span>数字遗产约定</span>
+        <button class="hx-q" type="button" data-tip="指定继承人。如果账号连续多年不活跃，「纪念」类历程将按约定移交。约定写入身份链，庄重可追溯。">?</button>
+        <p>把珍贵的，托付给人。</p>
+      </div>
+      <div class="hx-term">
+        <span>年度火星年报</span>
+        <button class="hx-q" type="button" data-tip="一键生成某一年的历程回顾：七类统计、等级成长、年度羽毛形态。可以分享公开版本给朋友。">?</button>
+        <p>一年一羽，可分享。</p>
+      </div>
+      <div class="hx-term">
+        <span>护照验证器</span>
+        <button class="hx-q" type="button" data-tip="任何人拿到你导出的火星护照 JSON，都能在验证器页离线验真。文件不上传服务器，数据自持的最终闭环。">?</button>
+        <p>你的护照，谁都能验。</p>
+      </div>
     </div>
   </section>
 </div>
@@ -202,6 +276,11 @@
         <input id="fPlace" type="text" maxlength="40" placeholder="例如：泸州 · 长江边">
       </div>
       <div class="hx-field">
+        <label for="fUnlock">时间胶囊 <button class="hx-q" type="button" data-tip="给这段历程设定一个未来解锁日期。在那天到来之前，内容会被封存，连你自己也无法查看正文（标题可见）。就像给未来的自己写一封信。">?</button></label>
+        <input id="fUnlock" type="date" min="" max="2099-12-31">
+        <div class="hx-field-note">可选：设定未来某一天，到期才解锁正文（写给自己）</div>
+      </div>
+      <div class="hx-field">
         <label>可见范围</label>
         <div class="hx-vis">
           <label class="hx-vis-item"><input type="radio" name="fVis" value="private" checked><span>{{ icon("lock") }} 仅自己可见</span></label>
@@ -210,7 +289,7 @@
         <div class="hx-field-note">公开后才会出现在可分享的公开身份证页</div>
       </div>
       <div class="hx-form-foot">
-        <span class="hx-form-tip">保存时会自动生成内容指纹并写入链上</span>
+        <span class="hx-form-tip" id="hxFormTip">保存时会自动生成内容指纹并写入链上</span>
         <div class="hx-form-btns">
           <button class="btn btn-ghost btn-sm" type="button" data-close="hxModal">取消</button>
           <button class="btn btn-gold btn-sm" type="submit" id="hxFormSave">保存并存证</button>
@@ -260,6 +339,110 @@
   </div>
 </div>
 
+<!-- ══════════ AI 记录助手弹窗（V1.7） ══════════ -->
+<div class="hx-modal" id="hxAiModal" hidden>
+  <div class="hx-modal-card">
+    <div class="hx-modal-head">
+      <h3>{{ icon("sparkles") }} AI 记录助手</h3>
+      <button class="hx-modal-close" type="button" data-close="hxAiModal" aria-label="关闭">✕</button>
+    </div>
+    <div class="hx-ai-body">
+      <p class="hx-ai-intro">说一句话或一段话，AI 帮你归类到七类、起标题、润色成完整历程。<br>
+      确认后写入你的身份链，记录成本从「填表单」降到「说句话」。</p>
+      <textarea id="hxAiText" rows="4" maxlength="500"
+        placeholder="例如：去年冬天我拿到了人生第一面理赔锦旗，客户拉着我的手说谢谢，那一刻觉得十年没白干。"></textarea>
+      <div class="hx-ai-actions">
+        <button class="btn btn-gold" id="hxAiGen" type="button">{{ icon("sparkles") }} 生成草稿</button>
+        <span class="hx-ai-status" id="hxAiStatus"></span>
+      </div>
+      <div id="hxAiPreview" class="hx-ai-preview" hidden>
+        <div class="hx-ai-preview-head">
+          <b>草稿预览</b>
+          <span class="hx-ai-via" id="hxAiVia"></span>
+        </div>
+        <div class="hx-ai-field"><span>分类</span><b id="hxAiCat"></b></div>
+        <div class="hx-ai-field"><span>标题</span><b id="hxAiTitle"></b></div>
+        <div class="hx-ai-field"><span>摘要</span><p id="hxAiSum"></p></div>
+        <div class="hx-ai-field"><span>故事</span><p id="hxAiDet"></p></div>
+        <div class="hx-ai-field" id="hxAiMoodRow" hidden><span>心情</span><b id="hxAiMood"></b></div>
+        <div class="hx-ai-field" id="hxAiDateRow" hidden><span>推断时间</span><b id="hxAiDate"></b></div>
+        <div class="hx-ai-preview-actions">
+          <button class="btn btn-ghost btn-sm" type="button" data-close="hxAiModal">放弃</button>
+          <button class="btn btn-gold btn-sm" id="hxAiUse" type="button">{{ icon("pluscircle") }} 填入表单，确认入链</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ 邀请见证人弹窗（V1.7） ══════════ -->
+<div class="hx-modal" id="hxWitModal" hidden>
+  <div class="hx-modal-card hx-modal-sm">
+    <div class="hx-modal-head">
+      <h3>{{ icon("users") }} 邀请见证人</h3>
+      <button class="hx-modal-close" type="button" data-close="hxWitModal" aria-label="关闭">✕</button>
+    </div>
+    <form id="hxWitForm" class="hx-form">
+      <input type="hidden" id="witRid" value="">
+      <p class="hx-wit-intro">邀请另一位火星居民为「<b id="witRecTitle"></b>」签名作证。
+      对方签名后，签名指纹会写入对方自己的身份链，自证升级为互证。</p>
+      <div class="hx-field hx-field-full">
+        <label for="witDid">对方身份标识（DID）<span class="hx-required">*</span></label>
+        <input id="witDid" type="text" maxlength="80" placeholder="did:mars:ecojia:…" required>
+        <div class="hx-field-note">对方在「火星平面 → 编辑身份」里可以复制自己的 DID</div>
+      </div>
+      <div class="hx-field hx-field-full">
+        <label for="witStatement">见证语（可选）</label>
+        <input id="witStatement" type="text" maxlength="200" placeholder="例如：那一年我在场，确实如此">
+      </div>
+      <div class="hx-form-foot">
+        <span class="hx-form-tip">邀请不会上链；对方签名后，签名才写入对方的链</span>
+        <div class="hx-form-btns">
+          <button class="btn btn-ghost btn-sm" type="button" data-close="hxWitModal">取消</button>
+          <button class="btn btn-gold btn-sm" type="submit">发出邀请</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════ 数字遗产约定弹窗（V1.7） ══════════ -->
+<div class="hx-modal" id="hxLegacyModal" hidden>
+  <div class="hx-modal-card hx-modal-sm">
+    <div class="hx-modal-head">
+      <h3>{{ icon("heart") }} 数字遗产约定</h3>
+      <button class="hx-modal-close" type="button" data-close="hxLegacyModal" aria-label="关闭">✕</button>
+    </div>
+    <form id="hxLegacyForm" class="hx-form">
+      <p class="hx-wit-intro">指定一位继承人。如果账号连续多年不活跃，你「纪念」类的历程将按本约定移交给继承人。
+      约定本身会写入你的身份链，庄重且可追溯。</p>
+      <div class="hx-field hx-field-full">
+        <label for="legHeirDid">继承人身份标识（DID）</label>
+        <input id="legHeirDid" type="text" maxlength="80" placeholder="did:mars:ecojia:…（留空表示撤销约定）">
+      </div>
+      <div class="hx-field hx-field-full">
+        <label for="legHeirName">继承人称呼</label>
+        <input id="legHeirName" type="text" maxlength="20" placeholder="例如：女儿 / 爱人">
+      </div>
+      <div class="hx-field">
+        <label for="legYears">不活跃年限（1-10 年）</label>
+        <input id="legYears" type="number" min="1" max="10" value="3">
+      </div>
+      <div class="hx-field hx-field-full">
+        <label for="legNote">想对继承人说的话（可选）</label>
+        <input id="legNote" type="text" maxlength="200" placeholder="这些纪念，替我继续保管">
+      </div>
+      <div class="hx-form-foot">
+        <span class="hx-form-tip">约定变更会写入身份链；当前约定会显示在「数据主权」面板</span>
+        <div class="hx-form-btns">
+          <button class="btn btn-ghost btn-sm" type="button" data-close="hxLegacyModal">取消</button>
+          <button class="btn btn-gold btn-sm" type="submit">保存约定</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -268,12 +451,15 @@
   const IS_LOGIN = {{ 'true' if user else 'false' }};
   const NS = "http://www.w3.org/2000/svg";
   const MOODS = ["开心","幸福","骄傲","感恩","平静","怀念","难过","坚定"];
-  const ACTION_LABEL = {genesis:"创世", create:"新增", update:"修改", delete:"删除", identity:"身份"};
+  const ACTION_LABEL = {genesis:"创世", create:"新增", update:"修改", delete:"删除", identity:"身份",
+                        witness:"见证", family:"家庭链", legacy:"遗产约定"};
+  const WITNESS_CATS = ["荣耀", "重要"];
   let DATA = null;
   let filterCat = "全部";
   let keyword = "";
   let sortMode = "asc";
   let selectedId = null;
+  let aiDraftUsed = false;
 
   const $ = (id)=>document.getElementById(id);
   const esc = (s)=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
@@ -553,8 +739,8 @@
       return `<button class="hx-item ${active?"active":""}" type="button" data-id="${esc(r.id)}" style="--c:${meta.color}">
         <span class="hx-item-date">${esc(r.happened_on)}</span>
         <span class="hx-item-main">
-          <span class="hx-item-title">${esc(r.title)}</span>
-          <span class="hx-item-sub">${esc(r.summary) || " "}</span>
+          <span class="hx-item-title">${esc(r.title)}${r.locked?` <em class="hx-cap-badge">封存至 ${esc(r.unlock_at)}</em>`:""}${r.ai_draft?` <em class="hx-ai-badge">AI</em>`:""}</span>
+          <span class="hx-item-sub">${r.locked ? "时间胶囊 · 到期解锁" : (esc(r.summary) || " ")}</span>
         </span>
         <span class="hx-item-cat">${esc(r.category)}</span>
         <span class="hx-item-vis" title="${r.visibility==="public"?"公开见证":"仅自己可见"}">${r.visibility==="public"?"公":"私"}</span>
@@ -574,18 +760,39 @@
     }
     const meta = catMeta(r.category);
     const editable = DATA.login && !DATA.demo;
+    const locked = !!r.locked;
+    const wits = (r.witnesses || []);
+    const witHtml = wits.length ? `
+      <div class="hx-d-wit">
+        <div class="hx-d-wit-head">{{ icon("users") }} 见证人</div>
+        ${wits.map(w=>`
+          <div class="hx-d-wit-item ${w.status}">
+            <span class="hx-d-wit-name">${esc(w.mars_name)}</span>
+            <span class="hx-d-wit-status">${w.status==="signed"?"已签名":"待签名"}</span>
+            ${w.status==="signed" ? `<code title="签名指纹">${esc(String(w.sign_hash).slice(0,14))}…</code>` : ""}
+            ${w.statement ? `<em>${esc(w.statement)}</em>` : ""}
+          </div>`).join("")}
+      </div>` : "";
+    const canInvite = editable && !locked && WITNESS_CATS.includes(r.category);
     box.innerHTML = `
       <div class="hx-d-top">
         <span class="hx-d-date">${esc(r.happened_on)}</span>
         <span class="hx-d-cat" style="--c:${meta.color}">${esc(r.category)}</span>
+        ${locked ? `<span class="hx-d-cap">{{ icon("lock") }} 封存至 ${esc(r.unlock_at)}</span>` : ""}
       </div>
       <h3 class="hx-d-title">${esc(r.title)}</h3>
-      ${r.summary ? `<p class="hx-d-sum">${esc(r.summary)}</p>` : ""}
-      ${r.detail ? `<p class="hx-d-det">${esc(r.detail)}</p>` : ""}
+      ${locked ? `<div class="hx-d-locked">
+        <b>时间胶囊仍在封存中</b>
+        <p>这段历程要到 <b>${esc(r.unlock_at)}</b> 才解锁。到期之前，正文连你自己也看不到 —— 就像一封写给未来的信。</p>
+      </div>` : `
+        ${r.summary ? `<p class="hx-d-sum">${esc(r.summary)}</p>` : ""}
+        ${r.detail ? `<p class="hx-d-det">${esc(r.detail)}</p>` : ""}
+      `}
       <div class="hx-d-meta">
-        ${r.mood ? `<span>心情：${esc(r.mood)}</span>` : ""}
-        ${r.place ? `<span>地点：${esc(r.place)}</span>` : ""}
+        ${!locked && r.mood ? `<span>心情：${esc(r.mood)}</span>` : ""}
+        ${!locked && r.place ? `<span>地点：${esc(r.place)}</span>` : ""}
         <span>${r.visibility==="public" ? "公开见证" : "仅自己可见"}</span>
+        ${r.ai_draft ? `<span class="hx-ai-badge">AI 协助整理</span>` : ""}
       </div>
       <div class="hx-d-chain">
         <span class="hx-d-chain-label">内容指纹</span>
@@ -595,7 +802,9 @@
         <span class="hx-d-chain-label">链上区块</span>
         <code>#${esc(r.block_no)} · ${r.demo ? "示例" : "已存证"}</code>
       </div>
+      ${witHtml}
       ${editable ? `<div class="hx-d-ops">
+        ${canInvite ? `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxOpenWitness('${esc(r.id)}')">{{ icon("users") }} 邀请见证人</button>` : ""}
         <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxEditRecord('${esc(r.id)}')">{{ icon("pencil") }} 修改</button>
         <button class="btn btn-ghost btn-sm hx-danger" type="button" onclick="window.hxDeleteRecord('${esc(r.id)}')">{{ icon("trash") }} 删除</button>
       </div>` : `<div class="hx-d-demo">${DATA.demo ? "示例历程 · 登录后即可建自己的档案" : ""}</div>`}`;
@@ -621,7 +830,242 @@
     renderFeather();
     renderList();
     renderDetail();
+    renderNudge();
+    renderWitnessInbox();
+    renderFamily();
+    renderLegacyLine();
   }
+
+  /* ---------- V1.7 月度提醒 ---------- */
+  function renderNudge(){
+    const n = DATA.nudge;
+    const box = $("hxNudge");
+    if(!n || !DATA.login || DATA.demo){ box.hidden = true; return; }
+    const dismissKey = "hx-nudge-" + n.month;
+    if(localStorage.getItem(dismissKey)){ box.hidden = true; return; }
+    $("hxNudgeText").textContent = n.text;
+    $("hxNudgeHint").textContent = n.hint;
+    box.hidden = false;
+    $("hxNudgeClose").onclick = ()=>{ localStorage.setItem(dismissKey, "1"); box.hidden = true; };
+    $("hxNudgeGo").onclick = ()=>{ box.hidden = true; openAiModal(); };
+  }
+
+  /* ---------- V1.7 见证收件箱 ---------- */
+  function renderWitnessInbox(){
+    const list = DATA.witness_inbox || [];
+    const sec = $("hxWitInbox");
+    if(!DATA.login || DATA.demo || !list.length){ sec.hidden = true; return; }
+    sec.hidden = false;
+    $("hxWitCount").textContent = list.length + " 条待签名";
+    $("hxWitList").innerHTML = list.map(w=>`
+      <div class="hx-wit-item">
+        <div class="hx-wit-info">
+          <b>${esc(w.title)}</b>
+          <span>${esc(w.owner_name)} · ${esc(w.category)} · ${esc(w.happened_on)}</span>
+          ${w.statement ? `<em>「${esc(w.statement)}」</em>` : ""}
+        </div>
+        <div class="hx-wit-ops">
+          <button class="btn btn-gold btn-sm" type="button" onclick="window.hxSignWitness(${w.id})">签名见证</button>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxDeclineWitness(${w.id})">婉拒</button>
+        </div>
+      </div>`).join("");
+  }
+
+  window.hxSignWitnessById = null;
+  window.hxSignWitness = async function(wid){
+    const w = (DATA.witness_inbox || []).find(x=>x.id===wid);
+    const statement = w && w.statement ? w.statement : "";
+    const d = await api(`/api/huoxing/witness/${wid}/sign`, {
+      method:"POST", body: JSON.stringify({statement})
+    });
+    if(d.ok){ toast(d.msg || "已签名见证"); await load(true); }
+  };
+  window.hxDeclineWitness = async function(wid){
+    if(!confirm("确定婉拒这次见证邀请吗？")) return;
+    const d = await api(`/api/huoxing/witness/${wid}/decline`, {method:"POST"});
+    if(d.ok){ toast(d.msg || "已婉拒"); await load(true); }
+  };
+
+  /* ---------- V1.7 邀请见证人 ---------- */
+  window.hxOpenWitness = function(rid){
+    const r = findRecord(rid);
+    if(!r) return;
+    $("witRid").value = r.id;
+    $("witRecTitle").textContent = r.title;
+    $("witDid").value = "";
+    $("witStatement").value = "";
+    openModal("hxWitModal");
+    setTimeout(()=>$("witDid").focus(), 60);
+  };
+  $("hxWitForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    const rid = $("witRid").value;
+    const did = $("witDid").value.trim();
+    if(!did){ toast("请填写对方的身份标识 DID", false); return; }
+    const d = await api(`/api/huoxing/records/${rid}/witness`, {
+      method:"POST",
+      body: JSON.stringify({did, statement: $("witStatement").value.trim()})
+    });
+    if(d.ok){
+      closeModal("hxWitModal");
+      toast(d.msg || "邀请已发出");
+      await load(true);
+    }
+  });
+
+  /* ---------- V1.7 家庭记忆链 ---------- */
+  function renderFamily(){
+    const list = DATA.family || [];
+    const box = $("hxFamilyList");
+    $("hxFamilyCount").textContent = list.length ? `${list.filter(f=>f.status==="confirmed").length} 位家人` : "还未关联家人";
+    if(!DATA.login || DATA.demo){
+      box.innerHTML = `<div class="hx-family-empty">登录后，把家人的火星身份证关联进来，形成家庭记忆链</div>`;
+      return;
+    }
+    if(!list.length){
+      box.innerHTML = `<div class="hx-family-empty">还没有关联家人。输入家人的 DID，发出第一条家庭链邀请吧。</div>`;
+      return;
+    }
+    box.innerHTML = list.map(f=>{
+      const o = f.other || {};
+      const confirmed = f.status === "confirmed";
+      return `<div class="hx-family-item ${f.status}">
+        <div class="hx-avatar hx-avatar-xs">${identicon(o.avatar_seed || o.did || "mars")}</div>
+        <div class="hx-family-info">
+          <b>${esc(o.mars_name || "未命名")}</b>
+          <span>${esc(f.relation)} · ${confirmed ? "已确认" : (f.direction==="out" ? "等待对方确认" : "待你确认")}</span>
+          ${confirmed && o.public_card ? `<a class="hx-family-link" href="/hx/card/${esc(o.did)}" target="_blank" rel="noopener">查看 TA 的公开身份证（${f.other_public_count||0} 条公开历程）</a>` : ""}
+        </div>
+        <div class="hx-family-ops">
+          ${!confirmed && f.direction==="in" ? `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxAcceptFamily(${f.id})">确认关联</button>` : ""}
+          <button class="btn btn-ghost btn-sm hx-danger" type="button" onclick="window.hxRemoveFamily(${f.id})">解除</button>
+        </div>
+      </div>`;
+    }).join("");
+  }
+  window.hxAcceptFamily = async function(fid){
+    const d = await api(`/api/huoxing/family/${fid}/accept`, {method:"POST"});
+    if(d.ok){ toast(d.msg || "已确认"); await load(true); }
+  };
+  window.hxRemoveFamily = async function(fid){
+    if(!confirm("确定解除这条家庭链关联吗？链上历史仍可追溯。")) return;
+    const d = await api(`/api/huoxing/family/${fid}`, {method:"DELETE"});
+    if(d.ok){ toast(d.msg || "已解除"); await load(true); }
+  };
+  $("hxFamilyAdd").addEventListener("click", async ()=>{
+    if(needLogin()) return;
+    const did = $("hxFamilyDid").value.trim();
+    if(!did){ toast("请填写家人的身份标识 DID", false); return; }
+    const d = await api("/api/huoxing/family", {
+      method:"POST",
+      body: JSON.stringify({did, relation: $("hxFamilyRel").value.trim() || "家人"})
+    });
+    if(d.ok){
+      $("hxFamilyDid").value = "";
+      $("hxFamilyRel").value = "";
+      toast(d.msg || "邀请已发出");
+      await load(true);
+    }
+  });
+
+  /* ---------- V1.7 数字遗产约定 ---------- */
+  function renderLegacyLine(){
+    const lg = DATA.legacy;
+    const box = $("hxLegacyLine");
+    if(!DATA.login || DATA.demo || !lg){ box.hidden = true; return; }
+    box.hidden = false;
+    box.innerHTML = `{{ icon("heart") }} 已约定：账号 ${lg.inactive_years} 年不活跃时，「${esc(lg.scope||"纪念")}」类历程移交给 <b>${esc(lg.heir_name || "指定继承人")}</b>`;
+  }
+  $("hxLegacyOpen").addEventListener("click", ()=>{
+    if(needLogin()) return;
+    const lg = DATA.legacy || {};
+    $("legHeirDid").value = lg.heir_did || "";
+    $("legHeirName").value = lg.heir_name || "";
+    $("legYears").value = lg.inactive_years || 3;
+    $("legNote").value = lg.note || "";
+    openModal("hxLegacyModal");
+  });
+  $("hxLegacyForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    const d = await api("/api/huoxing/legacy", {
+      method:"PUT",
+      body: JSON.stringify({
+        heir_did: $("legHeirDid").value.trim(),
+        heir_name: $("legHeirName").value.trim(),
+        inactive_years: parseInt($("legYears").value || "3", 10),
+        note: $("legNote").value.trim()
+      })
+    });
+    if(d.ok){
+      closeModal("hxLegacyModal");
+      toast(d.msg || "约定已保存");
+      await load(true);
+    }
+  });
+
+  /* ---------- V1.7 年报入口 ---------- */
+  $("hxAnnualOpen").addEventListener("click", ()=>{
+    if(needLogin()) return;
+    const years = DATA.annual_years || [];
+    const thisYear = String(new Date().getFullYear());
+    const year = years.includes(thisYear) ? thisYear : (years[0] || thisYear);
+    location.href = `/huoxing/annual/${year}`;
+  });
+
+  /* ---------- V1.7 AI 记录助手 ---------- */
+  function openAiModal(){
+    if(needLogin()) return;
+    $("hxAiText").value = "";
+    $("hxAiPreview").hidden = true;
+    $("hxAiStatus").textContent = "";
+    openModal("hxAiModal");
+    setTimeout(()=>$("hxAiText").focus(), 60);
+  }
+  $("hxAiOpen").addEventListener("click", openAiModal);
+  let lastAiDraft = null;
+  $("hxAiGen").addEventListener("click", async ()=>{
+    const text = $("hxAiText").value.trim();
+    if(text.length < 4){ toast("先口述一段话（至少 4 个字）", false); return; }
+    $("hxAiGen").disabled = true;
+    $("hxAiStatus").textContent = "AI 正在整理…";
+    const d = await api("/api/huoxing/ai_draft", {method:"POST", body: JSON.stringify({text})});
+    $("hxAiGen").disabled = false;
+    if(!d.ok){ $("hxAiStatus").textContent = d.msg || "生成失败"; return; }
+    lastAiDraft = d.draft;
+    $("hxAiCat").textContent = d.draft.category || "";
+    $("hxAiTitle").textContent = d.draft.title || "";
+    $("hxAiSum").textContent = d.draft.summary || "（无）";
+    $("hxAiDet").textContent = d.draft.detail || "（无）";
+    $("hxAiMoodRow").hidden = !d.draft.mood;
+    $("hxAiMood").textContent = d.draft.mood || "";
+    $("hxAiDateRow").hidden = !d.draft.happened_on;
+    $("hxAiDate").textContent = d.draft.happened_on || "";
+    $("hxAiVia").textContent = d.via === "ark" ? "火山引擎大模型" : "本地智能整理";
+    $("hxAiStatus").textContent = d.msg || "";
+    $("hxAiPreview").hidden = false;
+  });
+  $("hxAiUse").addEventListener("click", ()=>{
+    if(!lastAiDraft) return;
+    closeModal("hxAiModal");
+    openRecordModal(null);
+    const dr = lastAiDraft;
+    aiDraftUsed = true;
+    if(dr.happened_on) $("fDate").value = dr.happened_on;
+    $("fTitle").value = dr.title || "";
+    $("fSummary").value = dr.summary || "";
+    $("fDetail").value = dr.detail || "";
+    if(dr.category){
+      $("fCatPick").querySelectorAll(".hx-pick-item").forEach(x=>{
+        x.classList.toggle("active", x.dataset.cat === dr.category);
+      });
+    }
+    if(dr.mood){
+      $("fMoodPick").querySelectorAll(".hx-pick-item").forEach(x=>{
+        x.classList.toggle("active", x.dataset.mood === dr.mood);
+      });
+    }
+    toast("草稿已填入表单，请核对后保存入链");
+  });
 
   /* ---------- 复制 / 登录拦截 ---------- */
   window.hxCopy = async function(text){
@@ -698,6 +1142,10 @@
     $("fSummary").value = rec ? rec.summary || "" : "";
     $("fDetail").value = rec ? rec.detail || "" : "";
     $("fPlace").value = rec ? rec.place || "" : "";
+    $("fUnlock").value = rec ? (rec.unlock_at || "") : "";
+    $("fUnlock").min = new Date(Date.now()+86400000).toISOString().slice(0,10);
+    aiDraftUsed = false;
+    $("hxFormTip").textContent = "保存时会自动生成内容指纹并写入链上";
     document.querySelectorAll("input[name=fVis]").forEach(x=>{
       x.checked = rec ? rec.visibility === x.value : x.value === "private";
     });
@@ -744,7 +1192,9 @@
       detail: $("fDetail").value.trim(),
       mood: pickValue($("fMoodPick"), "mood"),
       place: $("fPlace").value.trim(),
-      visibility: vis ? vis.value : "private"
+      visibility: vis ? vis.value : "private",
+      unlock_at: $("fUnlock").value || "",
+      ai_draft: aiDraftUsed ? 1 : 0
     };
     if(!body.title){ toast("请填写标题", false); return; }
     const btn = $("hxFormSave");

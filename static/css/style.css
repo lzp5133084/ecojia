@@ -1317,3 +1317,194 @@ body.hx-lock{overflow:hidden}
   .hx-item-date{width:58px;font-size:10.5px}
   .hx-item-cat{display:none}
 }
+
+/* ═══════════════ V1.7 火星身份证扩展：时间胶囊 / 见证人 / AI助手 / 家庭链 / 年报 / 验证器 ═══════════════ */
+/* —— 月度提醒条 —— */
+.hx-nudge{display:flex;align-items:center;gap:14px;margin:0 0 18px;padding:14px 18px;border-radius:16px;
+  background:linear-gradient(120deg,rgba(244,114,182,.14),rgba(192,132,252,.10));
+  border:1px solid rgba(244,114,182,.35);box-shadow:0 8px 30px rgba(244,114,182,.12)}
+.hx-nudge[hidden]{display:none}
+.hx-nudge-dot{width:10px;height:10px;border-radius:50%;background:#f472b6;flex:none;
+  box-shadow:0 0 12px #f472b6;animation:hxNudgePulse 1.8s ease-in-out infinite}
+@keyframes hxNudgePulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5}}
+.hx-nudge-text{flex:1;display:flex;flex-direction:column;gap:2px}
+.hx-nudge-text b{font-size:15px;color:#ffe3f1}
+.hx-nudge-text span{font-size:12px;color:rgba(255,227,241,.62)}
+.hx-nudge-close{background:none;border:none;color:rgba(255,227,241,.5);font-size:15px;cursor:pointer;padding:4px}
+.hx-nudge-close:hover{color:#ffe3f1}
+
+/* —— 见证收件箱 —— */
+.hx-witinbox{margin:0 0 18px;padding:18px 20px;border-radius:18px;
+  background:linear-gradient(135deg,rgba(255,215,107,.10),rgba(244,114,182,.06));
+  border:1px solid rgba(255,215,107,.3)}
+.hx-witinbox[hidden]{display:none}
+.hx-witinbox-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.hx-witinbox-head h3{margin:0;font-size:16px;color:#ffe9b8;display:flex;align-items:center;gap:7px}
+.hx-witinbox-head em{font-style:normal;font-size:12px;color:rgba(255,233,184,.6);margin-left:4px}
+.hx-witlist{display:flex;flex-direction:column;gap:10px}
+.hx-wit-item{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 14px;border-radius:13px;background:rgba(23,14,38,.55);border:1px solid rgba(255,215,107,.18)}
+.hx-wit-info{display:flex;flex-direction:column;gap:3px;min-width:0}
+.hx-wit-info b{font-size:14px;color:#fff3d9}
+.hx-wit-info span{font-size:12px;color:rgba(255,243,217,.55)}
+.hx-wit-info em{font-style:normal;font-size:12px;color:#ffd76b}
+.hx-wit-ops{display:flex;gap:8px;flex:none}
+
+/* —— 详情里的见证人 / 胶囊 —— */
+.hx-d-cap{font-size:11.5px;color:#c084fc;background:rgba(192,132,252,.14);
+  border:1px solid rgba(192,132,252,.35);padding:3px 9px;border-radius:99px;display:inline-flex;align-items:center;gap:4px}
+.hx-d-locked{margin:10px 0;padding:14px 16px;border-radius:13px;
+  background:linear-gradient(135deg,rgba(192,132,252,.12),rgba(138,151,255,.08));
+  border:1px dashed rgba(192,132,252,.45)}
+.hx-d-locked b{font-size:13.5px;color:#ddc2ff}
+.hx-d-locked p{margin:6px 0 0;font-size:12px;color:rgba(221,194,255,.72);line-height:1.7}
+.hx-d-wit{margin-top:12px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.12)}
+.hx-d-wit-head{font-size:12.5px;color:#ffd76b;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.hx-d-wit-item{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;
+  padding:6px 10px;border-radius:9px;background:rgba(255,215,107,.07);margin-bottom:6px}
+.hx-d-wit-name{color:#ffe9b8;font-weight:600}
+.hx-d-wit-status{color:rgba(255,233,184,.55)}
+.hx-d-wit-item.signed .hx-d-wit-status{color:#7ee2a8}
+.hx-d-wit-item code{color:rgba(255,255,255,.45);font-size:10.5px}
+.hx-d-wit-item em{font-style:normal;color:rgba(255,243,217,.7);width:100%}
+
+/* —— 列表徽章 —— */
+.hx-cap-badge{font-style:normal;font-size:10px;color:#ddc2ff;background:rgba(192,132,252,.16);
+  border:1px solid rgba(192,132,252,.4);border-radius:99px;padding:1px 7px;margin-left:5px;vertical-align:1px}
+.hx-ai-badge{font-style:normal;font-size:10px;color:#9ef0ff;background:rgba(92,225,230,.14);
+  border:1px solid rgba(92,225,230,.4);border-radius:99px;padding:1px 7px;margin-left:5px;vertical-align:1px}
+
+/* —— AI 记录助手 —— */
+.hx-ai-body{padding:4px 2px 2px}
+.hx-ai-intro{font-size:13px;color:rgba(255,255,255,.66);line-height:1.8;margin:0 0 12px}
+#hxAiText{width:100%;resize:vertical;border-radius:13px;padding:12px 14px;font-size:13.5px;line-height:1.7;
+  background:rgba(23,14,38,.6);border:1px solid rgba(244,114,182,.28);color:#fff;outline:none;font-family:inherit}
+#hxAiText:focus{border-color:#f472b6;box-shadow:0 0 0 3px rgba(244,114,182,.14)}
+.hx-ai-actions{display:flex;align-items:center;gap:12px;margin:12px 0}
+.hx-ai-status{font-size:12px;color:rgba(255,255,255,.55)}
+.hx-ai-preview{border-radius:14px;padding:14px 16px;margin-top:4px;
+  background:linear-gradient(135deg,rgba(92,225,230,.08),rgba(192,132,252,.08));
+  border:1px solid rgba(92,225,230,.3)}
+.hx-ai-preview[hidden]{display:none}
+.hx-ai-preview-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.hx-ai-preview-head b{font-size:14px;color:#bdf3f7}
+.hx-ai-via{font-size:11px;color:rgba(189,243,247,.55);border:1px solid rgba(92,225,230,.3);
+  border-radius:99px;padding:2px 9px}
+.hx-ai-field{display:flex;gap:10px;padding:6px 0;border-top:1px dashed rgba(255,255,255,.08);font-size:13px}
+.hx-ai-field span{flex:none;width:56px;color:rgba(255,255,255,.45);font-size:12px;padding-top:2px}
+.hx-ai-field b{color:#fff;font-weight:600}
+.hx-ai-field p{margin:0;color:rgba(255,255,255,.8);line-height:1.7}
+.hx-ai-preview-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+
+/* —— 数据主权第二排按钮 / 遗产行 —— */
+.hx-own-actions2{margin-top:8px}
+.hx-legacy-line{margin:10px 0 0;font-size:12px;color:#e9c4ff;line-height:1.7;
+  padding:9px 12px;border-radius:11px;background:rgba(192,132,252,.09);border:1px dashed rgba(192,132,252,.4)}
+.hx-legacy-line[hidden]{display:none}
+.hx-legacy-line .ic{width:13px;height:13px;vertical-align:-2px;margin-right:4px}
+.hx-legacy-line b{color:#ddc2ff}
+
+/* —— 家庭记忆链 —— */
+.hx-family{margin:0 0 18px;padding:18px 20px;border-radius:18px;
+  background:linear-gradient(135deg,rgba(126,226,168,.08),rgba(92,225,230,.05));
+  border:1px solid rgba(126,226,168,.25)}
+.hx-family .hx-guide-head{margin-bottom:12px}
+.hx-family .hx-guide-head h3{color:#c8f7dd}
+.hx-family .hx-guide-head span{font-size:12px;color:rgba(200,247,221,.55)}
+.hx-family-list{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.hx-family-empty{font-size:13px;color:rgba(200,247,221,.55);padding:10px 4px}
+.hx-family-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:13px;
+  background:rgba(23,14,38,.55);border:1px solid rgba(126,226,168,.18)}
+.hx-family-item.pending{opacity:.85;border-style:dashed}
+.hx-avatar-xs{width:38px;height:38px;border-radius:11px;overflow:hidden;flex:none}
+.hx-avatar-xs svg{width:100%;height:100%;display:block}
+.hx-family-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.hx-family-info b{font-size:14px;color:#eafff3}
+.hx-family-info span{font-size:11.5px;color:rgba(234,255,243,.55)}
+.hx-family-link{font-size:11.5px;color:#7ee2a8;text-decoration:none}
+.hx-family-link:hover{text-decoration:underline}
+.hx-family-ops{display:flex;gap:8px;flex:none}
+.hx-family-add{display:flex;gap:10px;flex-wrap:wrap}
+.hx-family-add input{flex:1;min-width:180px;border-radius:11px;padding:10px 13px;font-size:13px;
+  background:rgba(23,14,38,.6);border:1px solid rgba(126,226,168,.28);color:#fff;outline:none;font-family:inherit}
+.hx-family-add input:focus{border-color:#7ee2a8;box-shadow:0 0 0 3px rgba(126,226,168,.12)}
+
+/* —— 年报页 —— */
+.hx-annual-hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:22px;margin-bottom:20px}
+.hx-annual-card{border-radius:22px;padding:34px 30px;position:relative;overflow:hidden;
+  background:linear-gradient(150deg,rgba(244,114,182,.16),rgba(192,132,252,.12) 55%,rgba(92,225,230,.10));
+  border:1px solid rgba(244,114,182,.35);display:flex;flex-direction:column;justify-content:center;gap:10px}
+.hx-annual-year{font-size:56px;font-weight:800;letter-spacing:2px;line-height:1;
+  background:linear-gradient(120deg,#ffd76b,#f472b6,#c084fc);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hx-annual-name{font-size:19px;font-weight:700;color:#fff}
+.hx-annual-levels{display:flex;align-items:center;gap:9px;font-size:13px}
+.hx-annual-arrow{color:rgba(255,255,255,.4)}
+.hx-annual-grew{font-style:normal;font-size:11px;color:#7ee2a8;border:1px solid rgba(126,226,168,.45);
+  border-radius:99px;padding:2px 9px}
+.hx-annual-total{display:flex;align-items:baseline;gap:9px}
+.hx-annual-total b{font-size:40px;color:#ffd76b;font-weight:800}
+.hx-annual-total span{font-size:13px;color:rgba(255,255,255,.6)}
+.hx-annual-fp{margin-top:8px}
+.hx-annual-side{border-radius:22px;padding:18px;background:rgba(23,14,38,.5);border:1px solid rgba(255,255,255,.1)}
+.hx-annual-side svg{width:100%;height:auto;max-height:420px}
+.hx-annual-cats{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:20px}
+.hx-annual-cat{display:flex;flex-direction:column;align-items:center;gap:5px;padding:13px 6px;border-radius:14px;
+  background:rgba(23,14,38,.5);border:1px solid color-mix(in srgb,var(--c) 35%,transparent)}
+.hx-annual-cat .hx-cat-dot{width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 9px var(--c)}
+.hx-annual-cat .hx-cat-name{font-size:12.5px;color:rgba(255,255,255,.75)}
+.hx-annual-cat b{font-size:19px;color:var(--c)}
+.hx-annual-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.hx-public-wit{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.hx-public-wit-item{font-size:11px;color:#ffe9b8;background:rgba(255,215,107,.1);
+  border:1px solid rgba(255,215,107,.35);border-radius:99px;padding:2px 9px}
+
+/* —— 护照验证器 —— */
+.hxv-wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.hxv-drop{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:44px 20px;border-radius:22px;border:2px dashed rgba(244,114,182,.4);
+  background:rgba(23,14,38,.45);text-align:center;transition:.25s}
+.hxv-drop.over{border-color:#f472b6;background:rgba(244,114,182,.09);transform:scale(1.01)}
+.hxv-drop b{font-size:16px;color:#ffe3f1}
+.hxv-drop span{font-size:12px;color:rgba(255,227,241,.5)}
+.hxv-drop-icon{color:#f472b6}
+.hxv-drop-icon .ic{width:42px;height:42px}
+.hxv-drop .hx-q{position:absolute;top:12px;right:12px}
+.hxv-paste{border-radius:15px;background:rgba(23,14,38,.45);border:1px solid rgba(255,255,255,.1);padding:14px 16px}
+.hxv-paste summary{cursor:pointer;font-size:13px;color:rgba(255,255,255,.65);outline:none}
+.hxv-paste textarea{width:100%;margin-top:12px;resize:vertical;border-radius:11px;padding:11px 13px;
+  font-size:12px;font-family:ui-monospace,Consolas,monospace;background:rgba(10,6,20,.7);
+  border:1px solid rgba(255,255,255,.14);color:#cfe;outline:none}
+.hxv-paste .btn{margin-top:10px}
+.hxv-result{border-radius:18px;padding:20px 22px}
+.hxv-result[hidden]{display:none}
+.hxv-result.ok{background:linear-gradient(135deg,rgba(126,226,168,.13),rgba(92,225,230,.08));
+  border:1px solid rgba(126,226,168,.45)}
+.hxv-result.bad{background:linear-gradient(135deg,rgba(255,107,107,.13),rgba(244,114,182,.08));
+  border:1px solid rgba(255,107,107,.45)}
+.hxv-badge{display:inline-block;font-size:15px;font-weight:700;padding:6px 16px;border-radius:99px}
+.hxv-badge.ok{color:#0e2b1c;background:#7ee2a8}
+.hxv-badge.bad{color:#2b0e0e;background:#ff8a8a}
+.hxv-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0}
+.hxv-grid>div{display:flex;flex-direction:column;gap:3px;padding:10px 12px;border-radius:11px;
+  background:rgba(23,14,38,.5)}
+.hxv-grid span{font-size:11px;color:rgba(255,255,255,.45)}
+.hxv-grid b{font-size:14px;color:#fff}
+.hxv-grid code{font-size:11px;color:#9ef0ff;word-break:break-all}
+.hxv-issues{margin:12px 0 0;padding-left:20px;font-size:13px;color:#ffd0d0;line-height:2}
+.hxv-note{margin:12px 0 0;font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.8}
+.hxv-terms{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+
+@media (max-width:900px){
+  .hx-annual-hero{grid-template-columns:1fr}
+  .hx-annual-cats{grid-template-columns:repeat(4,1fr)}
+  .hxv-terms{grid-template-columns:1fr}
+  .hxv-grid{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .hx-annual-cats{grid-template-columns:repeat(2,1fr)}
+  .hx-annual-year{font-size:40px}
+  .hx-wit-item{flex-direction:column;align-items:stretch}
+  .hx-wit-ops{justify-content:flex-end}
+  .hx-family-item{flex-wrap:wrap}
+  .hx-nudge{flex-wrap:wrap}
+}

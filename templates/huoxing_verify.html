@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% from "icon_macro.html" import icon %}
+{% block title %}护照互认验证器 · 火星身份证{% endblock %}
+{% block content %}
+
+<section class="page-head hx-head">
+  <div class="hx-kicker"><span class="hx-kicker-dot"></span>护照互认验证器 · 数据自持的最终闭环</div>
+  <h1>{{ icon("shieldlock") }}任何人都能验真</h1>
+  <p>拿到一份导出的「火星护照」JSON 文件，在这里上传即可验证真伪。<br>
+  验证在你自己的浏览器里完成，文件不会上传到服务器 —— 这就是「数据自持」的承诺。</p>
+  <div class="hx-head-meta">
+    <span>版本 {{ footer.version }}</span><i>·</i>
+    <span>程序大小 {{ footer.size }}</span><i>·</i>
+    <span>最后保存 {{ footer.saved }}</span><i>·</i>
+    <span>作者：军哥懂保</span><i>·</i>
+    <span>微信：xunijiayuan</span>
+  </div>
+</section>
+
+<section class="hxv-wrap">
+  <div class="hxv-drop" id="hxvDrop">
+    <div class="hxv-drop-icon">{{ icon("package") }}</div>
+    <b>把火星护照 JSON 文件拖到这里</b>
+    <span>或者</span>
+    <label class="btn btn-gold btn-sm">
+      选择文件
+      <input type="file" id="hxvFile" accept=".json,application/json" hidden>
+    </label>
+    <button class="hx-q" type="button" data-tip="火星护照是在「火星平面 → 导出护照」得到的 JSON 文件，包含身份、历程与完整的链式区块。">?</button>
+  </div>
+
+  <details class="hxv-paste">
+    <summary>没有文件？粘贴护照 JSON 文本也可以</summary>
+    <textarea id="hxvText" rows="6" placeholder='{"schema":"ecojia.marsid.passport/1.1", ...}'></textarea>
+    <button class="btn btn-gold btn-sm" type="button" id="hxvTextBtn">验证这段文本</button>
+  </details>
+
+  <div class="hxv-result" id="hxvResult" hidden></div>
+
+  <div class="hxv-terms">
+    <div class="hx-term">
+      <span>本地验真</span>
+      <button class="hx-q" type="button" data-tip="验证全程在你自己的浏览器里完成：重新计算每一枚指纹，再一枚一枚对回去。护照文件不会上传到任何服务器。">?</button>
+      <p>浏览器内完成，文件不上传。</p>
+    </div>
+    <div class="hx-term">
+      <span>为什么可信</span>
+      <button class="hx-q" type="button" data-tip="每个区块的指纹都由「上一个区块的指纹 + 本块内容」生成。只要改动任何一个字，后面所有指纹都会断裂。">?</button>
+      <p>改一个字，全链断裂。</p>
+    </div>
+    <div class="hx-term">
+      <span>数据自持</span>
+      <button class="hx-q" type="button" data-tip="护照归持有人所有，可离线保存、备份、迁移。平台只是见证人，不是数据的主人。">?</button>
+      <p>你的数据，你带走。</p>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  const $ = (id)=>document.getElementById(id);
+  const esc = (s)=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+                     .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  const GENESIS = "0".repeat(64);
+
+  async function sha256hex(text){
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  }
+  function canon(obj){ /* 与后端 hx_json 一致：键排序 + 紧凑分隔符 + 不转义非ASCII */
+    if(obj === null || typeof obj !== "object") return JSON.stringify(obj);
+    if(Array.isArray(obj)) return "[" + obj.map(canon).join(",") + "]";
+    return "{" + Object.keys(obj).sort().map(k=>JSON.stringify(k)+":"+canon(obj[k])).join(",") + "}";
+  }
+  function recordPayload(rec){
+    const keys = ["category","happened_on","title","summary","detail","mood","place","visibility"];
+    if((rec.unlock_at || "").trim()) keys.push("unlock_at");
+    const o = {};
+    keys.forEach(k=>{ o[k] = rec[k] || ""; });
+    return canon(o);
+  }
+
+  async function verifyPassport(p){
+    const issues = [];
+    if(!p || typeof p !== "object") return {valid:false, issues:["文件不是有效的 JSON 对象"]};
+    const blocks = (p.blocks || []).slice().sort((a,b)=>(a.block_no||0)-(b.block_no||0));
+    let prev = GENESIS;
+    for(const b of blocks){
+      if(b.prev_hash !== prev) issues.push(`第 ${b.block_no} 块与上一块衔接断裂`);
+      const ph = await sha256hex(b.payload || "");
+      if(ph !== b.payload_hash) issues.push(`第 ${b.block_no} 块内容指纹被改动`);
+      const expect = await sha256hex(`${b.block_no}|${b.prev_hash}|${b.action}|${b.record_id||0}|${b.payload_hash}|${b.created_at}`);
+      if(expect !== b.block_hash) issues.push(`第 ${b.block_no} 块区块哈希不匹配`);
+      prev = b.block_hash || "";
+    }
+    const latest = {};
+    for(const b of blocks){
+      if((b.action==="create" || b.action==="update") && b.record_id) latest[b.record_id] = b.payload_hash;
+    }
+    for(const rec of (p.records || [])){
+      if(latest[rec.id]){
+        const h = await sha256hex(recordPayload(rec));
+        if(h !== latest[rec.id]) issues.push(`记录「${rec.title||"?"}」与链上指纹不一致`);
+      }
+    }
+    const head = blocks.length ? blocks[blocks.length-1].block_hash : "";
+    if(p.chain && p.chain.head && head && p.chain.head !== head)
+      issues.push("护照记载的链头与区块重算结果不一致");
+    return {valid: issues.length===0, issues: issues.slice(0,8),
+            height: blocks.length, head,
+            records: (p.records||[]).length,
+            mars_name: (p.identity||{}).mars_name || "",
+            did: (p.identity||{}).did || "",
+            exported_at: p.exported_at || ""};
+  }
+
+  function renderResult(r, fname){
+    const box = $("hxvResult");
+    box.hidden = false;
+    if(r.valid){
+      box.className = "hxv-result ok";
+      box.innerHTML = `
+        <div class="hxv-verdict"><span class="hxv-badge ok">✓ 验真通过</span></div>
+        <div class="hxv-grid">
+          <div><span>持有人</span><b>${esc(r.mars_name || "未知")}</b></div>
+          <div><span>身份标识</span><code>${esc(r.did)}</code></div>
+          <div><span>链上区块</span><b>${r.height}</b></div>
+          <div><span>收录历程</span><b>${r.records}</b></div>
+          <div><span>导出时间</span><b>${esc(r.exported_at)}</b></div>
+          <div><span>最新指纹</span><code>${esc((r.head||"").slice(0,20))}…</code></div>
+        </div>
+        <p class="hxv-note">这份护照的每一枚指纹都与内容吻合，链条完整无断裂，内容未被篡改。</p>`;
+    }else{
+      box.className = "hxv-result bad";
+      box.innerHTML = `
+        <div class="hxv-verdict"><span class="hxv-badge bad">✕ 验真未通过</span></div>
+        <ul class="hxv-issues">${r.issues.map(i=>`<li>${esc(i)}</li>`).join("")}</ul>
+        <p class="hxv-note">这份文件可能被改动过，或不是完整的火星护照。请与持有人核对来源。</p>`;
+    }
+    box.scrollIntoView({behavior:"smooth", block:"nearest"});
+  }
+
+  async function handleText(text, fname){
+    let p;
+    try{ p = JSON.parse(text); }
+    catch(e){ renderResult({valid:false, issues:["文件不是有效的 JSON，请确认是完整的火星护照文件"]}, fname); return; }
+    renderResult(await verifyPassport(p), fname);
+  }
+
+  function handleFile(file){
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>handleText(reader.result, file.name);
+    reader.readAsText(file, "utf-8");
+  }
+
+  const drop = $("hxvDrop");
+  drop.addEventListener("dragover", (e)=>{ e.preventDefault(); drop.classList.add("over"); });
+  drop.addEventListener("dragleave", ()=>drop.classList.remove("over"));
+  drop.addEventListener("drop", (e)=>{
+    e.preventDefault(); drop.classList.remove("over");
+    handleFile(e.dataTransfer.files[0]);
+  });
+  $("hxvFile").addEventListener("change", (e)=>handleFile(e.target.files[0]));
+  $("hxvTextBtn").addEventListener("click", ()=>{
+    const t = $("hxvText").value.trim();
+    if(!t){ toast("请先粘贴护照 JSON 文本", false); return; }
+    handleText(t, "粘贴的文本");
+  });
+
+  document.addEventListener("click", (e)=>{
+    const q = e.target.closest(".hx-q");
+    if(q){
+      e.stopPropagation();
+      const was = q.classList.contains("show");
+      document.querySelectorAll(".hx-q.show").forEach(x=>x.classList.remove("show"));
+      if(!was) q.classList.add("show");
+    }else{
+      document.querySelectorAll(".hx-q.show").forEach(x=>x.classList.remove("show"));
+    }
+  });
+})();
+</script>
+{% endblock %}
