@@ -17,7 +17,7 @@
         "path": "stats.users"
       }
     ],
-    "auth": "统一账号",
+    "auth": "统一账号 lzp5133084",
     "note": "本站后台，即当前中枢所属门户"
   },
   {
@@ -42,8 +42,8 @@
         "path": "contributors"
       }
     ],
-    "auth": "资料站账号",
-    "note": "审核类操作较多，建议与门户账号后续打通"
+    "auth": "统一账号 lzp5133084",
+    "note": "统一账号已写入该站数据库，可直接登录后台"
   },
   {
     "id": "douyin-recruit",
@@ -63,7 +63,7 @@
         "path": "data.pending"
       }
     ],
-    "auth": "统一账号",
+    "auth": "统一账号 lzp5133084",
     "note": "已与规则同步为统一账号"
   },
   {
@@ -99,7 +99,7 @@
     "admin_url": "https://tools.ecojia.cn/renjunxue-cangku/",
     "probe": "",
     "metrics": [],
-    "auth": "页面内管理后台",
+    "auth": "统一账号 lzp5133084",
     "note": "打开站点后切换「管理后台」标签页"
   },
   {
@@ -111,7 +111,7 @@
     "admin_url": "https://tools.ecojia.cn/luzhouren-clan/admin-login.html",
     "probe": "",
     "metrics": [],
-    "auth": "站点独立口令",
+    "auth": "统一账号 lzp5133084",
     "note": "纯前端静态后台，数据存浏览器本地"
   },
   {
