@@ -30,6 +30,7 @@ from functools import wraps
 from flask import (Flask, g, session, request, jsonify, Response,
                    render_template, redirect, url_for)
 from werkzeug.security import generate_password_hash, check_password_hash
+import agent_service
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "ecojia.db")
