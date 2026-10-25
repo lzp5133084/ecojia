@@ -6,7 +6,7 @@
    ============================================================ */
 (function () {
   "use strict";
-  window.__ecoBarVer = "20261025g";
+  window.__ecoBarVer = "20261026a";
   if (window.__ecoBarLoaded) return; window.__ecoBarLoaded = true;
   // iframe 内不渲染（避免外壳页+内嵌页出现两套组件）
   if (window.self !== window.top) return;
@@ -29,21 +29,18 @@
   var css = `
 #ecoBarWrap,#ecoBarWrap *{box-sizing:border-box;margin:0;padding:0;font-family:"HarmonyOS Sans SC","MiSans","PingFang SC","Microsoft YaHei",sans-serif}
 #ecoBarWrap{position:relative;z-index:2147483000}
-.eb-cap{position:fixed;display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:999px;
- font-size:13px;letter-spacing:.5px;cursor:pointer;text-decoration:none;user-select:none;z-index:2147483001;
- color:#f5e9c8;background:linear-gradient(160deg,rgba(22,18,10,.85),rgba(40,32,16,.8));
- border:1px solid rgba(240,199,94,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
- box-shadow:0 4px 20px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,235,180,.18);
- transition:transform .25s,border-color .25s,box-shadow .25s}
-.eb-cap:hover{transform:translateY(-2px);border-color:rgba(240,199,94,.8);box-shadow:0 8px 28px rgba(240,199,94,.28)}
-.eb-cap svg{width:15px;height:15px;stroke:#f0c75e;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-.eb-home{top:14px;left:14px}
-.eb-home .eb-brand{font-size:10px;color:#a8955f;letter-spacing:1px;margin-left:2px}
-.eb-auth{top:14px;right:14px;color:#e8dcc0;padding-right:14px}
-.eb-auth .eb-dot{width:8px;height:8px;border-radius:50%;background:#7ee2a8;box-shadow:0 0 8px #7ee2a8;flex-shrink:0;animation:ebDotPulse 2s ease-in-out infinite}
-.eb-auth.off .eb-dot{background:#8a8577;box-shadow:none;animation:none}
+/* —— 面板内快捷入口条（返回首页 + 登录/注册） —— */
+.eb-quick{display:flex;gap:9px;padding:10px 14px;border-bottom:1px solid rgba(240,199,94,.16);
+ background:linear-gradient(90deg,rgba(240,199,94,.06),transparent 70%)}
+.eb-qbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:36px;border-radius:11px;
+ font-size:12.5px;color:#f0dfae;text-decoration:none;letter-spacing:.5px;cursor:pointer;
+ background:rgba(240,199,94,.08);border:1px solid rgba(240,199,94,.3);transition:.2s}
+.eb-qbtn:hover{background:rgba(240,199,94,.18);border-color:rgba(240,199,94,.6);transform:translateY(-1px)}
+.eb-qbtn svg{width:14px;height:14px;stroke:#f0c75e;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.eb-qbtn .eb-dot{width:8px;height:8px;border-radius:50%;background:#7ee2a8;box-shadow:0 0 8px #7ee2a8;flex-shrink:0;animation:ebDotPulse 2s ease-in-out infinite}
+.eb-qbtn.off .eb-dot{background:#8a8577;box-shadow:none;animation:none}
 @keyframes ebDotPulse{0%,100%{box-shadow:0 0 6px #7ee2a8}50%{box-shadow:0 0 14px #7ee2a8}}
-.eb-auth .eb-role{font-size:10px;color:#f0c75e;background:rgba(240,199,94,.15);padding:1px 7px;border-radius:999px;margin-left:4px}
+.eb-qbtn .eb-role{font-size:10px;color:#f0c75e;background:rgba(240,199,94,.15);padding:1px 7px;border-radius:999px}
 /* —— 悬浮球 —— */
 .eb-ball{position:fixed;right:22px;bottom:24px;width:62px;height:62px;border-radius:50%;cursor:grab;z-index:2147483002;
  display:flex;align-items:center;justify-content:center;flex-direction:column;
@@ -116,7 +113,7 @@
 .eb-send svg{width:17px;height:17px;stroke:#241c08;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .eb-foot{padding:7px 14px 10px;font-size:10px;color:#8a7c54;text-align:center;letter-spacing:.5px}
 /* —— 名词解析弹层 —— */
-.eb-dict{position:absolute;top:56px;right:12px;width:250px;padding:14px 16px;border-radius:14px;display:none;z-index:9;
+.eb-dict{position:absolute;top:112px;right:12px;width:250px;padding:14px 16px;border-radius:14px;display:none;z-index:9;
  background:rgba(20,16,9,.97);border:1px solid rgba(240,199,94,.4);box-shadow:0 14px 40px rgba(0,0,0,.55)}
 .eb-dict.show{display:block}
 .eb-dict h4{font-size:12.5px;color:#f0c75e;margin-bottom:8px;letter-spacing:1px}
@@ -131,18 +128,15 @@
 .eb-tip b{display:block;margin-bottom:2px;font-size:13px}
 /* —— 移动端适配 —— */
 @media (max-width:720px){
- .eb-cap{height:33px;padding:0 11px;font-size:11.5px}
- .eb-home{top:9px;left:9px}.eb-auth{top:9px;right:9px}
  .eb-ball{right:14px;bottom:16px;width:54px;height:54px}
  .eb-panel{right:0;left:0;bottom:0;width:100%;max-width:100%;height:78vh;border-radius:20px 20px 0 0;transform-origin:bottom center}
  .eb-tip{right:78px;bottom:22px;max-width:190px}
 }
 /* —— 浅色页面自适应：白金主题（与深色黑金同源高级感） —— */
-#ecoBarWrap.eb-light .eb-cap{color:#5c4a12;background:linear-gradient(160deg,rgba(255,253,247,.9),rgba(250,242,220,.85));
- border-color:rgba(180,140,40,.45);box-shadow:0 4px 16px rgba(120,90,20,.14),inset 0 1px 0 #fff}
-#ecoBarWrap.eb-light .eb-cap:hover{border-color:rgba(180,140,40,.8);box-shadow:0 8px 24px rgba(180,140,40,.22)}
-#ecoBarWrap.eb-light .eb-cap svg{stroke:#a8842c}
-#ecoBarWrap.eb-light .eb-auth{color:#6b5a26}
+#ecoBarWrap.eb-light .eb-quick{border-bottom-color:rgba(180,140,40,.18);background:linear-gradient(90deg,rgba(212,175,55,.08),transparent 70%)}
+#ecoBarWrap.eb-light .eb-qbtn{color:#6b5a26;background:rgba(212,175,55,.1);border-color:rgba(180,140,40,.35)}
+#ecoBarWrap.eb-light .eb-qbtn:hover{background:rgba(212,175,55,.22);border-color:rgba(180,140,40,.6)}
+#ecoBarWrap.eb-light .eb-qbtn svg{stroke:#a8842c}
 #ecoBarWrap.eb-light .eb-ball{background:radial-gradient(circle at 32% 28%,#fffdf6,#f6ecd4 72%);
  border-color:rgba(180,140,40,.6);box-shadow:0 6px 22px rgba(120,90,20,.22),0 0 20px rgba(212,175,55,.3)}
 #ecoBarWrap.eb-light .eb-ball .eb-ai{background:linear-gradient(135deg,#a8842c,#d4af37,#8a6d1f);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -179,14 +173,8 @@
 
   /* ---------- DOM ---------- */
   var wrap = document.createElement("div"); wrap.id = "ecoBarWrap";
-  // 门户自身页面已带顶部导航（返回首页+登录），只挂智能体，不重复画胶囊
-  var isPortal = !!document.querySelector(".topbar .user-area");
+  // 所有页面统一：只渲染悬浮球 + 浮窗（返回首页/登录入口已植入浮窗内）
   wrap.innerHTML = `
-${isPortal ? "" : `<a class="eb-cap eb-home" href="${PORTAL}" title="返回数字生态家园门户首页">
- <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
- <span>返回首页</span><span class="eb-brand">ecojia.cn</span></a>
-<a class="eb-cap eb-auth off" id="ebAuth" href="${PORTAL}/login" title="登录生态统一账号">
- <i class="eb-dot"></i><span id="ebAuthTxt">登录 / 注册</span></a>`}
 <div class="eb-ball" id="ebBall" title="生态智能体·小禾">
  <span class="eb-ai">AI</span><span class="eb-sub">小禾</span></div>
 <div class="eb-panel hide" id="ebPanel">
@@ -196,6 +184,13 @@ ${isPortal ? "" : `<a class="eb-cap eb-home" href="${PORTAL}" title="返回数�
   <button class="eb-hbtn" id="ebDict" title="名词解析（大白话）">?</button>
   <button class="eb-hbtn" id="ebClear" title="清空本会话记录">🗑</button>
   <button class="eb-hbtn" id="ebFold" title="收起为悬浮球">—</button>
+ </div>
+ <div class="eb-quick">
+  <a class="eb-qbtn" id="ebHome" href="${PORTAL}" title="返回数字生态家园门户首页">
+   <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
+   <span>返回首页</span></a>
+  <a class="eb-qbtn off" id="ebAuth" href="${PORTAL}/login" title="登录生态统一账号">
+   <i class="eb-dot"></i><span id="ebAuthTxt">登录 / 注册</span></a>
  </div>
  <div class="eb-dict" id="ebDictBox">
   <h4>📖 名词解析（大白话）</h4>
