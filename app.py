@@ -2109,6 +2109,28 @@ def api_admin_hub_delete(cid):
     return jsonify({"ok": True, "msg": "已移除"})
 
 
+# ══════════════════ 密钥与模型健康监控（V1.7 追加） ══════════════════
+import key_check
+
+
+@app.route("/keys")
+def keys_page():
+    """密钥健康看板：仅管理员可见，密钥只显示打码指纹"""
+    u = current_user()
+    if not u:
+        return redirect(url_for("login_page"))
+    if u["role"] != "admin":
+        return render_template("auth.html", deny="该页面需要管理员权限")
+    return render_template("keys.html")
+
+
+@app.route("/api/keys/status")
+@admin_required
+def api_keys_status():
+    force = request.args.get("refresh") == "1"
+    return jsonify({"ok": True, "status": key_check.get_status(force=force)})
+
+
 # ══════════════════ 启动 ══════════════════
 init_db()
 

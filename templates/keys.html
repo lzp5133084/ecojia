@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% from "icon_macro.html" import icon %}
+{% block title %}密钥与模型健康看板 · 管理后台{% endblock %}
+{% block content %}
+
+<section class="page-head hx-head">
+  <div class="hx-kicker"><span class="hx-kicker-dot"></span>管理后台 · 凭证中心</div>
+  <h1>{{ icon("key") }}密钥与模型健康看板</h1>
+  <p>一页看清所有 API Key、平台令牌、本地与线上大模型通道的真实可用状态。<br>
+  结果缓存 10 分钟，密钥只显示打码指纹，原文不落页面、不进前端。</p>
+  <div class="hx-head-meta">
+    <span>版本 {{ footer.version }}</span><i>·</i>
+    <span>程序大小 {{ footer.size }}</span><i>·</i>
+    <span>最后保存 {{ footer.saved }}</span><i>·</i>
+    <span>作者：军哥懂保</span><i>·</i>
+    <span>微信：xunijiayuan</span>
+  </div>
+</section>
+
+<section class="kc-toolbar">
+  <div class="kc-summary" id="kcSummary">
+    <span class="kc-loading-dot"></span>正在读取健康状态…
+  </div>
+  <div class="kc-actions">
+    <span class="kc-time" id="kcTime"></span>
+    <button class="btn btn-gold btn-sm" id="kcRefresh" type="button">{{ icon("zap") }} 立即重测</button>
+  </div>
+</section>
+
+<section class="kc-grid" id="kcGrid" aria-label="密钥状态列表"></section>
+
+<section class="hx-guide" style="margin-top:26px">
+  <div class="hx-guide-head">
+    <h3>{{ icon("bulb") }} 使用说明与操作指引</h3>
+    <span>看状态、找问题、会处理</span>
+  </div>
+  <div class="hx-steps">
+    <div class="hx-step">
+      <b>01</b>
+      <h4>看颜色</h4>
+      <p>绿色 = 实测可用；红色 = 已失效，需要处理；每项后面附带耗时与失败原因。</p>
+    </div>
+    <div class="hx-step">
+      <b>02</b>
+      <h4>定期重测</h4>
+      <p>结果缓存 10 分钟防刷接口。点「立即重测」会真实调用各家 API 再验证一遍。</p>
+    </div>
+    <div class="hx-step">
+      <b>03</b>
+      <h4>改密钥</h4>
+      <p>密钥集中保存在服务器的 keyring.json 文件里，改完回到本页点重测即可看到新状态。</p>
+    </div>
+    <div class="hx-step">
+      <b>04</b>
+      <h4>双通道模型</h4>
+      <p>线上走火山方舟，本地兜底走 Ollama。两路都红时，AI 助手会自动降级为本地规则引擎。</p>
+    </div>
+  </div>
+  <div class="hx-terms">
+    <div class="hx-term">
+      <span>打码指纹</span>
+      <button class="hx-q" type="button" data-tip="密钥原文只存在服务器文件里，页面只显示前6位…后4位的指纹，用于区分是哪一把 Key，防止泄露。">?</button>
+      <p>只露两头，中间隐藏。</p>
+    </div>
+    <div class="hx-term">
+      <span>鉴权通过·推理端点关闭</span>
+      <button class="hx-q" type="button" data-tip="意思是：Key 本身没过期（能登录方舟），但名下开通的模型服务被关闭或欠费了。到火山方舟控制台重新开通模型即可恢复。">?</button>
+      <p>钥匙没坏，门被关了。</p>
+    </div>
+    <div class="hx-term">
+      <span>Ollama 本地兜底</span>
+      <button class="hx-q" type="button" data-tip="装在本机的小型开源模型服务。方舟不可用时自动切换，保证 AI 功能不断线；首次使用需执行 ollama pull 拉取模型。">?</button>
+      <p>断网也能跑的备胎。</p>
+    </div>
+    <div class="hx-term">
+      <span>结果缓存</span>
+      <button class="hx-q" type="button" data-tip="每次真实检测都要调用多家外部 API，频繁调用可能触发限流。所以结果缓存 10 分钟，缓存期内秒开。">?</button>
+      <p>10 分钟内的结果直接读档。</p>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  var grid = document.getElementById('kcGrid');
+  var summary = document.getElementById('kcSummary');
+  var timeEl = document.getElementById('kcTime');
+  var btn = document.getElementById('kcRefresh');
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  function render(st){
+    var cards = st.items.map(function(it){
+      var cls = it.ok ? 'kc-ok' : 'kc-bad';
+      var iconName = it.ok ? 'check' : 'xmark';
+      var ms = (it.ms!=null) ? it.ms + 'ms' : '—';
+      return '<div class="kc-card '+cls+'">'
+        + '<div class="kc-card-head"><span class="kc-group">'+esc(it.group)+'</span>'
+        + '<span class="kc-state"><svg class="ic"><use href="#i-'+iconName+'"></use></svg>'
+        + (it.ok ? ' 正常' : ' 失效') + '</span></div>'
+        + '<h4>'+esc(it.label)+'</h4>'
+        + '<code class="kc-fp">'+esc(it.fp)+'</code>'
+        + '<p class="kc-detail">'+esc(it.stage ? it.stage + ' · ' : '')+esc(it.detail||'')+'</p>'
+        + '<div class="kc-ms">'+ms+'</div>'
+        + '</div>';
+    }).join('');
+    grid.innerHTML = cards;
+    summary.innerHTML = '<b class="'+(st.bad? 'kc-num-bad':'kc-num-ok')+'">'+ st.ok +'/'+ st.total +'</b> 项正常'
+      + (st.bad ? '<em class="kc-warn">（'+ st.bad +' 项需处理）</em>' : '<em class="kc-fine">全部健康</em>');
+    timeEl.textContent = '检测于 ' + st.checked_at + (st.cached ? '（缓存）' : '（实測）');
+  }
+
+  function load(force){
+    btn.disabled = true;
+    btn.innerHTML = '检测中…';
+    fetch('/api/keys/status' + (force ? '?refresh=1' : ''))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.ok) { render(d.status); }
+        else { summary.textContent = d.msg || '读取失败'; }
+      })
+      .catch(function(){ summary.textContent = '网络异常，稍后重试'; })
+      .finally(function(){
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="ic"><use href="#i-zap"></use></svg> 立即重测';
+      });
+  }
+
+  btn.addEventListener('click', function(){ load(true); });
+  load(false);
+})();
+</script>
+{% endblock %}

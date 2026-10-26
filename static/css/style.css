@@ -1508,3 +1508,31 @@ body.hx-lock{overflow:hidden}
   .hx-family-item{flex-wrap:wrap}
   .hx-nudge{flex-wrap:wrap}
 }
+
+/* ══════════ V1.7 密钥健康看板（/keys） ══════════ */
+.kc-toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin:18px 0;padding:14px 18px;border:1px solid rgba(255,214,130,.18);border-radius:16px;background:linear-gradient(135deg,rgba(30,22,44,.72),rgba(18,14,30,.72));backdrop-filter:blur(10px)}
+.kc-summary{font-size:15px;color:#d8cfe8}
+.kc-summary b{font-size:22px;margin-right:6px}
+.kc-num-ok{color:#7ee2a8}.kc-num-bad{color:#ff9d7e}
+.kc-warn{color:#ffcf8a;font-style:normal;margin-left:8px}
+.kc-fine{color:#7ee2a8;font-style:normal;margin-left:8px}
+.kc-actions{display:flex;align-items:center;gap:12px}
+.kc-time{font-size:12px;color:#8f86a6}
+.kc-loading-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ffd682;margin-right:8px;animation:kcPulse 1.2s ease-in-out infinite}
+@keyframes kcPulse{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.kc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.kc-card{position:relative;padding:16px 18px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(150deg,rgba(28,21,42,.85),rgba(16,12,26,.85));transition:transform .25s ease,box-shadow .25s ease}
+.kc-card:hover{transform:translateY(-3px)}
+.kc-card.kc-ok{border-color:rgba(126,226,168,.35);box-shadow:0 0 0 1px rgba(126,226,168,.08),0 10px 30px -18px rgba(126,226,168,.35)}
+.kc-card.kc-bad{border-color:rgba(255,157,126,.4);box-shadow:0 0 0 1px rgba(255,157,126,.1),0 10px 30px -18px rgba(255,120,90,.45)}
+.kc-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.kc-group{font-size:12px;letter-spacing:.08em;color:#9d92bb;text-transform:uppercase}
+.kc-state{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px}
+.kc-ok .kc-state{color:#7ee2a8;background:rgba(126,226,168,.12)}
+.kc-bad .kc-state{color:#ff9d7e;background:rgba(255,157,126,.12)}
+.kc-state .ic{width:13px;height:13px}
+.kc-card h4{margin:0 0 6px;font-size:16px;color:#f3eefc}
+.kc-fp{display:inline-block;font-size:12px;color:#c8b06a;background:rgba(255,214,130,.08);border:1px dashed rgba(255,214,130,.25);border-radius:8px;padding:2px 8px;margin-bottom:8px}
+.kc-detail{margin:0;font-size:13px;line-height:1.6;color:#b7add2;word-break:break-all}
+.kc-ms{position:absolute;top:16px;right:18px;font-size:11px;color:#6f6688}
+@media(max-width:560px){.kc-grid{grid-template-columns:1fr}.kc-ms{position:static;margin-top:8px}}

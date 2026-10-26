@@ -924,3 +924,25 @@ cd /opt/ecojia/ziliao && git pull && sudo systemctl restart ecojia-ziliao
 
 遗留说明：方舟 API Key（ark-10b72b80…）的 doubao-1.5 端点已关闭，
 管理后台配置新 Key 或模型端点即可恢复大模型 AI 助手；本地兜底当前可用。
+
+════════════════════════════════════════════════════════════
+2026-10-26  密钥大清查 + 健康看板上线
+════════════════════════════════════════════════════════════
+用户指令：重新验证规则中的全部 API KEY，只保留有效的，
+并用网页方式随时呈现本地模型和线上模型情况。
+
+实测结论（逐一真实调用）：
+- 有效：高德地图 Key、Gitee 令牌、GitHub Token、管理员账号 18180309010
+- 部分有效：4 把方舟 Key + 豆包对话 Key —— 鉴权通过（Key 未过期），
+  但名下全部推理端点已关闭（doubao/deepseek/kimi 均 404/ClosedEndpoint），
+  需到火山方舟控制台重新开通模型端点后才能推理。
+- 失效：豆包语音 TTS Key（invalid auth token，签名鉴权不通过）
+- 本地模型：Ollama 服务在线，已装 moondream:1.8b / qwen2.5vl:3b /
+  qwen2.5:7b / qwen3:4b / llava:7b（默认 qwen2.5:0.5b 未装，可切环境变量）
+
+交付物：
+- key_check.py：检测引擎（方舟/豆包语音/高德/Gitee/GitHub/管理员/Ollama），
+  结果缓存 10 分钟，密钥只出打码指纹。
+- keyring.json：密钥集中配置（已 gitignore，不入库；服务器需单独放一份）。
+- /keys 看板页 + /api/keys/status：仅管理员可见，一键重测，双端适配。
+- 实测 5/11 项正常，桌面+手机 Playwright 截图验证通过。

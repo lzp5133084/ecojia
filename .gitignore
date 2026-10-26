@@ -10,3 +10,10 @@ cookies.txt
 
 # 运行日志
 *.log
+
+# 密钥与检测缓存（绝不入库）
+keyring.json
+keycheck_cache.json
+_tmp_*.py
+shots_v17/
+_dbg_*.py
