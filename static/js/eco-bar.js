@@ -459,9 +459,18 @@
       localStorage.setItem(HIST_KEY, JSON.stringify(arr));
     } catch (e) {}
   }
+  var INITIAL_SUGGESTIONS = [
+    "视频转PPT工具在哪？", "灵犀互传怎么用？", "怎么凸显图片里某个物品？", "上传资料安全吗？",
+    "咱们网站有什么？", "怎么联系创办人？", "如何批量重命名文件？", "客户管理系统有哪些功能？",
+    "霓虹边框工具在哪？", "理赔资料助手怎么用？", "如何修复网络？", "黑金二维码工坊能做什么？",
+    "九页问卷怎么创建？", "AI资产速查Hub有哪些内容？", "直播嘉宾看板能用在什么场景？",
+    "灵魂拷问题库有多少？", "资料百事通积分怎么赚？", "火星身份证是什么？",
+    "有接单赚钱的平台吗？", "怎么注册账号？登录入口在哪？",
+  ];
   var historyLoaded = false;
   function loadHistory() {
     if (historyLoaded) return; historyLoaded = true;
+    setChips(INITIAL_SUGGESTIONS);  // chips 无论是否有历史都先初始化
     var local = [];
     try { local = JSON.parse(localStorage.getItem(HIST_KEY) || "[]"); } catch (e) {}
     if (local.length) { local.forEach(function (m) { addMsg(m[0], m[1]); }); return; }
@@ -473,12 +482,6 @@
   }
   function greet() {
     addMsg("ai", "您好呀！我是生态智能体「小鸽子」🕊️\n找不到工具、页面打不开、不会用……都可以问我。我会先去服务器上检查，再回答您。");
-    setChips(["视频转PPT工具在哪？", "灵犀互传怎么用？", "怎么凸显图片里某个物品？", "上传资料安全吗？",
-              "咱们网站有什么？", "怎么联系创办人？", "如何批量重命名文件？", "客户管理系统有哪些功能？",
-              "霓虹边框工具在哪？", "理赔资料助手怎么用？", "如何修复网络？", "黑金二维码工坊能做什么？",
-              "九页问卷怎么创建？", "AI资产速查Hub有哪些内容？", "直播嘉宾看板能用在什么场景？",
-              "灵魂拷问题库有多少？", "资料百事通积分怎么赚？", "火星身份证是什么？",
-              "有接单赚钱的平台吗？", "怎么注册账号？登录入口在哪？"]);
   }
   function setChips(list) {
     chips.innerHTML = "";
@@ -490,23 +493,24 @@
     if (list.length > 4) {
       var more = document.createElement("span"); more.className = "eb-chip eb-more";
       more.innerHTML = '<span class="eb-more-label">更多</span><span class="eb-more-arrow">▾</span>';
-      more.onclick = function () {
-        var isOpen = chips.dataset.open === "1";
-        chips.innerHTML = "";
-        (isOpen ? list.slice(0, 4) : list).forEach(function (q) {
-          var c = document.createElement("span"); c.className = "eb-chip"; c.textContent = q;
-          c.onclick = function () { input.value = q; send(); }; chips.appendChild(c);
-        });
-        chips.dataset.open = isOpen ? "" : "1";
-        more = document.createElement("span"); more.className = "eb-chip eb-more";
-        more.innerHTML = '<span class="eb-more-label">' + (isOpen ? "更多" : "收起") + '</span><span class="eb-more-arrow">' + (isOpen ? "▾" : "▴") + '</span>';
-        more.onclick = arguments.callee;
-        chips.appendChild(more);
-        chips.scrollTop = chips.scrollHeight;
-      };
+      more.onclick = function () { toggleChips(more, list); };
       chips.appendChild(more);
       chips.dataset.open = "";
     }
+  }
+  function toggleChips(more, list) {
+    var isOpen = chips.dataset.open === "1";
+    chips.innerHTML = "";
+    (isOpen ? list.slice(0, 4) : list).forEach(function (q) {
+      var c = document.createElement("span"); c.className = "eb-chip"; c.textContent = q;
+      c.onclick = function () { input.value = q; send(); }; chips.appendChild(c);
+    });
+    chips.dataset.open = isOpen ? "" : "1";
+    var more2 = document.createElement("span"); more2.className = "eb-chip eb-more";
+    more2.innerHTML = '<span class="eb-more-label">' + (isOpen ? "更多" : "收起") + '</span><span class="eb-more-arrow">' + (isOpen ? "▾" : "▴") + '</span>';
+    more2.onclick = function () { toggleChips(more2, list); };
+    chips.appendChild(more2);
+    chips.scrollTop = chips.scrollHeight;
   }
 
   /* ---------- 发送 ---------- */
