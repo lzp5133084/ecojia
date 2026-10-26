@@ -97,10 +97,15 @@
 .eb-typing i{width:7px;height:7px;border-radius:50%;background:#f0c75e;animation:ebTp 1.1s infinite}
 .eb-typing i:nth-child(2){animation-delay:.18s}.eb-typing i:nth-child(3){animation-delay:.36s}
 @keyframes ebTp{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
-.eb-chips{display:flex;gap:7px;flex-wrap:wrap;padding:8px 14px 2px}
+.eb-chips{display:flex;gap:7px;flex-wrap:wrap;padding:8px 14px 10px;max-height:100px;overflow-y:auto;scroll-behavior:smooth}
+.eb-chips::-webkit-scrollbar{width:4px}
+.eb-chips::-webkit-scrollbar-thumb{background:rgba(240,199,94,.3);border-radius:4px}
 .eb-chip{padding:6px 12px;border-radius:999px;font-size:11.5px;color:#e8d59a;cursor:pointer;
  background:rgba(240,199,94,.08);border:1px solid rgba(240,199,94,.28);transition:.2s}
 .eb-chip:hover{background:rgba(240,199,94,.2)}
+.eb-more{color:#f0c75e;border-color:rgba(240,199,94,.5);background:rgba(240,199,94,.12);
+ font-weight:600;letter-spacing:1px;display:inline-flex;gap:4px;align-items:center}
+.eb-more .eb-more-arrow{font-size:9px;line-height:1}
 .eb-input{display:flex;gap:9px;padding:12px 14px;border-top:1px solid rgba(240,199,94,.16)}
 .eb-input input{flex:1;height:42px;border-radius:13px;border:1px solid rgba(240,199,94,.3);outline:none;
  background:rgba(255,255,255,.06);color:#f5e9c8;font-size:13.5px;padding:0 15px;transition:.2s}
@@ -468,15 +473,40 @@
   }
   function greet() {
     addMsg("ai", "您好呀！我是生态智能体「小鸽子」🕊️\n找不到工具、页面打不开、不会用……都可以问我。我会先去服务器上检查，再回答您。");
-    setChips(["视频转PPT工具在哪？", "虚拟家园打不开", "一共有哪些工具？", "怎么联系军哥？"]);
+    setChips(["视频转PPT工具在哪？", "灵犀互传怎么用？", "怎么凸显图片里某个物品？", "上传资料安全吗？",
+              "咱们网站有什么？", "怎么联系创办人？", "如何批量重命名文件？", "客户管理系统有哪些功能？",
+              "霓虹边框工具在哪？", "理赔资料助手怎么用？", "如何修复网络？", "黑金二维码工坊能做什么？",
+              "九页问卷怎么创建？", "AI资产速查Hub有哪些内容？", "直播嘉宾看板能用在什么场景？",
+              "灵魂拷问题库有多少？", "资料百事通积分怎么赚？", "火星身份证是什么？",
+              "有接单赚钱的平台吗？", "怎么注册账号？登录入口在哪？"]);
   }
   function setChips(list) {
     chips.innerHTML = "";
-    list.forEach(function (q) {
+    var visible = list.slice(0, 4);
+    visible.forEach(function (q) {
       var c = document.createElement("span"); c.className = "eb-chip"; c.textContent = q;
-      c.onclick = function () { input.value = q; send(); };
-      chips.appendChild(c);
+      c.onclick = function () { input.value = q; send(); }; chips.appendChild(c);
     });
+    if (list.length > 4) {
+      var more = document.createElement("span"); more.className = "eb-chip eb-more";
+      more.innerHTML = '<span class="eb-more-label">更多</span><span class="eb-more-arrow">▾</span>';
+      more.onclick = function () {
+        var isOpen = chips.dataset.open === "1";
+        chips.innerHTML = "";
+        (isOpen ? list.slice(0, 4) : list).forEach(function (q) {
+          var c = document.createElement("span"); c.className = "eb-chip"; c.textContent = q;
+          c.onclick = function () { input.value = q; send(); }; chips.appendChild(c);
+        });
+        chips.dataset.open = isOpen ? "" : "1";
+        more = document.createElement("span"); more.className = "eb-chip eb-more";
+        more.innerHTML = '<span class="eb-more-label">' + (isOpen ? "更多" : "收起") + '</span><span class="eb-more-arrow">' + (isOpen ? "▾" : "▴") + '</span>';
+        more.onclick = arguments.callee;
+        chips.appendChild(more);
+        chips.scrollTop = chips.scrollHeight;
+      };
+      chips.appendChild(more);
+      chips.dataset.open = "";
+    }
   }
 
   /* ---------- 发送 ---------- */
@@ -499,7 +529,7 @@
       tp.remove(); sending = false;
       if (d.ok) {
         addMsg("ai", d.reply, d.cards); cachePush("assistant", d.reply);
-        if (d.suggestions) setChips(d.suggestions.slice(0, 4));
+        if (d.suggestions) setChips(d.suggestions);
       } else { addMsg("ai", "😥 出了点小状况：" + (d.msg || "请稍后再试")); }
     }).catch(function () {
       tp.remove(); sending = false;

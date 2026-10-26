@@ -42,7 +42,6 @@ def build_alias_map(tools):
         "T25": ["视频转ppt", "视频做ppt", "录屏转ppt", "课程转ppt", "帧提取ppt", "视频ppt", "转ppt", "ppt工具"],
         "T20": ["视频提帧", "提取视频帧", "视频截图", "单帧提取", "视频抽帧"],
         "T21": ["高清提帧", "原画质提帧", "vip提帧"],
-        "T23": ["虚拟家园", "混元生图", "混元", "ai画图", "ai绘图", "生图", "腾讯混元"],
         "T01": ["门户", "首页", "官网", "主站", "生态家园"],
         "T02": ["资料", "查资料", "资料百事通", "百事通"],
         "T03": ["客户管理", "小区客户", "智汇管家", "客户系统"],
@@ -79,6 +78,13 @@ def build_alias_map(tools):
             n = str(n).strip().lower()
             if len(n) >= 2:
                 alias.setdefault(n, no)
+    # 跨工具族的口语叫法（不绑死某个具体工具编号）
+    family = {
+        "T11": ["凸显", "指定物品", "圈出", "标出", "标注", "发光边", "图片描边"],
+    }
+    for no, words in family.items():
+        for w in words:
+            alias.setdefault(w, no)
     return alias
 
 
@@ -227,11 +233,36 @@ def call_llm(messages, cfg, max_tokens=700):
 RE_BAD = re.compile(r"(打不开|进不去|无法访问|用不了|不能用|坏了|崩溃|白屏|报错|失败|超时|很慢|卡|挂了|不显示|加载不出)")
 RE_ASK_WHERE = re.compile(r"(在哪|哪里|怎么找|如何找|有没有|地址|链接|入口|怎么用|如何用|使用)")
 RE_LIST = re.compile(r"(全部工具|所有工具|工具列表|有哪些工具|几个工具|工具清单)")
+RE_PRODUCTS = re.compile(r"(有什么|咱们网站|你们网站|生态有啥|主要做什么|主打|有哪些.*产品|产品矩阵)")
+RE_HUOXING = re.compile(r"(火星身份证|火星平面|huoxing|羽毛|区块链|身份证)")
 RE_GREET = re.compile(r"^\s*(你好|您好|hi|hello|在吗|嗨|哈喽)[!！~。\s]*$", re.I)
 RE_WHO = re.compile(r"(你是谁|你是哪个|介绍.*你|你的名字)")
-RE_AUTHOR = re.compile(r"(作者|军哥|联系方式|微信|是谁做|谁开发)")
+RE_AUTHOR = re.compile(r"(作者|军哥|创办人|联系方式|微信|是谁做|谁开发|创始人)")
 
-SUGGESTIONS = ["视频转PPT工具在哪？", "虚拟家园·混元生图打不开", "一共有哪些工具？", "怎么联系军哥？"]
+SUGGESTIONS = [
+    # 默认展示 4 条
+    "视频转PPT工具在哪？",
+    "灵犀互传怎么用？",
+    "怎么凸显图片里某个物品？",
+    "上传资料安全吗？",
+    # 展开共 20 条
+    "咱们网站有什么？",
+    "怎么联系创办人？",
+    "如何批量重命名文件？",
+    "客户管理系统有哪些功能？",
+    "霓虹边框工具在哪？",
+    "理赔资料助手怎么用？",
+    "如何修复网络？",
+    "黑金二维码工坊能做什么？",
+    "九页问卷怎么创建？",
+    "AI资产速查Hub有哪些内容？",
+    "直播嘉宾看板能用在什么场景？",
+    "灵魂拷问题库有多少？",
+    "资料百事通积分怎么赚？",
+    "火星身份证是什么？",
+    "有接单赚钱的平台吗？",
+    "怎么注册账号？登录入口在哪？",
+]
 
 
 def _tool_line(t):
@@ -263,7 +294,7 @@ def agent_answer(message, eco, page_url="", health_checker=None):
         return (f"您好呀！我是生态智能体「小鸽子」🕊️\n\n"
                 f"我熟悉 **{meta.get('name','数字生态家园')}** 的全部 {len(tools)} 个工具和 {len(products)} 位生态成员，可以帮您：\n"
                 f"- 🔍 找工具：比如「视频转PPT在哪」\n"
-                f"- 🩺 查故障：比如「混元生图打不开」，我会先去检查再回答\n"
+                f"- 🩺 查故障：比如「视频转PPT打不开」，我会先去检查再回答\n"
                 f"- 📖 讲用法：每个工具的使用说明与名词解释\n\n"
                 f"您想问点什么？"), "greet", [], None
 
@@ -273,12 +304,37 @@ def agent_answer(message, eco, page_url="", health_checker=None):
                 "我住在每个页面的右下角，负责帮您找工具、查状态、答疑问。"
                 "我的知识来自生态底座 ecosystem.json，由军哥懂保持续维护。"), "who", [], None
 
-    # 3) 问作者/联系方式
+    # 3) 问作者/创办人/联系方式
     if RE_AUTHOR.search(msg):
         return (f"本站由 **{meta.get('author','军哥懂保')}** 开发维护\n\n"
                 f"- 微信号：**{meta.get('wechat','xunijiayuan')}**\n"
                 f"- 官网：[ecojia.cn](https://ecojia.cn)\n"
+                f"- 个人履历：[军哥懂保门户](https://tools.ecojia.cn/jungedongbao-website/)\n"
                 f"- 有想法还可以去 [许愿墙](https://ecojia.cn/wishes) 许愿催更 ✨"), "author", [], None
+
+    # 3.5) 火星身份证（主打产品）
+    if RE_HUOXING.search(msg):
+        return ("**火星身份证** 是主打产品之一，也叫「火星平面」🌱\n\n"
+                "- 它是用**羽毛**为形象的个人历程记录器：每一根羽毛都是一段经历、一个故事，越长越丰盈\n"
+                "- 采用 **区块链链式存证** + **去中心化身份（DID）** 技术，您的记录永远属于您自己\n"
+                "- 可存：证件、保单、合同、家庭重要资料……一次记录，一生可查\n\n"
+                "👉 直达：[火星身份证](https://ecojia.cn/huoxing)\n"
+                "也可以去 [产品矩阵](https://ecojia.cn/#main-product) 看全部 13 位生态成员。"), "huoxing", [], None
+
+    # 3.6) 产品矩阵 / 网站有什么
+    if RE_PRODUCTS.search(msg) and not RE_LIST.search(msg):
+        online_tools = [t for t in tools if t.get("url")]
+        prod_lines = []
+        for p in products[:8]:
+            status = p.get("status", "")
+            name = p.get("name", "")
+            url = p.get("url", "")
+            tag = f"[{name}]({url})" if url else f"**{name}**"
+            prod_lines.append(f"- {tag} — {status}")
+        return (f"**{meta.get('name','数字生态家园')}** 是「一个账号，连接所有产品」的服务生活的数字生态 🌱\n\n"
+                f"- **在线工具 {len(online_tools)} 个**（覆盖客户管理、网络修复、图片特效、二维码、批量改名…）\n"
+                f"- **主打产品 {len(products)} 位**：\n" + "\n".join(prod_lines) +
+                "\n\n👉 [进入主打产品](https://ecojia.cn/#main-product) 看详情 👉 [工具清单](https://ecojia.cn/tools) 全部 27 个可玩"), "products", [], None
 
     # 4) 列全部工具
     if RE_LIST.search(msg):
@@ -308,7 +364,7 @@ def agent_answer(message, eco, page_url="", health_checker=None):
                     break
         if not target:
             return ("收到，您遇到了访问问题。请告诉我是**哪个工具**打不开？\n\n"
-                    "比如直接说：「混元生图打不开」「二维码工坊进不去」——\n"
+                    "比如直接说：「视频转PPT打不开」「黑金QR工坊进不去」——\n"
                     "我会立刻去服务器上实际访问检查一遍，再把结果告诉您。🩺"), "ask_which", [], None
 
         report = health_checker(target) if health_checker else check_url(target.get("url"))
@@ -330,9 +386,6 @@ def agent_answer(message, eco, page_url="", health_checker=None):
                           "1. 浏览器缓存旧了 → 按 **Ctrl+F5** 强制刷新\n"
                           "2. 网络对目标资源访问慢 → 切换 WiFi/手机流量 试试\n"
                           "3. 浏览器拦截了第三方内容 → 换 Chrome/Edge 最新版\n")
-            if "混元" in name or "hunyuan" in (target.get("url") or ""):
-                reply += ("\n补充：「虚拟家园」是内嵌腾讯混元官网的窗口，**需要先微信扫码登录腾讯混元**才能作画；"
-                          "如内嵌窗口异常，可直接访问 [腾讯混元官网](https://hunyuan.tencent.com/realtimeImage?from=/visual) 使用。")
             reply += "\n如果按上面操作还是不行，告诉我您看到的具体画面，我继续帮您查！"
             return (reply, "health_ok", [_tool_line(target)], report)
         else:
@@ -399,9 +452,9 @@ FALLBACK_REPLY = (
     "这个问题我还在学习中 🕊️\n\n"
     "我目前最擅长这些：\n"
     "- 🔍 **找工具**：「视频转PPT在哪」「二维码工具怎么用》\n"
-    "- 🩺 **查故障**：「混元生图打不开」（我会实际检查后再回答）\n"
+    "- 🩺 **查故障**：「某某工具打不开」（我会实际检查后再回答）\n"
     "- 📋 **看清单**：「一共有哪些工具」\n"
-    "- 👤 **找军哥**：「怎么联系作者」\n\n"
+    "- 👤 **找军哥**：「怎么联系创办人」\n\n"
     "您换个问法试试？或到 [许愿墙](https://ecojia.cn/wishes) 留下需求，军哥会来解答。"
 ).replace("》", "」")
 
