@@ -946,3 +946,31 @@ cd /opt/ecojia/ziliao && git pull && sudo systemctl restart ecojia-ziliao
 - keyring.json：密钥集中配置（已 gitignore，不入库；服务器需单独放一份）。
 - /keys 看板页 + /api/keys/status：仅管理员可见，一键重测，双端适配。
 - 实测 5/11 项正常，桌面+手机 Playwright 截图验证通过。
+
+────────────────────────────────────────────
+【⑦ AI 小鸽子 20 条兜底问题上线】（2026-10-26 完成）
+────────────────────────────────────────────
+需求：用户要求智能体默认 4 条兜底问题 + 可展开 20 条，全部结合网站真实内容。
+后端（agent_service.py）改动：
+1. 清理残留 T23（混元生图）别名 + 全文案残留（问候语示例/fallback 示例/故障块补充/ask_which 示例，共 6 处）
+2. 新增 family 跨工具口语族（凸显/圈出/标出 → T11 霓虹边框，不绑死某个具体编号）
+3. 新增 RE_PRODUCTS 正则 + 产品矩阵回答块（「咱们网站有什么」）
+4. 新增 RE_HUOXING 正则 + 火星身份证回答块（「火星身份证是什么」）
+5. 新增 RE_AUTHOR 扩展创办人字段 + 回答块加军哥懂保个人门户链接
+6. SUGGESTIONS 改为完整 20 条（默认前 4 条 + 展开 16 条），全部结合生态真实内容
+  默认 4 条：视频转PPT在哪 / 灵犀互传怎么用 / 怎么凸显图片里某个物品 / 上传资料安全吗
+  其余 16 条：咱们网站有什么 / 怎么联系创办人 / 批量重命名 / 客户管理功能
+  / 霓虹边框 / 理赔助手 / 修复网络 / 黑金二维码 / 九页问卷 / AI资产Hub
+  / 直播嘉宾看板 / 灵魂拷问题库 / 资料百事通积分 / 火星身份证 / 接单平台
+  / 账号注册登录
+前端（eco-bar.js）改动：
+1. INITIAL_SUGGESTIONS 20 条完整列表独立声明（必须在 loadHistory 之前赋值，hoist 陷阱）
+2. loadHistory() 无论是否有历史都先 setChips(INITIAL_SUGGESTIONS)，修复「有历史时 chips 为空」bug
+3. 新增 setChips → toggleChips 拆函数（规避严格模式下 arguments.callee 非法）
+4. .eb-more 按钮视觉（更多▾/收起▴）+ .eb-chips 容器 max-height + 滚动条
+部署：3 个 commit（8e050b7/3c531f8 + docs eca2ef6），服务器 git fetch + 手动 sftp 同步 tools/eco-bar.js + sed 改版本号破除浏览器缓存（?v=20261026c）
+关键 bug 链（务必记住）：
+  最初浏览器反复报告 ebChips 为空 → 诊断发现 setChips 在 greet() 里，
+  但 loadHistory 有历史时跳过 greet → 又发现 INITIAL_SUGGESTIONS 定义在 loadHistory
+  之后导致 undefined（JS var hoist 陷阱）→ 又发现严格模式下 arguments.callee 非法
+验证：本地预验证 20 条全部命中 intent（零 fallback）+ 浏览器线上 10 步全 PASS
