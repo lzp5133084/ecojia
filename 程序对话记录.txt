@@ -974,3 +974,59 @@ cd /opt/ecojia/ziliao && git pull && sudo systemctl restart ecojia-ziliao
   但 loadHistory 有历史时跳过 greet → 又发现 INITIAL_SUGGESTIONS 定义在 loadHistory
   之后导致 undefined（JS var hoist 陷阱）→ 又发现严格模式下 arguments.callee 非法
 验证：本地预验证 20 条全部命中 intent（零 fallback）+ 浏览器线上 10 步全 PASS
+
+────────────────────────────────────────────
+【⑧ 灵犀互传 3.0 商用版：体验版升级 + 双端上线】（2026-10-26 完成）
+────────────────────────────────────────────
+需求：保留 2.0 体验版（/lan-share-hub/）完全不动，在 2.0 基础上升级出 3.0 商用版
+（/lan-share-hub-pro/），同时部署到 GitHub，并在 ecojia.cn 工具清单新增 3.0 入口。
+用户提出的 12 条升级点（1-4 为 2.0 缺陷）：
+ 1 摄像头与屏幕过去只能二选一 → 3.0 改为可同时观看
+ 2 网页端电脑无法被控制 → 新增电脑端伴侣程序（Python），受控走 RDP 通道
+ 3 同屏共看时摄像头画面自动降到右下角小窗（画中画），互不遮挡
+ 4 手机端点电脑投屏全屏失败 → 三级降级（原生全屏 → iOS video 全屏 → 伪全屏）
+ 5 远程操作要有醒目光标/按键/滑动提示（.ctl-cursor / .ctl-actions / .rdp-cursor）
+ 6 右上角分享地址下方新增 APK 下载卡（标注 v3.0.0 与更新时间）
+ 7 消息记录支持导出 TXT（APK 走原生 saveFile，网页走 Blob 下载）
+ 8 文件发送后服务器缓存 10 分钟，房内可重复下载（VIP）
+ 9 主播模式：首个进房者为房主，可审批并设置多个主播；主播开播后进房者自动观看+听声音
+10 进房/离房/主播变更写系统公告到消息记录
+11 自动识别设备类型（手机/平板/电脑/其他）
+12 APK 或进入链接后所有开关默认全开
+后端（signal_server.py 8770 + file_cache_server.py 8771）：
+ - 连接键由 peerId 改为 id|mode，支持同一设备并行 view/screen/call 三路 WebRTC
+ - 房间状态 rooms[room]={host,anchors[],live[]}；房主断线自动 promote_host
+ - 新增锚点消息：anchor-apply/anchor-answer/anchor-set/anchor-unset/anchor-live/anchor-quit
+ - roles_payload 下发 host/hostName/anchors[{id,name,live}]/live[]；peers 附 role、live
+ - 文件缓存：POST /c3/upload?name=&ttl=600 → /c3/f/<id>，30 秒清理线程，CORS *
+前端：app.html / app.js / style.css（版本号 20261026p3）
+ - 多路同看 + layoutPip 画中画；toggleFullscreen 三级降级；showControlMark 控制 HUD
+ - detectDeviceType（UA + 原生桥）；allowCtl 默认开启；init 时 APK 自动 startStandby
+ - exportChat 导出 TXT（含版本/时间/设备/房间/作者头）；cacheToServer 文件缓存
+ - 主播族：applyRoles/updateAnchorUI/onAnchorRequest/answerAnchor/toggleAnchor/
+   scheduleAnchorSubscribe/startAnchorLive/stopAnchorLive/quitAnchor
+ - WebSocket 改为 /ws3；GitHub Pages 镜像页自动改走 wss://tools.ecojia.cn/ws3 与 /c3/
+APK（work/v3/apk，v3.0.0 / versionCode 300）：
+ - 新 keystore app/lanhub.jks（旧签名丢失，老版本需先卸载再装）
+ - MainActivity：WebView 加载 /lan-share-hub-pro/app.html?native=1，LanHubNative 桥
+   （startCapture/stopCapture/frameBase64/caps/a11yEnabled/openA11ySettings/control/saveFile）
+ - ScreenService：MediaProjection + ImageReader，110ms 节流，最长边 1600 / JPEG 62，
+   本地 127.0.0.1 随机端口 /frame 供 WebView 取帧
+ - CtlAccessibilityService：dispatchGesture 实现点击/滑动/返回
+部署与踩坑（务必记住）：
+ 1 真实生效的 nginx 配置是 /etc/nginx/sites-enabled/ecojia-tools（普通文件，非软链），
+   /etc/nginx/sites-available 里那份是旧的；先改错文件导致 /c3/ 一直 404
+ 2 nginx 里已有的 location /ws 是前缀匹配，会连 /ws3 一起吞掉（表现为 /ws3 返回 426
+   实际打到 2.0 的 8765）；必须用 location ^~ /ws3 单独声明
+ 3 备份文件不能放在 sites-enabled 内，否则出现 duplicate default server 导致 nginx 起不来
+ 4 graceful reload 期间旧 worker 仍会响应请求，验证要重试 2~3 次
+ 5 app.js 原先把 WebSocket 写死 /ws（连到 2.0 信令），已改 /ws3 —— 否则主播模式/设备类型全部失效
+验证：systemctl active / 8080 与 443 两侧 /c3/health 200 / 上传+下载 200 / ws3 握手回 room-roles
+ 双端协议回归：房主=首进、进房公告、申请→审批→成为主播、开播 live 列表 + 公告 全部 PASS
+ 浏览器回归：桌面 9 项布局功能 PASS；手机 390x844 修复横向溢出（523→390），
+ APK 卡完整显示、电脑伴侣卡隐藏、底部三 Tab 切换正常
+上线：
+ - https://tools.ecojia.cn/lan-share-hub-pro/（工具清单第 27 号「灵犀互传 3.0 商用版」）
+ - https://github.com/lzp5133084/lingxi-huchuan-3
+ - https://lzp5133084.github.io/lingxi-huchuan-3/（镜像页走后端 tools.ecojia.cn）
+作者：军哥懂保（微信：xunijiayuan）
