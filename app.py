@@ -151,11 +151,17 @@ def get_hardware():
 
 
 def get_main_product():
-    """当前主打产品（矩阵中 main=true 的那位）"""
+    """当前主打产品（矩阵中 main=true 的第一位）"""
     for p in get_products():
         if p.get("main"):
             return p
     return {"name": "资料百事通", "url": MAIN_SITE_URL, "status": "已上线"}
+
+
+def get_main_products():
+    """全部主打产品（main=true，支持双主打）"""
+    mains = [p for p in get_products() if p.get("main")]
+    return mains or [{"name": "资料百事通", "url": MAIN_SITE_URL, "status": "已上线"}]
 
 
 def renumber(products):
@@ -714,7 +720,14 @@ def index():
     main = get_main_product()
     return render_template("index.html", products=get_products(),
                            hardware=get_hardware(), apis=eco.get("apis", []),
-                           main_product=main, main_url=main.get("url") or MAIN_SITE_URL)
+                           main_product=main, main_url=main.get("url") or MAIN_SITE_URL,
+                           main_products=get_main_products())
+
+
+@app.route("/vault")
+def vault_page():
+    """数字保险箱（Digital Vault V2.9）· 主打产品2 专属介绍页（含PPT滚动演示）"""
+    return render_template("vault.html")
 
 
 @app.route("/wishes")
