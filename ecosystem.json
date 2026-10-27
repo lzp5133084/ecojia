@@ -21,8 +21,8 @@
       "scope": "个人 · 家庭",
       "icon": "🔐",
       "status": "已上线",
-      "main": false,
-      "url": "https://tools.ecojia.cn/digital-vault/",
+      "main": true,
+      "url": "https://ecojia.cn/vault",
       "repo": "digital-vault",
       "desc": "家庭重要证件、保单、合同、房产资料的加密数字保管箱，一人保管全家共享。三端支持：Windows电脑端 + Android手机端 + 网页版。",
       "pages_url": "https://lzp5133084.github.io/digital-vault/"
