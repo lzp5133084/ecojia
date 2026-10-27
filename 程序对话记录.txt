@@ -1053,3 +1053,33 @@ APK（work/v3/apk，v3.0.0 / versionCode 300）：
  子路径 /customer-management/、/screenpen/、/c3/health 保持 200；
  浏览器实测跳转正常、T33 卡片正常显示、页面总数 32
 作者：军哥懂保（微信：xunijiayuan）
+
+────────────────────────────────────────────
+【⑩ ecojia.cn 全栈优化：消除3类警告 + Flask→gunicorn】（2026-10-27 完成）
+────────────────────────────────────────────
+背景：用户收到服务器警告，经 SSH 全面健康扫描定位到 3 类问题：
+  A. Caddyfile 格式警告：每次 reload 都提示 "run caddy fmt --overwrite"
+     （来自上轮 tools.ecojia.cn 301 入口插入的缩进 tab/空格混用）
+  B. Flask development server 警告：每次启动都打 WARNING
+     "Do not use it in a production deployment"
+     （导致 HTTP/2 stream closed / aborting with incomplete response）
+  C. 288 个 __pycache__ 目录 + 2550 个 .bak/.pyc 文件堆积
+优化：
+ 1 caddy fmt --overwrite（备份 Caddyfile.bak.{时间}_pre_fmt）→ validate OK → reload OK
+ 2 服务器 venv 装 gunicorn 26.2.0，写新 systemd unit：
+     ExecStart=/opt/ecojia/venv/bin/gunicorn -w 2 -b 127.0.0.1:8400
+       --timeout 60 --access-logfile logs/gunicorn_access.log
+       --error-logfile logs/gunicorn_error.log app:app
+     （旧 unit 备份 ecojia-portal.service.bak.{时间}_pre_gunicorn）
+     daemon-reload + restart 后 server header 从 "Werkzeug/3.x" 变为 "gunicorn"
+     gunicorn 自动拉起主进程 + 2 worker，Restart=always + RestartSec=3
+ 3 清理 /opt 下 288 个 __pycache__ + 2550 个 .bak/.pyc（保留 Caddyfile 备份）
+验证：
+  curl ecojia.cn/ → 200, curl /tools → 200, tools.ecojia.cn/ → 301 ✓
+  journalctl -u ecojia-portal grep "development server" → **0 次**（警告清零）
+  journalctl -u caddy grep "not formatted" → **0 次**（格式警告清零）
+踩坑：本地 ecosystem.json 与 gitee 远端有 1348 行冲突（别人提交的 T34 版本号变动），
+  手动 abort rebase → reset --hard gitee/main 对齐；线上已同步，无需额外处理
+额外发现：T17/T18/T19 缺 URL 是正常的——标注为"Python 桌面程序/本地电脑软件"
+  本来就没有网页入口；products.T01 状态已改为"已上线"并登记 T34 工具条目
+作者：军哥懂保（微信：xunijiayuan）
