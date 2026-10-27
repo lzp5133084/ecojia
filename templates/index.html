@@ -17,23 +17,42 @@
   </div>
 </section>
 
-<!-- ═══ 当前主打区 ═══ -->
+<!-- ═══ 当前主打区（支持多主打） ═══ -->
 <section class="main-product" id="main-product">
+  {% for mp in main_products %}
   <div class="mp-card">
     <div class="mp-head">
-      <span class="mp-badge">当前主打 · {{ main_product.status }}</span>
-      <span class="mp-icon">{{ icon(picon(main_product.icon), "ic-neon") }}</span>
+      <span class="mp-badge">主打产品{{ loop.index }} · {{ mp.status }}</span>
+      <span class="mp-icon">{{ icon(picon(mp.icon), "ic-neon") }}</span>
     </div>
-    <h2 class="mp-name">{{ main_product.name }}</h2>
+    <h2 class="mp-name">{{ mp.name }}</h2>
+    {% if mp.name == "数字保险箱" %}
+    <p class="mp-scope">家庭重要资料的加密数字保管箱 · 一人保管全家共享</p>
+    <p class="mp-desc">证件 · 保单 · 合同 · 密码账号 统一加密保管。<br>
+    AES-GCM 端到端加密，长期未登录自动触发应急交付，三端同步。</p>
+    <div class="mp-feats">
+      <span>{{ icon("shield") }} AES-GCM加密</span><span>{{ icon("users") }} 家庭授权</span><span>{{ icon("clock") }} 应急触发</span><span>{{ icon("package") }} 三端同步</span>
+    </div>
+    <div class="mp-btnrow">
+      <a class="btn btn-gold btn-lg mp-btn" href="/vault">产品介绍与演示 {{ icon("arrowright") }}</a>
+      <a class="btn btn-ghost btn-lg" href="https://tools.ecojia.cn/digital-vault/" target="_blank">下载中心</a>
+    </div>
+    {% else %}
     <p class="mp-scope">全民共创式资料共享与智能查询平台</p>
     <p class="mp-desc">查资料 · 传资料 · 赚积分 · AI智能帮您找。<br>
     出院记录、诊断证明、各类单据……大家上传、大家共享、大家受益。</p>
     <div class="mp-feats">
       <span>{{ icon("search") }} AI智能搜索</span><span>{{ icon("users") }} 社区共创</span><span>{{ icon("trophy") }} 贡献等级</span><span>{{ icon("gem") }} VIP权益</span>
     </div>
-    <a class="btn btn-gold btn-lg mp-btn" href="{{ main_url }}" target="_blank">立即进入 {{ icon("arrowright") }}</a>
+    <a class="btn btn-gold btn-lg mp-btn" href="{{ mp.url or main_url }}" target="_blank">立即进入 {{ icon("arrowright") }}</a>
+    {% endif %}
   </div>
+  {% endfor %}
 </section>
+<style>
+#main-product{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px}
+#main-product .mp-btnrow{display:flex;gap:12px;flex-wrap:wrap}
+</style>
 
 <!-- ═══ 产品矩阵 ═══ -->
 <section class="section" id="products">
