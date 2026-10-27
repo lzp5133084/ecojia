@@ -17,13 +17,15 @@
     {
       "no": "01",
       "name": "数字保险箱",
-      "en": "",
+      "en": "Digital Vault",
       "scope": "个人 · 家庭",
       "icon": "🔐",
-      "status": "规划中",
+      "status": "已上线",
       "main": false,
-      "url": "",
-      "desc": "家庭重要证件、保单、合同、房产资料的加密数字保管箱，一人保管全家共享。"
+      "url": "https://tools.ecojia.cn/digital-vault/",
+      "repo": "digital-vault",
+      "desc": "家庭重要证件、保单、合同、房产资料的加密数字保管箱，一人保管全家共享。三端支持：Windows电脑端 + Android手机端 + 网页版。",
+      "pages_url": "https://lzp5133084.github.io/digital-vault/"
     },
     {
       "no": "02",
@@ -1078,6 +1080,74 @@
         "后台「页面配置」可修改前台文案与联系方式，保存即生效"
       ],
       "note": "数据存储于服务器 SQLite（recruit.db）；后台账号与生态统一账号一致。"
+    },
+    {
+      "no": "T32",
+      "name": "灵犀互传 3.0 商用版",
+      "en": "LanShare Hub Pro 3.0",
+      "repo": "https://github.com/lzp5133084/lingxi-huchuan-3",
+      "type": "网页工具 + WebSocket 信令服务 + 文件缓存服务",
+      "entry": "index.html",
+      "run": "浏览器打开即用（信令 8770 /ws3，文件缓存 8771 /c3/）",
+      "port": null,
+      "url": "https://tools.ecojia.cn/lan-share-hub-pro/",
+      "size_kb": 225,
+      "updated": "2026-10-26",
+      "status": "已上线·HTTPS",
+      "desc": "同屏互看 · 主播模式 · 远程控制（含电脑端伴侣）· 摄像头+屏幕双路同看画中画 · 文件 10 分钟服务器缓存 · 消息导出 TXT · 设备类型自动识别 · 手机 APK v3.0.0",
+      "steps": [
+        "电脑/手机打开链接即可互见（同一房间码）",
+        "点「看TA屏幕」「看看TA」「视频通话」发起互看",
+        "主播模式：第一个进房的人是房主，可审批并设置主播；主播开播后其他人自动观看",
+        "手机安装 APK v3.0.0 可走原生通道共享屏幕并被远程控制",
+        "电脑安装「电脑端伴侣」后可被远程控制"
+      ],
+      "note": "GitHub Pages 镜像：https://lzp5133084.github.io/lingxi-huchuan-3/；APK 新签名，旧版需先卸载再装；保留 2.0 体验版 /lan-share-hub/ 不动。"
+    },
+    {
+      "no": "T33",
+      "name": "鼠标画笔 · ScreenPen",
+      "en": "ScreenPen Web",
+      "repo": null,
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器打开即用",
+      "port": null,
+      "url": "https://tools.ecojia.cn/screenpen/",
+      "size_kb": 142,
+      "updated": "2026-10-26",
+      "status": "已上线·HTTPS",
+      "desc": "屏幕标注画笔：画笔/荧光/直线/箭头/矩形/椭圆/文字/橡皮 8 种工具 · 撤销/重做/清空/导出/存档 · 数字键 1-8 快捷切换 · localStorage 本地保存 · 纯本地运行不上传",
+      "steps": [
+        "打开链接即可在网页上直接标注",
+        "数字键 1-8 快速切换 8 种标注工具",
+        "支持撤销/重做，标注可存档到本地并导出图片"
+      ],
+      "note": "v1.0.0 网页演示版；桌面版另有区域截图与 F2/F3 快捷功能。作者：军哥懂保（微信 xunijiayuan）"
+    },
+    {
+      "no": "T34",
+      "name": "我的数字保险箱",
+      "en": "Digital Vault V2.9",
+      "repo": "digital-vault",
+      "type": "网页工具 + Windows桌面EXE + Android APK",
+      "entry": "index.html / 官方下载页",
+      "run": "网页版浏览器打开；电脑端双击 EXE 安装；手机端安装 APK",
+      "port": null,
+      "url": "https://tools.ecojia.cn/digital-vault/",
+      "size_kb": 41977,
+      "updated": "2026-10-27",
+      "status": "已上线·HTTPS",
+      "desc": "🔐 家庭加密数字保管箱：AES-GCM 端到端加密 · 本地优先架构 · 家庭授权共享 · 长期未登录应急触发 · 三端支持（Windows 39MB + Android 2MB + 网页）",
+      "steps": [
+        "打开「立即打开」进入官方下载页，选择对应平台版本",
+        "电脑端下载 EXE 安装，手机端下载 APK 安装",
+        "首次启动设置主密码（至少 6 位，务必牢记）",
+        "录入证件/保单/合同/密码等数字资产，系统自动加密保管",
+        "在「长期未登录触发」里配置应急交付规则和家人联系方式"
+      ],
+      "pages_url": "https://lzp5133084.github.io/digital-vault/",
+      "note": "GitHub Pages 镜像下载页；二进制文件托管在 GitHub Releases（exe 约 39MB / apk 约 2MB）；对应产品矩阵 01「数字保险箱」。"
     }
   ],
   "stages": [
