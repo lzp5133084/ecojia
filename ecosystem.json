@@ -17,13 +17,15 @@
     {
       "no": "01",
       "name": "数字保险箱",
-      "en": "",
+      "en": "Digital Vault",
       "scope": "个人 · 家庭",
       "icon": "🔐",
-      "status": "规划中",
+      "status": "已上线",
       "main": false,
-      "url": "",
-      "desc": "家庭重要证件、保单、合同、房产资料的加密数字保管箱，一人保管全家共享。"
+      "url": "https://tools.ecojia.cn/digital-vault/",
+      "repo": "digital-vault",
+      "desc": "家庭重要证件、保单、合同、房产资料的加密数字保管箱，一人保管全家共享。三端支持：Windows电脑端 + Android手机端 + 网页版。",
+      "pages_url": "https://lzp5133084.github.io/digital-vault/"
     },
     {
       "no": "02",
@@ -1122,6 +1124,30 @@
         "支持撤销/重做，标注可存档到本地并导出图片"
       ],
       "note": "v1.0.0 网页演示版；桌面版另有区域截图与 F2/F3 快捷功能。作者：军哥懂保（微信 xunijiayuan）"
+    },
+    {
+      "no": "T34",
+      "name": "我的数字保险箱",
+      "en": "Digital Vault V2.9",
+      "repo": "digital-vault",
+      "type": "网页工具 + Windows桌面EXE + Android APK",
+      "entry": "index.html / 官方下载页",
+      "run": "网页版浏览器打开；电脑端双击 EXE 安装；手机端安装 APK",
+      "port": null,
+      "url": "https://tools.ecojia.cn/digital-vault/",
+      "size_kb": 41977,
+      "updated": "2026-10-27",
+      "status": "已上线·HTTPS",
+      "desc": "🔐 家庭加密数字保管箱：AES-GCM 端到端加密 · 本地优先架构 · 家庭授权共享 · 长期未登录应急触发 · 三端支持（Windows 39MB + Android 2MB + 网页）",
+      "steps": [
+        "打开「立即打开」进入官方下载页，选择对应平台版本",
+        "电脑端下载 EXE 安装，手机端下载 APK 安装",
+        "首次启动设置主密码（至少 6 位，务必牢记）",
+        "录入证件/保单/合同/密码等数字资产，系统自动加密保管",
+        "在「长期未登录触发」里配置应急交付规则和家人联系方式"
+      ],
+      "pages_url": "https://lzp5133084.github.io/digital-vault/",
+      "note": "GitHub Pages 镜像下载页；二进制文件托管在 GitHub Releases（exe 约 39MB / apk 约 2MB）；对应产品矩阵 01「数字保险箱」。"
     }
   ],
   "stages": [
