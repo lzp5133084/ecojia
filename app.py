@@ -1902,6 +1902,9 @@ def api_wishes_list():
         w = dict(r)
         w["mine"] = bool(session.get("uid") and w["user_id"] == session["uid"])
         w["can_manage"] = w["mine"] or (current_user() or {}).get("role") == "admin"
+        # 隐私：联系方式仅本人和管理员可见，游客/他人看不到
+        if not w["can_manage"]:
+            w.pop("contact", None)
         wishes.append(w)
     return jsonify({"ok": True, "wishes": wishes,
                     "status_options": WISH_STATUS})
