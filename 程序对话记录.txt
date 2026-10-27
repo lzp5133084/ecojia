@@ -1107,3 +1107,31 @@ APK（work/v3/apk，v3.0.0 / versionCode 300）：
   还在用 python app.py 启动 Flask dev server，分别跑 8300/8503 等端口，
   可逐一批改为 gunicorn（优先级低于门户，等用户需求时再做）
 作者：军哥懂保（微信：xunijiayuan）
+
+────────────────────────────────────────────
+【⑫ 全栈巡检 + 自定义404/500错误页】（2026-10-27 完成）
+────────────────────────────────────────────
+三身份只读巡检发现：
+  P0 无自定义404页（裸"Not Found"服务器页，品牌感断裂）
+  P2 4个子站Flask dev server + 无logrotate（后续迭代）
+修复：
+  1 templates/404.html 继承 base.html，深紫黑+金色渐变404大字+三个按钮
+     （返回生态主页 / 看看工具清单 / 去许愿墙逛逛）
+     含"帮我们把它加到许愿墙"引导 + 完整导航栏和页脚（版本/作者/微信）
+  2 templates/500.html 同风格，橙色渐变500 + 返回主页/上一页按钮
+  3 app.py 新增 errorhandler(404) + errorhandler(405) 合并处理
+     —— /api/* 路径返回 JSON（{"ok":false,"msg":"..."}），
+       非API路径返回品牌404模板（405也走404风格）
+     —— 解决 OPTIONS 通配路由 /api/<path:_p> 拦截 GET 导致 /api/nonexistent
+       返回裸405错误页的问题（现在返回 JSON + 正确 path）
+  4 gunicorn HUP 优雅重载（master PID 138508 → 自动拉起新 worker）
+踩坑：
+  本地 edit app.py 后 push 时发现远程 df6fe85 已有人大幅改写了 app.py
+    （新增 vault.html /vault 路由 + 大段改动），三方合并 4329 行全冲突
+    → 放弃 stash + git reset --hard df6fe85 对齐远程 + 重新插入 errorhandler
+  教训：多人协作时 push 前必须先 pull，否则冲突范围可能远超预期
+部署：push gitee 6ba0867 + e00c32f 两次提交（errorhandler + 405补全）
+验证：curl 全链路 7 条全 PASS（HTML404、API JSON404/405、正常首页/tools/301/子路径）
+  浏览器实测：深色金色调品牌风格 ✓ 渐变404大字 ✓ 三个按钮 ✓
+  完整导航栏+页脚 ✓
+作者：军哥懂保（微信：xunijiayuan）
