@@ -1030,3 +1030,26 @@ APK（work/v3/apk，v3.0.0 / versionCode 300）：
  - https://github.com/lzp5133084/lingxi-huchuan-3
  - https://lzp5133084.github.io/lingxi-huchuan-3/（镜像页走后端 tools.ecojia.cn）
 作者：军哥懂保（微信：xunijiayuan）
+
+────────────────────────────────────────────
+【⑨ 工具中心合并去重：tools.ecojia.cn 根路径 301 收口】（2026-10-27 完成）
+────────────────────────────────────────────
+背景：用户发现 tools.ecojia.cn「工具中心」是孤岛页面（首页无入口、27卡片、
+排版文字竖排挤压、19/21号卡片名称显示"src"损坏），与主站 /tools（31工具）
+双轨并行。用户选定方案1：合并去重，子域名做301收口。
+执行：
+ 1 对比两套清单：主站已覆盖工具中心27/28卡片，唯一缺失=鼠标画笔·ScreenPen
+   → ecosystem.json 补录 T33（commit 8fe391d，推送 gitee 成功；github SSL失败）
+ 2 服务器 /opt/ecojia/portal 有自动同步机制，push后 ecosystem.json 即更新为32条，
+   门户热加载免重启，/tools 页即时显示 T33
+ 3 Caddy 层收口（/etc/caddy/Caddyfile，备份 Caddyfile.bak.202610271607_tools301）：
+   tools.ecojia.cn 块内 encode 行后新增两条精确匹配跳转——
+   redir / → https://ecojia.cn/tools 301；redir /index.html 同理
+   子路径不受影响（redir 精确匹配语义），caddy validate 通过后 reload
+踩坑：
+ 1 sed 远程插行因转义失效，改为「sudo cat拉取→本地改→SFTP上传/tmp→validate→cp」
+ 2 Caddyfile 缩进是 tab 不是空格，字符串匹配插入点必须先 repr 确认
+验证：tools.ecojia.cn/ 与 /index.html 均 301→ecojia.cn/tools；
+ 子路径 /customer-management/、/screenpen/、/c3/health 保持 200；
+ 浏览器实测跳转正常、T33 卡片正常显示、页面总数 32
+作者：军哥懂保（微信：xunijiayuan）
