@@ -1101,6 +1101,27 @@
         "电脑安装「电脑端伴侣」后可被远程控制"
       ],
       "note": "GitHub Pages 镜像：https://lzp5133084.github.io/lingxi-huchuan-3/；APK 新签名，旧版需先卸载再装；保留 2.0 体验版 /lan-share-hub/ 不动。"
+    },
+    {
+      "no": "T33",
+      "name": "鼠标画笔 · ScreenPen",
+      "en": "ScreenPen Web",
+      "repo": null,
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器打开即用",
+      "port": null,
+      "url": "https://tools.ecojia.cn/screenpen/",
+      "size_kb": 142,
+      "updated": "2026-10-26",
+      "status": "已上线·HTTPS",
+      "desc": "屏幕标注画笔：画笔/荧光/直线/箭头/矩形/椭圆/文字/橡皮 8 种工具 · 撤销/重做/清空/导出/存档 · 数字键 1-8 快捷切换 · localStorage 本地保存 · 纯本地运行不上传",
+      "steps": [
+        "打开链接即可在网页上直接标注",
+        "数字键 1-8 快速切换 8 种标注工具",
+        "支持撤销/重做，标注可存档到本地并导出图片"
+      ],
+      "note": "v1.0.0 网页演示版；桌面版另有区域截图与 F2/F3 快捷功能。作者：军哥懂保（微信 xunijiayuan）"
     }
   ],
   "stages": [
