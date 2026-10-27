@@ -69,9 +69,13 @@ def agent_cors(resp):
 
 # ══════════════════ 错误页 ══════════════════
 @app.errorhandler(404)
-def not_found(e):
+@app.errorhandler(405)
+def _handle_404_405(e):
+    code = getattr(e, "code", 404)
     if request.path.startswith("/api/"):
-        return jsonify({"ok": False, "msg": "接口不存在", "path": request.path}), 404
+        msg = "接口不存在" if code == 404 else "请求方法不允许"
+        return jsonify({"ok": False, "msg": msg, "path": request.path}), code
+    # 非 API 路径一律走品牌 404（405 对用户也是"找不到"）
     return render_template("404.html"), 404
 
 
