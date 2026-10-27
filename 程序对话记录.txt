@@ -1135,3 +1135,36 @@ APK（work/v3/apk，v3.0.0 / versionCode 300）：
   浏览器实测：深色金色调品牌风格 ✓ 渐变404大字 ✓ 三个按钮 ✓
   完整导航栏+页脚 ✓
 作者：军哥懂保（微信：xunijiayuan）
+
+────────────────────────────────────────────
+【⑬ 深挖 /wishes + /admin CRUD 交互逻辑】（2026-10-28 完成）
+────────────────────────────────────────────
+三身份只读巡检 + 代码审查 + 浏览器实测，发现并修复1个P0：
+
+【/wishes 许愿墙交互逻辑】
+  后端接口（完整闭环）：
+    GET /api/wishes      列表（含 mine/can_manage 字段，支持 kw/product 过滤）
+    POST /api/wishes     提交（匿名可提交，校验 product/contact/content 长度）
+    PUT /api/wishes/<id> 修改（需登录，仅本人/管理员；管理员可改status）
+    DELETE /api/wishes/<id> 删除（需登录，仅本人/管理员）
+  前端交互：submitWish / editWish / saveWish / setStatus / delWish
+  ✅ 权限控制正确，XSS 用 escapeHtml 防护
+  ❌ P0 隐私泄露：/api/wishes 对游客返回 contact（联系方式）明文
+    → 修复：非 can_manage 时 pop 掉 contact 字段
+    → 验证：游客 contact字段存在:False / 管理员 contact值正确返回
+    → commit a1a4184
+
+【/admin 积木管理 CRUD 交互逻辑】
+  后端接口（完整闭环）：
+    POST /api/ecosystem/products        新增（@admin_required，自动编号插"待添加"前）
+    PUT /api/ecosystem/products/<no>    修改（"待添加"不可改）
+    DELETE /api/ecosystem/products/<no> 删除（"待添加"不可删）
+  前端交互：openBrickForm / editBrick / saveBrick / delBrick
+  ✅ icon_map 通过 context_processor 全局注入，积木图标显示正常
+  ✅ 新增/修改表单回填正确，"待添加"占位有锁标识
+  ✅ 无重大问题
+
+【踩坑记录】
+  - 浏览器实测时提交了1条测试愿望，事后用 sqlite3 DELETE 清理
+  - 验证脱敏时需要造愿望再测，测完立即删除，保持生产数据干净
+作者：军哥懂保（微信：xunijiayuan）
