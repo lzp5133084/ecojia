@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+{% from "icon_macro.html" import icon %}
+{% block title %}数字保险箱 · Digital Vault V2.9{% endblock %}
+{% block content %}
+<style>
+/* ═══ 数字保险箱专属页 · 星霓暖赛博风 ═══ */
+.vault-hero{position:relative;text-align:center;padding:70px 20px 40px;overflow:hidden}
+.vault-hero::before{content:"";position:absolute;inset:-30%;background:
+  radial-gradient(circle at 30% 30%,rgba(201,167,235,.14),transparent 40%),
+  radial-gradient(circle at 70% 60%,rgba(245,198,139,.10),transparent 40%);
+  animation:vaultGlow 12s ease-in-out infinite alternate;pointer-events:none}
+@keyframes vaultGlow{0%{transform:rotate(0deg) scale(1)}100%{transform:rotate(8deg) scale(1.08)}}
+.vh-badge{display:inline-flex;gap:8px;align-items:center;padding:7px 18px;border-radius:999px;border:1px solid rgba(245,198,139,.35);background:rgba(245,198,139,.08);color:#F5C68B;font-size:12px;letter-spacing:1px}
+.vh-badge i{width:6px;height:6px;border-radius:50%;background:#9CCC65;box-shadow:0 0 10px #9CCC65;animation:blink 2s infinite}
+@keyframes blink{50%{opacity:.3}}
+.vault-hero h1{font-size:clamp(34px,6vw,58px);font-weight:800;margin:22px 0 10px;background:linear-gradient(135deg,#F5C68B,#E8A0BF 55%,#C9A7EB);-webkit-background-clip:text;background-clip:text;color:transparent}
+.vault-hero .vh-sub{color:var(--muted,#a99bc0);font-size:clamp(13px,1.6vw,16px);max-width:620px;margin:0 auto;line-height:1.9}
+.vh-meta{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:24px}
+.vh-meta span{padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-size:12px;color:#c9bcd9}
+
+/* ═══ PPT 全屏滚动演示 ═══ */
+.ppt-wrap{max-width:1080px;margin:46px auto 0;padding:0 18px}
+.ppt-head{text-align:center;margin-bottom:20px}
+.ppt-head h2{font-size:24px;margin-bottom:6px}
+.ppt-head p{color:var(--muted,#a99bc0);font-size:13px}
+.ppt-stage{position:relative;border-radius:26px;overflow:hidden;border:1px solid rgba(245,198,139,.22);box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 60px rgba(201,167,235,.08);background:#150d20}
+.ppt-track{display:flex;transition:transform .7s cubic-bezier(.22,1,.36,1)}
+.ppt-slide{flex:0 0 100%;min-height:520px;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:34px;padding:52px 56px;position:relative;overflow:hidden}
+.ppt-slide::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% 15%,rgba(201,167,235,.10),transparent 45%),radial-gradient(circle at 10% 90%,rgba(245,198,139,.08),transparent 45%)}
+.ppt-txt{position:relative;z-index:2}
+.ppt-page-no{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#C9A7EB;letter-spacing:2px;margin-bottom:16px}
+.ppt-page-no::before{content:"";width:26px;height:1px;background:linear-gradient(90deg,#C9A7EB,transparent)}
+.ppt-txt h3{font-size:clamp(24px,3vw,34px);margin-bottom:14px;line-height:1.25}
+.ppt-txt h3 em{font-style:normal;background:linear-gradient(135deg,#F5C68B,#E8A0BF);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ppt-txt p{color:#b7a9cc;font-size:14px;line-height:1.9;margin-bottom:18px}
+.ppt-points{display:grid;gap:10px}
+.ppt-points li{list-style:none;display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#cfc0de}
+.ppt-points li::before{content:"◆";color:#F5C68B;font-size:10px;margin-top:4px}
+/* 幻灯片里的演示窗口(纯CSS模拟产品UI) */
+.ppt-visual{position:relative;z-index:2}
+.demo-win{border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,#1d1430,#171026);box-shadow:0 24px 60px rgba(0,0,0,.5);transform:perspective(1200px) rotateY(-6deg) rotateX(2deg);transition:transform .6s}
+.ppt-slide:hover .demo-win{transform:perspective(1200px) rotateY(-2deg) rotateX(0deg)}
+.demo-win .dw-bar{display:flex;gap:6px;padding:10px 12px;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.06)}
+.demo-win .dw-bar i{width:10px;height:10px;border-radius:50%}
+.demo-win .dw-bar i:nth-child(1){background:#ff5f57}.demo-win .dw-bar i:nth-child(2){background:#febc2e}.demo-win .dw-bar i:nth-child(3){background:#28c840}
+.demo-win .dw-title{margin-left:auto;font-size:10px;color:#8d7ba5}
+.dw-body{padding:16px}
+.dw-row{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.035);margin-bottom:8px;border:1px solid rgba(255,255,255,.05)}
+.dw-row .ic{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:13px;background:linear-gradient(135deg,rgba(245,198,139,.25),rgba(201,167,235,.25))}
+.dw-row .tx{flex:1}.dw-row .tx b{display:block;font-size:11px;color:#e9dffa}.dw-row .tx i{font-size:9px;color:#8d7ba5;font-style:normal}
+.dw-tag{font-size:9px;padding:2px 8px;border-radius:99px;background:rgba(245,198,139,.14);color:#F5C68B}
+.dw-statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.dw-stat{padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);text-align:center}
+.dw-stat b{display:block;font-size:16px;color:#F5C68B}.dw-stat span{font-size:8px;color:#8d7ba5}
+.dw-bar-wrap{height:7px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden;margin:8px 0}
+.dw-bar-fill{height:100%;width:65%;border-radius:99px;background:linear-gradient(90deg,#F5C68B,#C9A7EB);animation:barFlow 2.6s ease-in-out infinite alternate}
+@keyframes barFlow{from{width:52%}to{width:78%}}
+.dw-lock{width:54px;height:54px;border-radius:16px;margin:0 auto 10px;display:grid;place-items:center;font-size:26px;background:linear-gradient(135deg,rgba(245,198,139,.3),rgba(201,167,235,.3));border:1px solid rgba(245,198,139,.35);box-shadow:0 0 30px rgba(245,198,139,.18)}
+.dw-input{height:30px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);margin:7px 0;display:flex;align-items:center;padding:0 10px;font-size:10px;color:#8d7ba5}
+.dw-btn{height:32px;border-radius:8px;background:linear-gradient(135deg,#F5C68B,#E8A0BF);color:#221536;font-weight:700;display:grid;place-items:center;font-size:11px;margin-top:8px}
+.dw-devices{display:flex;justify-content:center;align-items:flex-end;gap:16px;padding:16px 0}
+.dw-pc{width:150px;height:96px;border-radius:8px;border:2px solid rgba(245,198,139,.4);background:linear-gradient(135deg,#241736,#1a1128);position:relative}
+.dw-pc::after{content:"";position:absolute;left:50%;bottom:-12px;transform:translateX(-50%);width:44px;height:12px;border-radius:0 0 8px 8px;background:rgba(245,198,139,.3)}
+.dw-phone{width:52px;height:96px;border-radius:10px;border:2px solid rgba(201,167,235,.45);background:linear-gradient(135deg,#241736,#1a1128)}
+.dw-tab{width:84px;height:64px;border-radius:8px;border:2px solid rgba(232,160,191,.4);background:linear-gradient(135deg,#241736,#1a1128)}
+.dw-scr{position:absolute;inset:8px;border-radius:4px;background:rgba(255,255,255,.05)}
+.dw-scr::before{content:"";display:block;height:5px;margin:5px;border-radius:3px;background:linear-gradient(90deg,rgba(245,198,139,.5),transparent)}
+.dw-scr::after{content:"";display:block;height:5px;margin:5px;border-radius:3px;background:linear-gradient(90deg,rgba(201,167,235,.5),transparent);width:70%}
+/* 翻页控件 */
+.ppt-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:1px solid rgba(245,198,139,.4);background:rgba(21,13,32,.7);backdrop-filter:blur(8px);color:#F5C68B;font-size:18px;display:grid;place-items:center;cursor:pointer;z-index:10;transition:.25s}
+.ppt-nav:hover{background:rgba(245,198,139,.18);box-shadow:0 0 20px rgba(245,198,139,.25)}
+.ppt-prev{left:16px}.ppt-next{right:16px}
+.ppt-dots{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:10}
+.ppt-dots button{width:10px;height:10px;border-radius:99px;border:none;background:rgba(255,255,255,.18);cursor:pointer;transition:.3s;padding:0}
+.ppt-dots button.on{width:28px;background:linear-gradient(90deg,#F5C68B,#C9A7EB);box-shadow:0 0 12px rgba(245,198,139,.5)}
+.ppt-progress{position:absolute;top:0;left:0;height:3px;background:linear-gradient(90deg,#F5C68B,#E8A0BF,#C9A7EB);z-index:11;transition:width .3s}
+.ppt-hint{text-align:center;margin-top:14px;font-size:11px;color:var(--muted,#a99bc0)}
+
+/* ═══ 功能区 ═══ */
+.vault-feats{max-width:1080px;margin:70px auto 0;padding:0 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.vf-card{padding:24px;border-radius:18px;background:linear-gradient(180deg,rgba(42,39,56,.55),rgba(26,18,39,.55));border:1px solid rgba(255,255,255,.07);transition:.3s}
+.vf-card:hover{border-color:rgba(245,198,139,.4);transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.35)}
+.vf-card .vf-ic{font-size:26px;margin-bottom:12px}
+.vf-card b{display:block;font-size:15px;margin-bottom:8px}
+.vf-card p{font-size:12px;color:var(--muted,#a99bc0);line-height:1.8}
+
+/* ═══ 下载区 ═══ */
+.vault-dl{max-width:1080px;margin:70px auto 0;padding:0 18px 30px}
+.vd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:24px}
+.vd-card{padding:26px;border-radius:20px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(42,39,56,.7),rgba(26,18,39,.7));text-align:center;transition:.3s}
+.vd-card:hover{border-color:rgba(245,198,139,.45);transform:translateY(-4px)}
+.vd-card .vd-ic{font-size:36px;margin-bottom:12px}
+.vd-card h4{font-size:16px;margin-bottom:6px}
+.vd-card .vd-meta{font-size:11px;color:var(--muted,#a99bc0);margin-bottom:16px}
+.vd-btn{display:inline-block;width:100%;padding:12px 0;border-radius:12px;font-weight:700;font-size:14px;background:linear-gradient(135deg,#F5C68B,#E8A0BF);color:#221536;transition:.25s}
+.vd-btn:hover{box-shadow:0 10px 28px rgba(245,198,139,.35)}
+.vd-btn.ghost{background:rgba(255,255,255,.07);color:#e9dffa;border:1px solid rgba(255,255,255,.14);margin-top:8px;font-weight:500}
+
+@media(max-width:860px){
+  .ppt-slide{grid-template-columns:1fr;padding:38px 26px 60px;min-height:auto;gap:24px}
+  .ppt-nav{width:38px;height:38px}
+  .ppt-prev{left:8px}.ppt-next{right:8px}
+}
+</style>
+
+<!-- ═══ 产品 Hero ═══ -->
+<section class="vault-hero">
+  <div class="vh-badge"><i></i>主打产品 2 · V2.9 商用版已发布</div>
+  <h1>数字保险箱</h1>
+  <p class="vh-sub">家庭重要证件、保单、合同、密码账号的加密数字保管箱<br>一人保管，全家共享 —— 数据本地加密，安全可靠</p>
+  <div class="vh-meta">
+    <span>🔐 AES-GCM 端到端加密</span><span>💾 本地优先</span><span>👨‍👩‍👧 家庭授权</span><span>⏱ 应急触发</span><span>📱 三端支持</span>
+  </div>
+</section>
+
+<!-- ═══ PPT 滚动演示 ═══ -->
+<div class="ppt-wrap">
+  <div class="ppt-head">
+    <h2>📽 产品演示</h2>
+    <p>自动播放 · 也可点击左右箭头或使用键盘 ← → 翻页</p>
+  </div>
+  <div class="ppt-stage" id="pptStage">
+    <div class="ppt-progress" id="pptProg"></div>
+    <div class="ppt-track" id="pptTrack">
+
+      <!-- 第1页:封面 -->
+      <div class="ppt-slide">
+        <div class="ppt-txt">
+          <div class="ppt-page-no">01 / 06 · 开篇</div>
+          <h3>把重要数字资产<br><em>安放在加密保险箱</em></h3>
+          <p>从密码账号到家庭保单，从房产证到应急联系方式——所有值得守护的数字信息，都有一个安全的家。</p>
+          <ul class="ppt-points">
+            <li>主密码不存储,丢失无法找回,真正的零信任架构</li>
+            <li>PBKDF2 派生密钥,21万次迭代防暴力破解</li>
+            <li>一人保管全家共享,应急机制守护家人</li>
+          </ul>
+        </div>
+        <div class="ppt-visual">
+          <div class="demo-win">
+            <div class="dw-bar"><i></i><i></i><i></i><span class="dw-title">我的数字保险箱 · 解锁</span></div>
+            <div class="dw-body" style="text-align:center;padding:22px">
+              <div class="dw-lock">🔐</div>
+              <div style="font-size:12px;color:#e9dffa;margin-bottom:6px">解锁保险箱</div>
+              <div class="dw-input">请输入主密码 ········</div>
+              <div class="dw-btn">立即解锁</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第2页:总览仪表盘 -->
+      <div class="ppt-slide">
+        <div class="ppt-txt">
+          <div class="ppt-page-no">02 / 06 · 总览</div>
+          <h3>保险箱总览<br><em>安全状态一目了然</em></h3>
+          <p>打开即是仪表盘：密码数量、关联人、应急规则倒计时、最近安全事件，全部实时呈现。</p>
+          <ul class="ppt-points">
+            <li>四项核心指标卡片,掌握全局</li>
+            <li>应急规则倒计时进度条实时计算</li>
+            <li>审计日志最近事件滚动展示</li>
+          </ul>
+        </div>
+        <div class="ppt-visual">
+          <div class="demo-win">
+            <div class="dw-bar"><i></i><i></i><i></i><span class="dw-title">保险箱总览</span></div>
+            <div class="dw-body">
+              <div class="dw-statgrid">
+                <div class="dw-stat"><b>12</b><span>密码记录</span></div>
+                <div class="dw-stat"><b>3</b><span>关联人</span></div>
+                <div class="dw-stat"><b>28天</b><span>距触发</span></div>
+                <div class="dw-stat"><b>0</b><span>交付记录</span></div>
+              </div>
+              <div class="dw-row"><div class="ic">🔑</div><div class="tx"><b>微信</b><i>138****8888 · 社交</i></div><span class="dw-tag">APP</span></div>
+              <div class="dw-row"><div class="ic">🏦</div><div class="tx"><b>网上银行</b><i>demo_user · 金融</i></div><span class="dw-tag">网页</span></div>
+              <div class="dw-row"><div class="ic">📧</div><div class="tx"><b>工作邮箱</b><i>mail@corp.com · 工作</i></div><span class="dw-tag">邮箱</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第3页:密码管理 -->
+      <div class="ppt-slide">
+        <div class="ppt-txt">
+          <div class="ppt-page-no">03 / 06 · 密码管理</div>
+          <h3>密码与账号<br><em>集中加密保管</em></h3>
+          <p>网站、APP、银行卡、会员卡……统一录入、分类管理、AES-GCM 加密存储，查看留痕可审计。</p>
+          <ul class="ppt-points">
+            <li>分类标签:社交/金融/工作/生活</li>
+            <li>密码默认掩码显示,查看动作记入审计</li>
+            <li>支持备注、网址、更新时间完整档案</li>
+          </ul>
+        </div>
+        <div class="ppt-visual">
+          <div class="demo-win">
+            <div class="dw-bar"><i></i><i></i><i></i><span class="dw-title">密码管理</span></div>
+            <div class="dw-body">
+              <div class="dw-row"><div class="ic">💬</div><div class="tx"><b>微信</b><i>账号 138****8888</i></div><span class="dw-tag">社交</span><span style="font-size:10px;color:#8d7ba5">••••••</span></div>
+              <div class="dw-row"><div class="ic">🏦</div><div class="tx"><b>工商银行网银</b><i>账号 6222****888</i></div><span class="dw-tag">金融</span><span style="font-size:10px;color:#8d7ba5">••••••</span></div>
+              <div class="dw-row"><div class="ic">📧</div><div class="tx"><b>QQ邮箱</b><i>账号 100469004</i></div><span class="dw-tag">工作</span><span style="font-size:10px;color:#8d7ba5">••••••</span></div>
+              <div class="dw-row"><div class="ic">🛒</div><div class="tx"><b>淘宝</b><i>账号 junge****</i></div><span class="dw-tag">生活</span><span style="font-size:10px;color:#8d7ba5">••••••</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第4页:家庭授权 -->
+      <div class="ppt-slide">
+        <div class="ppt-txt">
+          <div class="ppt-page-no">04 / 06 · 家庭授权</div>
+          <h3>家庭授权<br><em>一人保管全家受益</em></h3>
+          <p>指定应急关联人：当主人长期未登录，系统自动把保险箱文本包交付给指定的家人。</p>
+          <ul class="ppt-points">
+            <li>关联人档案:姓名/关系/联系方式</li>
+            <li>只有被选中的关联人才是应急接收人</li>
+            <li>授权备注明确交付范围与条件</li>
+          </ul>
+        </div>
+        <div class="ppt-visual">
+          <div class="demo-win">
+            <div class="dw-bar"><i></i><i></i><i></i><span class="dw-title">家庭授权</span></div>
+            <div class="dw-body">
+              <div class="dw-row"><div class="ic">👤</div><div class="tx"><b>妈妈 · 母亲</b><i>手机 138****0001</i></div><span class="dw-tag" style="background:rgba(156,204,101,.15);color:#9CCC65">当前接收人</span></div>
+              <div class="dw-row"><div class="ic">👤</div><div class="tx"><b>哥哥 · 兄弟姐妹</b><i>邮箱 brother@***.com</i></div></div>
+              <div class="dw-row"><div class="ic">👤</div><div class="tx"><b>爱人 · 配偶</b><i>手机 139****6666</i></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第5页:应急触发 -->
+      <div class="ppt-slide">
+        <div class="ppt-txt">
+          <div class="ppt-page-no">05 / 06 · 应急触发</div>
+          <h3>长期未登录<br><em>自动应急交付</em></h3>
+          <p>设定期限(如30天)未成功登录,系统判定为应急状态,自动整理完整文本包并启动交付流程。</p>
+          <ul class="ppt-points">
+            <li>触发时长自定义:按天/按月</li>
+            <li>倒计时进度实时可见</li>
+            <li>交付文本包含全部密码与关联人档案</li>
+            <li>预留邮件/短信/本地代理发送接口</li>
+          </ul>
+        </div>
+        <div class="ppt-visual">
+          <div class="demo-win">
+            <div class="dw-bar"><i></i><i></i><i></i><span class="dw-title">未登录触发规则</span></div>
+            <div class="dw-body">
+              <div style="text-align:center;padding:6px 0 14px">
+                <div style="font-size:11px;color:#9CCC65">● 规则运行中</div>
+                <div style="font-size:30px;font-weight:800;color:#F5C68B;margin:8px 0 2px">28 天</div>
+                <div style="font-size:10px;color:#8d7ba5">距离自动触发</div>
+                <div class="dw-bar-wrap"><div class="dw-bar-fill"></div></div>
+              </div>
+              <div class="dw-row"><div class="ic">⏱</div><div class="tx"><b>连续 30 天未登录后触发</b><i>接收人:妈妈 · 方式:文本包</i></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第6页:三端支持 -->
+      <div class="ppt-slide">
+        <div class="ppt-txt">
+          <div class="ppt-page-no">06 / 06 · 三端</div>
+          <h3>电脑 · 手机 · 网页<br><em>三端同步随身守护</em></h3>
+          <p>Windows 桌面端功能最全,Android 手机端随身查看,网页版零安装即开即用。数据可互相导入导出。</p>
+          <ul class="ppt-points">
+            <li>电脑端 EXE:约 39MB,主力版本</li>
+            <li>手机端 APK:约 2MB,轻量随身</li>
+            <li>网页版:46KB 单文件,浏览器直接用</li>
+          </ul>
+        </div>
+        <div class="ppt-visual">
+          <div class="demo-win">
+            <div class="dw-bar"><i></i><i></i><i></i><span class="dw-title">三端同步</span></div>
+            <div class="dw-body">
+              <div class="dw-devices">
+                <div class="dw-pc"><div class="dw-scr"></div></div>
+                <div class="dw-tab" style="position:relative"><div class="dw-scr"></div></div>
+                <div class="dw-phone" style="position:relative"><div class="dw-scr"></div></div>
+              </div>
+              <div style="text-align:center;font-size:11px;color:#8d7ba5;margin-top:16px">Windows 电脑端 · 网页版 · Android 手机端</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <button class="ppt-nav ppt-prev" id="pptPrev" aria-label="上一页">‹</button>
+    <button class="ppt-nav ppt-next" id="pptNext" aria-label="下一页">›</button>
+    <div class="ppt-dots" id="pptDots"></div>
+  </div>
+  <div class="ppt-hint">提示:鼠标悬停可暂停自动播放</div>
+</div>
+
+<!-- ═══ 功能详情 ═══ -->
+<div class="vault-feats">
+  <div class="vf-card"><div class="vf-ic">🔐</div><b>AES-GCM 端到端加密</b><p>主密码经 PBKDF2 派生 256 位密钥,保险箱内容 AES-GCM 加密,主密码本身不落盘。</p></div>
+  <div class="vf-card"><div class="vf-ic">💾</div><b>本地优先架构</b><p>数据只保存在你自己的设备上,不上传任何服务器,隐私安全完全自主可控。</p></div>
+  <div class="vf-card"><div class="vf-ic">👨‍👩‍👧</div><b>家庭授权共享</b><p>设置家庭关联人与应急接收人,一人保管,全家在关键时刻能够接力。</p></div>
+  <div class="vf-card"><div class="vf-ic">⏱</div><b>应急触发机制</b><p>长期未登录自动生成应急文本包交付家人,数字资产不失联、不失传。</p></div>
+  <div class="vf-card"><div class="vf-ic">📋</div><b>完整审计日志</b><p>解锁、查看、新增、修改、删除全程留痕,每一次操作可追溯。</p></div>
+  <div class="vf-card"><div class="vf-ic">📤</div><b>导出与备份</b><p>一键导出 TXT 文本包与 vaultbak 备份,数据可迁移,平台不锁定。</p></div>
+</div>
+
+<!-- ═══ 下载区 ═══ -->
+<div class="vault-dl">
+  <div class="ppt-head"><h2>⬇ 立即下载</h2><p>选择适合你的版本 · 全部免费</p></div>
+  <div class="vd-grid">
+    <div class="vd-card">
+      <div class="vd-ic">🪟</div><h4>电脑端 Windows</h4>
+      <div class="vd-meta">V2.9 · 约 39 MB · Win10/11</div>
+      <a class="vd-btn" href="https://github.com/lzp5133084/digital-vault/releases/download/v2.9/digital-vault-win-v2.9.exe" target="_blank">下载 EXE</a>
+    </div>
+    <div class="vd-card">
+      <div class="vd-ic">📱</div><h4>手机端 Android</h4>
+      <div class="vd-meta">V2.9 · 约 2 MB · Android 8.0+</div>
+      <a class="vd-btn" href="https://github.com/lzp5133084/digital-vault/releases/download/v2.9/digital-vault-android-v2.9.apk" target="_blank">下载 APK</a>
+    </div>
+    <div class="vd-card">
+      <div class="vd-ic">🌐</div><h4>网页版 在线体验</h4>
+      <div class="vd-meta">Prototype · 46 KB · 浏览器直接用</div>
+      <a class="vd-btn" href="https://tools.ecojia.cn/digital-vault/vault.html" target="_blank">在线使用</a>
+      <a class="vd-btn ghost" href="https://github.com/lzp5133084/digital-vault" target="_blank">GitHub 源码 ↗</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var track=document.getElementById('pptTrack'),
+      slides=track.children, total=slides.length,
+      dots=document.getElementById('pptDots'),
+      prog=document.getElementById('pptProg'),
+      stage=document.getElementById('pptStage'),
+      cur=0, timer=null;
+  for(var i=0;i<total;i++){
+    var b=document.createElement('button');
+    (function(n){b.onclick=function(){go(n);reset();}})(i);
+    dots.appendChild(b);
+  }
+  function go(n){
+    cur=(n+total)%total;
+    track.style.transform='translateX(-'+(cur*100)+'%)';
+    for(var i=0;i<total;i++)dots.children[i].className=(i===cur?'on':'');
+    prog.style.width=((cur+1)/total*100)+'%';
+  }
+  function next(){go(cur+1)}
+  function reset(){clearInterval(timer);timer=setInterval(next,5000)}
+  document.getElementById('pptNext').onclick=function(){next();reset();};
+  document.getElementById('pptPrev').onclick=function(){go(cur-1);reset();};
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'){next();reset();}
+    if(e.key==='ArrowLeft'){go(cur-1);reset();}
+  });
+  stage.addEventListener('mouseenter',function(){clearInterval(timer);});
+  stage.addEventListener('mouseleave',reset);
+  /* 触摸滑动 */
+  var sx=0;
+  stage.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});
+  stage.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-sx;
+    if(Math.abs(dx)>50){if(dx<0)next();else go(cur-1);reset();}
+  },{passive:true});
+  go(0);reset();
+})();
+</script>
+{% endblock %}
