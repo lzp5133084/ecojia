@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}页面未找到 · 数字生态家园{% endblock %}
+{% block content %}
+<style>
+.err-wrap{display:flex;align-items:center;justify-content:center;min-height:58vh;padding:40px 20px}
+.err-card{max-width:520px;width:100%;text-align:center}
+.err-code{
+  font-size:120px;font-weight:900;line-height:1;letter-spacing:-4px;
+  background:linear-gradient(135deg,#f0c75e 0%,#fff3c4 45%,#d4a437 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  margin-bottom:6px;filter:drop-shadow(0 4px 24px rgba(240,199,94,.25));
+}
+.err-title{font-size:22px;color:#e8e6e1;margin-bottom:8px;letter-spacing:2px}
+.err-sub{font-size:14px;color:#8a8577;margin-bottom:28px;line-height:1.7}
+.err-path{
+  display:inline-block;font-family:Consolas,monospace;font-size:12px;
+  color:#8a8577;background:rgba(240,199,94,.08);
+  border:1px solid rgba(240,199,94,.18);border-radius:6px;
+  padding:4px 10px;margin-bottom:26px;max-width:100%;word-break:break-all;
+}
+.err-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.err-actions a{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 22px;border-radius:10px;font-size:14px;font-weight:600;
+  text-decoration:none;transition:all .2s ease;
+}
+.err-go-home{
+  background:linear-gradient(135deg,#f0c75e,#d4a437);color:#1a1a1a;
+  box-shadow:0 4px 18px rgba(240,199,94,.28);
+}
+.err-go-home:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(240,199,94,.38)}
+.err-go-tools,.err-go-wishes{
+  background:rgba(24,24,28,.72);color:#f0c75e;
+  border:1px solid rgba(240,199,94,.28);
+}
+.err-go-tools:hover,.err-go-wishes:hover{
+  border-color:rgba(240,199,94,.6);background:rgba(34,34,40,.9);
+  transform:translateY(-2px);
+}
+.err-wish{font-size:12.5px;color:#8a8577;margin-top:8px}
+.err-wish a{color:#f0c75e;text-decoration:none;font-weight:600;border-bottom:1px dashed rgba(240,199,94,.35)}
+.err-wish a:hover{color:#fff3c4;border-bottom-color:#f0c75e}
+@media(max-width:600px){
+  .err-code{font-size:80px}
+  .err-title{font-size:18px}
+  .err-sub{font-size:13px}
+  .err-actions a{padding:9px 16px;font-size:13px}
+}
+</style>
+
+<div class="err-wrap">
+  <div class="err-card">
+    <div class="err-code">404</div>
+    <div class="err-title">呃，这里空空如也</div>
+    <div class="err-sub">
+      你要找的页面可能走丢了，也可能从未存在过。<br>
+      别着急，数字生态家园还有很多值得你逛的地方。
+    </div>
+    <div class="err-path">你访问的路径：{{ request.path }}</div>
+    <div class="err-actions">
+      <a class="err-go-home" href="/">← 返回生态主页</a>
+      <a class="err-go-tools" href="/tools">🧰 看看工具清单</a>
+      <a class="err-go-wishes" href="/wishes">🪄 去许愿墙逛逛</a>
+    </div>
+    <div class="err-wish">没找到你想要的？<a href="/wishes">帮我们把它加到许愿墙</a>，也许下次就能在这里找到啦 ✨</div>
+  </div>
+</div>
+{% endblock %}

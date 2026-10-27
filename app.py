@@ -67,6 +67,21 @@ def agent_cors(resp):
     return resp
 
 
+# ══════════════════ 错误页 ══════════════════
+@app.errorhandler(404)
+def not_found(e):
+    if request.path.startswith("/api/"):
+        return jsonify({"ok": False, "msg": "接口不存在", "path": request.path}), 404
+    return render_template("404.html"), 404
+
+
+@app.errorhandler(500)
+def server_error(e):
+    if request.path.startswith("/api/"):
+        return jsonify({"ok": False, "msg": "服务器内部错误，请稍后重试"}), 500
+    return render_template("500.html"), 500
+
+
 @app.route("/api/<path:_p>", methods=["OPTIONS"])
 def api_options(_p):
     return ("", 204)

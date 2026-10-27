@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}服务暂时不可用 · 数字生态家园{% endblock %}
+{% block content %}
+<style>
+.err-wrap{display:flex;align-items:center;justify-content:center;min-height:58vh;padding:40px 20px}
+.err-card{max-width:520px;width:100%;text-align:center}
+.err-code{
+  font-size:100px;font-weight:900;line-height:1;letter-spacing:-3px;
+  background:linear-gradient(135deg,#e0a05e 0%,#f4d29c 45%,#b8743a 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  margin-bottom:6px;filter:drop-shadow(0 4px 24px rgba(224,160,94,.22));
+}
+.err-title{font-size:22px;color:#e8e6e1;margin-bottom:8px;letter-spacing:2px}
+.err-sub{font-size:14px;color:#8a8577;margin-bottom:28px;line-height:1.7}
+.err-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.err-actions a{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 22px;border-radius:10px;font-size:14px;font-weight:600;
+  text-decoration:none;transition:all .2s ease;
+}
+.err-go-home{
+  background:linear-gradient(135deg,#f0c75e,#d4a437);color:#1a1a1a;
+  box-shadow:0 4px 18px rgba(240,199,94,.28);
+}
+.err-go-home:hover{transform:translateY(-2px)}
+.err-go-refresh{
+  background:rgba(24,24,28,.72);color:#f0c75e;
+  border:1px solid rgba(240,199,94,.28);
+}
+.err-go-refresh:hover{border-color:rgba(240,199,94,.6);transform:translateY(-2px)}
+@media(max-width:600px){
+  .err-code{font-size:72px}
+  .err-title{font-size:18px}
+}
+</style>
+
+<div class="err-wrap">
+  <div class="err-card">
+    <div class="err-code">500</div>
+    <div class="err-title">服务打了个盹</div>
+    <div class="err-sub">
+      数字生态家园内部出现了一点小状况，我们已经收到通知，<br>
+      请稍等片刻再试，或者刷新页面看看。
+    </div>
+    <div class="err-actions">
+      <a class="err-go-home" href="/">← 返回生态主页</a>
+      <a class="err-go-refresh" href="javascript:history.back()">🔄 返回上一页</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
