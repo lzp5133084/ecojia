@@ -1083,3 +1083,27 @@ APK（work/v3/apk，v3.0.0 / versionCode 300）：
 额外发现：T17/T18/T19 缺 URL 是正常的——标注为"Python 桌面程序/本地电脑软件"
   本来就没有网页入口；products.T01 状态已改为"已上线"并登记 T34 工具条目
 作者：军哥懂保（微信：xunijiayuan）
+
+────────────────────────────────────────────
+【⑪ 全栈优化收尾：旧Flask残留清理 + gunicorn logrotate】（2026-10-27）
+────────────────────────────────────────────
+遗留问题：
+  a. 改完 gunicorn 后，第二天又冒出 PID 3791268 旧 Flask + PID 135320 新 Flask
+  b. gunicorn_access/error 日志无 logrotate（40G小服务器会爆盘）
+修复：
+ 1 追查到 135320 属于 ecojia-ziliao.service（资料百事通 8300端口，非门户）；
+    旧 PID 3791268 是前一天 systemd 遗留进程
+    → kill -9 全部清理，现在 portal 下只有 gunicorn 主+2 worker
+ 2 发现每5分钟自动同步 cron：
+    */5 * * * * cd /opt/ecojia/portal && git fetch gitee && git reset --hard FETCH_HEAD
+    这个 cron 是 gitee 自动部署机制，只覆盖 git 仓库内文件（不会影响 /etc/systemd/system/）
+ 3 logrotate 配置写入 /etc/logrotate.d/ecojia-gunicorn：
+    daily + rotate 7 + compress + su ubuntu ubuntu + postrotate reload
+    第一次尝试报 "parent directory has insecure permissions"（logs 目录 group 可写）
+    → 加 su 指令让 logrotate 以 ubuntu 身份执行，强制 rotation 验证通过：
+    gunicorn_access.log-20261027 被切出，新日志文件创建成功
+待办（后续迭代，非紧急）：
+  ecojia-ziliao / ecojia-douyin / ecojia-ziliaobaishitong / ecojia-ecojia 这 4 个 service
+  还在用 python app.py 启动 Flask dev server，分别跑 8300/8503 等端口，
+  可逐一批改为 gunicorn（优先级低于门户，等用户需求时再做）
+作者：军哥懂保（微信：xunijiayuan）
