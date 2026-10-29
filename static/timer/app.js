@@ -1074,7 +1074,8 @@ window.addEventListener('resize', () => {
 
 // ============ 分享有奖 ============
 
-const INVITE_CODE = 'JG-TIMER-2027';
+// V2：邀请码不再固定，注册账号+实名认证后系统生成专属邀请码（ECJ开头）
+const REG_URL = 'https://ecojia.cn/login';
 
 function showShareModal() {
     $('shareModal').classList.remove('hidden');
@@ -1086,22 +1087,17 @@ function closeShareModal() {
 }
 
 function copyInviteCode() {
-    navigator.clipboard.writeText(INVITE_CODE).then(() => {
-        alert('邀请码 ' + INVITE_CODE + ' 已复制到剪贴板');
+    const tip = '专属邀请码需在官网注册并完成实名认证后自动生成\n注册入口已复制：' + REG_URL;
+    navigator.clipboard.writeText(REG_URL).then(() => {
+        alert(tip);
     }).catch(() => {
-        const ta = document.createElement('textarea');
-        ta.value = INVITE_CODE;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        alert('邀请码 ' + INVITE_CODE + ' 已复制');
+        prompt('请复制注册入口（注册+实名后自动生成专属邀请码）：', REG_URL);
     });
 }
 
 function doShare(platform) {
-    const link = 'https://www.ecojia.cn/timer?ref=' + INVITE_CODE;
-    const text = '🎁 我在用「悬浮计时器」，2027科技风超好用！邀请你也来试试，注册双方都得VIP特权：';
+    const link = REG_URL;
+    const text = '🎁 我在用「悬浮计时器」，2027科技风超好用！注册并完成实名认证即可获得你的专属邀请码，邀请好友双方都有奖励：';
     const shareText = text + '\n' + link;
 
     if (platform === 'link') {
