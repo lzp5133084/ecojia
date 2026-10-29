@@ -165,6 +165,17 @@
       "main": false,
       "url": "/wishes",
       "desc": "这里预留给你——下一个改变生活的产品，由你的愿望开启。"
+    },
+    {
+      "no": "14",
+      "name": "悬浮计时器",
+      "en": "Float Timer",
+      "scope": "个人 · 团队 · 大众",
+      "icon": "⏱️",
+      "status": "已上线",
+      "main": true,
+      "url": "https://ecojia.cn/timer/",
+      "desc": "2027科技风悬浮计时器，三端同步：正计时、倒计时、番茄钟，悬浮球不打断工作，计时记录自动保存，内置推广有惊喜大使招募体系。"
     }
   ],
   "hardware": [
@@ -1148,6 +1159,29 @@
       ],
       "pages_url": "https://lzp5133084.github.io/digital-vault/",
       "note": "GitHub Pages 镜像下载页；二进制文件托管在 GitHub Releases（exe 约 39MB / apk 约 2MB）；对应产品矩阵 01「数字保险箱」。"
+    },
+    {
+      "no": "T35",
+      "name": "悬浮计时器",
+      "en": "Float Timer",
+      "type": "网页工具 + Windows桌面EXE + Android APK",
+      "entry": "index.html / 网页端 · 电脑端 · 手机端三端",
+      "run": "网页端浏览器直接打开；电脑端双击 EXE；手机端安装 APK 后开启悬浮球",
+      "port": null,
+      "url": "https://ecojia.cn/timer/",
+      "size_kb": 210,
+      "updated": "2026-10-29",
+      "status": "已上线·HTTPS",
+      "desc": "⏱️ 2027科技风悬浮计时器：正计时 / 倒计时 / 番茄钟三模式，悬浮球不遮挡其他程序，计时结束可命名自动保存记录，支持到时提醒、重复计时、三端自动检查更新，并内置「推广有惊喜 · 大使招募」分享体系。",
+      "steps": [
+        "打开「立即打开」进入网页端，或下载电脑端 EXE / 手机端 APK",
+        "选择模式（正计时 / 倒计时 / 番茄钟），设定时间或选用 1 / 5 / 10 / 25 分钟预设",
+        "点「开始」计时，悬浮球会常驻桌面或屏幕边缘，双击开始/停止，长按或右键打开菜单",
+        "计时结束按需命名保存，未开启命名弹窗时自动以当前时间命名，记录可随时改名",
+        "点「🎁 推广有惊喜」查看大使阶梯奖励，复制邀请码分享给好友开盲盒"
+      ],
+      "note": "三端共用 www.ecojia.cn/timer/version.json 做版本检查；作者军哥懂保，微信 xunijiayuan；推广达 1 / 5 / 10 / 20 人分别解锁推广大使、精英级大使、骨灰级大使、项目合伙人，盲盒福利后期公布。",
+      "pages_url": "https://ecojia.cn/timer/"
     }
   ],
   "stages": [
