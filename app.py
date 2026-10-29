@@ -677,7 +677,7 @@ def init_db():
     db.execute("CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT)")
     db.commit()
     for r in db.execute("SELECT id FROM users WHERE invite_code IS NULL OR invite_code=''").fetchall():
-        db.execute("UPDATE users SET invite_code=? WHERE id=?", ("ECJ%d" % (10000 + r["id"]), r["id"]))
+        db.execute("UPDATE users SET invite_code=? WHERE id=?", ("ECJ%d" % (10000 + r[0]), r[0]))
     db.commit()
     db.commit()
     db.close()
