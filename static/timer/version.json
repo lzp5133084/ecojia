@@ -1,0 +1,23 @@
+{
+  "_comment": "悬浮计时器三端版本检查配置 - 部署到 https://ecojia.cn/timer/version.json",
+  "android": {
+    "versionCode": 2,
+    "versionName": "1.0.1",
+    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.1.apk",
+    "updateLog": "1. 正计时支持到时提醒\n2. 右键悬浮球可重复计时\n3. 命名保存逻辑优化（关闭自动以时间命名）\n4. 记录支持重命名\n5. 新增自动检查升级功能",
+    "forceUpdate": false
+  },
+  "desktop": {
+    "versionCode": 2,
+    "versionName": "1.0.1",
+    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.1.exe",
+    "updateLog": "1. 正计时支持到时提醒\n2. 右键悬浮球可重复计时\n3. 命名保存逻辑优化（关闭自动以时间命名）\n4. 记录支持重命名\n5. 新增自动检查升级功能",
+    "forceUpdate": false
+  },
+  "web": {
+    "versionCode": 2,
+    "versionName": "1.0.1",
+    "updateLog": "1. 正计时支持到时提醒\n2. 右键悬浮球可重复计时\n3. 命名保存逻辑优化（关闭自动以时间命名）\n4. 记录支持重命名\n5. 新增自动检查升级功能",
+    "forceUpdate": false
+  }
+}
