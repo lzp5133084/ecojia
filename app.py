@@ -20,7 +20,9 @@
  - 首个注册用户自动成为管理员（role=admin）
 ════════════════════════════════════════════════════════════
 """
+import base64
 import hashlib
+import re
 import json
 import os
 import sqlite3
@@ -43,7 +45,7 @@ app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
 
 # ---- 跨子域会话共享：服务器上以环境变量 ZSTJ_COOKIE_DOMAIN=.ecojia.cn 开启 ----
-_cookie_domain = os.environ.get("ZSTJ_COOKIE_DOMAIN", "").strip()
+_cookie_domain = os.environ.get("ZSTJ_COOKIE_DOMAIN", ".ecojia.cn").strip()
 if _cookie_domain:
     app.config["SESSION_COOKIE_DOMAIN"] = _cookie_domain
     app.config["SESSION_COOKIE_SAMESITE"] = "None"
@@ -663,6 +665,20 @@ def init_db():
             db.execute(f"ALTER TABLE hx_records ADD COLUMN {col} {ddl}")
         except sqlite3.Error:
             pass  # 列已存在
+
+    # —— V2 推广系统迁移：邀请码/邀请人/实名/合伙人 + 全局配置表 ——
+    for col, ddl in (("invite_code", "TEXT"), ("inviter_id", "INTEGER"),
+                     ("real_name", "TEXT"), ("real_idcard", "TEXT"),
+                     ("realname_at", "TEXT"), ("is_partner", "INTEGER NOT NULL DEFAULT 0")):
+        try:
+            db.execute(f"ALTER TABLE users ADD COLUMN {col} {ddl}")
+        except sqlite3.Error:
+            pass  # 列已存在
+    db.execute("CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT)")
+    db.commit()
+    for r in db.execute("SELECT id FROM users WHERE invite_code IS NULL OR invite_code=''").fetchall():
+        db.execute("UPDATE users SET invite_code=? WHERE id=?", ("ECJ%d" % (10000 + r["id"]), r["id"]))
+    db.commit()
     db.commit()
     db.close()
 
@@ -1501,6 +1517,7 @@ def api_register():
     username = (d.get("username") or "").strip()
     password = d.get("password") or ""
     nickname = (d.get("nickname") or "").strip() or username
+    ref = (d.get("ref") or "").strip().upper()
     if not (3 <= len(username) <= 20):
         return jsonify({"ok": False, "msg": "用户名需3-20个字符"}), 400
     if len(password) < 6:
@@ -1508,16 +1525,28 @@ def api_register():
     db = get_db()
     if db.execute("SELECT 1 FROM users WHERE username=?", (username,)).fetchone():
         return jsonify({"ok": False, "msg": "用户名已存在"}), 400
+    inviter_id, inviter_name, ref_msg = None, None, ""
+    if ref:
+        row = db.execute("SELECT id, nickname FROM users WHERE invite_code=?", (ref,)).fetchone()
+        if row:
+            inviter_id, inviter_name = row["id"], row["nickname"]
+            ref_msg = "\uff0c已关联邀请人「%s」" % inviter_name
+        else:
+            ref_msg = "\uff0c邀请码无效，已按自然流量登记"
     # 首个注册用户自动成为管理员
     is_first = db.execute("SELECT COUNT(*) c FROM users").fetchone()["c"] == 0
     role = "admin" if is_first else "user"
     cur = db.execute(
-        "INSERT INTO users(username, password_hash, nickname, role, created_at) VALUES(?,?,?,?,?)",
-        (username, generate_password_hash(password), nickname, role, now()))
+        "INSERT INTO users(username, password_hash, nickname, role, inviter_id, created_at) VALUES(?,?,?,?,?,?)",
+        (username, generate_password_hash(password), nickname, role, inviter_id, now()))
+    uid = cur.lastrowid
+    invite_code = "ECJ%d" % (10000 + uid)
+    db.execute("UPDATE users SET invite_code=? WHERE id=?", (invite_code, uid))
     db.commit()
-    session["uid"] = cur.lastrowid
-    log_op("注册账号", f"用户名:{username} 角色:{role}", cur.lastrowid)
-    return jsonify({"ok": True, "msg": "注册成功", "role": role,
+    session["uid"] = uid
+    log_op("注册账号", f"用户名:{username} 角色:{role} 邀请人:{inviter_id}", uid)
+    return jsonify({"ok": True, "msg": "注册成功" + ref_msg, "role": role,
+                    "invite_code": invite_code,
                     "nickname": nickname, "redirect": url_for("index")})
 
 
@@ -2173,6 +2202,112 @@ def api_keys_status():
 def timer_static(filename="index.html"):
     """悬浮计时器网页端：www.ecojia.cn/timer/ 直接打开，version.json 供三端检查更新"""
     return send_from_directory(os.path.join(app.root_path, "static", "timer"), filename)
+
+
+# ══════════════════ 推广系统 V2：专属邀请码 · 实名认证 · 关系链 ══════════════════
+def _get_setting(key, default=""):
+    row = get_db().execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+    return row["value"] if row else default
+
+
+@app.route("/api/promo/config")
+def api_promo_config():
+    """公开：推广弹窗所需配置（微信群二维码、合伙人支付二维码、联系方式）"""
+    return jsonify({"ok": True,
+                    "group_qr": _get_setting("promo_group_qr"),
+                    "pay_qr": _get_setting("promo_pay_qr"),
+                    "pay_price": _get_setting("promo_pay_price", "999"),
+                    "wechat": "xunijiayuan",
+                    "site": "www.ecojia.cn"})
+
+
+@app.route("/api/promo/me")
+def api_promo_me():
+    """登录后：我的专属邀请码 + 已邀请人数 + 实名状态 + 合伙人状态"""
+    u = current_user()
+    if not u:
+        return jsonify({"ok": False, "login": False, "msg": "未登录"}), 401
+    db = get_db()
+    code = u.get("invite_code") or ("ECJ%d" % (10000 + u["id"]))
+    if not u.get("invite_code"):
+        db.execute("UPDATE users SET invite_code=? WHERE id=?", (code, u["id"]))
+        db.commit()
+    cnt = db.execute("SELECT COUNT(*) c FROM users WHERE inviter_id=?", (u["id"],)).fetchone()["c"]
+    return jsonify({"ok": True, "login": True,
+                    "invite_code": code,
+                    "invite_url": "https://ecojia.cn/login?ref=" + code,
+                    "invited": cnt,
+                    "verified": bool(u.get("realname_at")),
+                    "real_name": u.get("real_name") or "",
+                    "is_partner": bool(u.get("is_partner")),
+                    "nickname": u["nickname"]})
+
+
+@app.route("/api/promo/realname", methods=["POST"])
+@login_required
+def api_promo_realname():
+    """实名认证（姓名+身份证号），认证后即可参与推广"""
+    d = request.get_json(silent=True) or {}
+    name = (d.get("real_name") or "").strip()
+    idcard = (d.get("real_idcard") or "").strip().upper()
+    if not (2 <= len(name) <= 8):
+        return jsonify({"ok": False, "msg": "请输入真实姓名（2-8字）"}), 400
+    if not re.fullmatch(r"\d{15}|\d{17}[\dX]", idcard):
+        return jsonify({"ok": False, "msg": "身份证号格式不正确（15位或18位）"}), 400
+    uid = session["uid"]
+    db = get_db()
+    db.execute("UPDATE users SET real_name=?, real_idcard=?, realname_at=? WHERE id=?",
+               (name, idcard, now(), uid))
+    db.commit()
+    log_op("实名认证", "姓名:%s" % name, uid)
+    return jsonify({"ok": True, "msg": "实名认证成功，专属邀请码已激活"})
+
+
+@app.route("/api/admin/promo/qr", methods=["POST"])
+@admin_required
+def api_admin_promo_qr():
+    """后台设置二维码：kind=group(推广微信群) / pay(合伙人999元支付)"""
+    d = request.get_json(silent=True) or {}
+    kind = d.get("kind")
+    data_url = d.get("data_url") or ""
+    if kind not in ("group", "pay"):
+        return jsonify({"ok": False, "msg": "kind 只能是 group / pay"}), 400
+    m = re.match(r"^data:image/(png|jpeg|jpg|webp);base64,(.+)$", data_url, re.S)
+    if not m:
+        return jsonify({"ok": False, "msg": "请上传 PNG/JPG/WEBP 图片"}), 400
+    ext = "jpg" if m.group(1) in ("jpeg", "jpg") else m.group(1)
+    raw = base64.b64decode(m.group(2))
+    if len(raw) > 2 * 1024 * 1024:
+        return jsonify({"ok": False, "msg": "图片不能超过 2MB"}), 400
+    updir = os.path.join(app.root_path, "static", "uploads")
+    os.makedirs(updir, exist_ok=True)
+    fname = "promo_%s.%s" % (kind, ext)
+    with open(os.path.join(updir, fname), "wb") as f:
+        f.write(raw)
+    url = "/static/uploads/" + fname
+    db = get_db()
+    db.execute("INSERT INTO settings(key, value) VALUES(?, ?) "
+               "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+               ("promo_%s_qr" % kind, url))
+    db.commit()
+    log_op("设置推广二维码", "类型:%s" % kind, session.get("uid"))
+    return jsonify({"ok": True, "msg": "二维码已更新", "url": url})
+
+
+@app.route("/api/admin/promo/tree")
+@admin_required
+def api_admin_promo_tree():
+    """推广关系总览：谁推广了谁（管理员）"""
+    db = get_db()
+    rows = db.execute("""
+        SELECT u.id, u.username, u.nickname, u.invite_code, u.real_name,
+               u.realname_at, u.is_partner, u.created_at, u.inviter_id,
+               i.nickname AS inviter_name, i.invite_code AS inviter_code,
+               (SELECT COUNT(*) FROM users x WHERE x.inviter_id = u.id) AS invited
+        FROM users u LEFT JOIN users i ON i.id = u.inviter_id
+        ORDER BY u.id DESC
+    """).fetchall()
+    return jsonify({"ok": True, "users": [dict(r) for r in rows]})
 
 
 # ══════════════════ 启动 ══════════════════

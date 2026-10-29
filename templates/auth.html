@@ -35,6 +35,8 @@
       <input id="r-password" type="password" autocomplete="new-password" placeholder="设置密码" required>
       <label>确认密码</label>
       <input id="r-password2" type="password" autocomplete="new-password" placeholder="再输一次" required>
+      <label>邀请码 <small>（选填，填写好友的专属邀请码，双方都有奖励）</small></label>
+      <input id="r-ref" type="text" placeholder="如 ECJ10001，留空则按自然流量登记">
       <button class="btn btn-gold btn-block" type="submit">{{ icon("sparkles") }} 创建账号</button>
       <p class="form-tip">首个注册用户自动成为本站管理员</p>
     </form>
@@ -62,17 +64,31 @@ async function doLogin(e){
 }
 async function doReg(e){
   e.preventDefault();
-  const p1 = document.getElementById('r-password').value;
+  (function(){
+  const p = new URLSearchParams(location.search);
+  const r = p.get('ref');
+  if(r){
+    localStorage.setItem('ecoj_ref', r.toUpperCase());
+    switchTab('reg');
+    document.getElementById('r-ref').value = r.toUpperCase();
+  } else {
+    const s2 = localStorage.getItem('ecoj_ref');
+    if(s2){ switchTab('reg'); document.getElementById('r-ref').value = s2; }
+  }
+})();
+const p1 = document.getElementById('r-password').value;
   const p2 = document.getElementById('r-password2').value;
   if(p1 !== p2){ toast('两次密码不一致', false); return false; }
   const d = await api('/api/auth/register', {method:'POST', body: JSON.stringify({
     username: document.getElementById('r-username').value.trim(),
     nickname: document.getElementById('r-nickname').value.trim(),
-    password: p1
+    password: p1,
+    ref: (document.getElementById('r-ref')||{}).value || ''
   })});
   if(d.ok){
-    toast(d.msg + (d.role==='admin' ? '（已自动成为管理员）' : ''));
-    setTimeout(()=>location.href=d.redirect, 600);
+    localStorage.removeItem('ecoj_ref');
+    toast(d.msg + (d.role==='admin' ? '（已自动成为管理员）' : '') + (d.invite_code ? '，你的专属邀请码：'+d.invite_code : ''));
+    setTimeout(()=>location.href=d.redirect, 1600);
   }
   return false;
 }
