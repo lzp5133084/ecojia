@@ -28,7 +28,7 @@ from datetime import datetime
 from functools import wraps
 
 from flask import (Flask, g, session, request, jsonify, Response,
-                   render_template, redirect, url_for)
+                   render_template, redirect, url_for, send_from_directory)
 from werkzeug.security import generate_password_hash, check_password_hash
 import agent_service
 
@@ -2164,6 +2164,15 @@ def keys_page():
 def api_keys_status():
     force = request.args.get("refresh") == "1"
     return jsonify({"ok": True, "status": key_check.get_status(force=force)})
+
+
+# ══════════════════ 悬浮计时器静态页（网页端） ══════════════════
+@app.route("/timer")
+@app.route("/timer/")
+@app.route("/timer/<path:filename>")
+def timer_static(filename="index.html"):
+    """悬浮计时器网页端：www.ecojia.cn/timer/ 直接打开，version.json 供三端检查更新"""
+    return send_from_directory(os.path.join(app.root_path, "static", "timer"), filename)
 
 
 # ══════════════════ 启动 ══════════════════
