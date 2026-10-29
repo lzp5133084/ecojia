@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0d0d1a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>⏱ 悬浮计时器 - 军哥懂保</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱</text></svg>">
+    <link rel="stylesheet" href="style.css?v=20261030a">
+</head>
+<body>
+    <!-- 新版本提示条 -->
+    <div class="update-banner hidden" id="updateBanner">
+        <div class="update-banner-content">
+            <span class="update-emoji">🎉</span>
+            <div class="update-text">
+                <strong id="updateTitle">发现新版本</strong>
+                <span id="updateLog" class="update-log"></span>
+            </div>
+            <div class="update-actions">
+                <button class="update-btn primary" id="btnUpdateNow">立即更新</button>
+                <button class="update-btn" id="btnUpdateLater">稍后</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 悬浮球 -->
+    <div id="floatingBall" class="floating-ball" draggable="true">
+        <div class="ball-inner">
+            <span class="ball-mode" id="ballMode">⏱</span>
+            <span class="ball-time" id="ballTime">00:00</span>
+            <div class="ball-progress" id="ballProgress"></div>
+        </div>
+    </div>
+
+    <!-- 主面板 -->
+    <div id="mainPanel" class="main-panel hidden">
+        <div class="panel-container">
+            <!-- 标题栏 -->
+            <div class="panel-header">
+                <div class="title-area">
+                    <h1 class="app-title">⏱ 悬浮计时器</h1>
+                    <p class="app-subtitle">军哥懂保 · 2027科技版 <span class="version-tag" id="versionTag" title="点击检查更新">v1.0.1</span></p>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn share-btn" id="btnShare" title="分享有奖">🎁</button>
+                    <button class="icon-btn" id="btnCollapse" title="收起">👇</button>
+                    <button class="icon-btn" id="btnClose" title="关闭">✕</button>
+                </div>
+            </div>
+
+            <!-- 模式切换 -->
+            <div class="mode-switch">
+                <button class="mode-btn active" data-mode="stopwatch">⏱ 正计时</button>
+                <button class="mode-btn" data-mode="countdown">⏳ 倒计时</button>
+                <button class="mode-btn" data-mode="pomodoro">🍅 番茄钟</button>
+            </div>
+
+            <!-- 番茄钟阶段标签 -->
+            <div class="phase-badge hidden" id="phaseBadge">
+                <span id="phaseText">🔥 专注工作中</span>
+            </div>
+
+            <!-- 时间显示 -->
+            <div class="time-display">
+                <span id="mainTime">00:00</span>
+            </div>
+
+            <!-- 进度条 -->
+            <div class="progress-bar hidden" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <!-- 设置区域 -->
+            <div class="settings-area">
+                <!-- Tab切换 -->
+                <div class="tab-nav">
+                    <button class="tab-btn active" data-tab="countdown">⏳ 倒计时</button>
+                    <button class="tab-btn" data-tab="pomodoro">🍅 番茄钟</button>
+                    <button class="tab-btn" data-tab="sound">🔊 声音</button>
+                    <button class="tab-btn" data-tab="laps">📋 计次</button>
+                    <button class="tab-btn" data-tab="records">📁 记录</button>
+                </div>
+
+                <!-- Tab1 倒计时 -->
+                <div class="tab-content active" id="tab-countdown">
+                    <div class="input-row">
+                        <label>时:</label>
+                        <input type="number" id="spinHours" min="0" max="24" value="0">
+                        <label>分:</label>
+                        <input type="number" id="spinMinutes" min="0" max="59" value="10">
+                        <label>秒:</label>
+                        <input type="number" id="spinSeconds" min="0" max="59" value="0">
+                    </div>
+                    <div class="shortcut-row">
+                        <button class="shortcut-btn" data-seconds="60">1分钟</button>
+                        <button class="shortcut-btn" data-seconds="300">5分钟</button>
+                        <button class="shortcut-btn" data-seconds="600">10分钟</button>
+                        <button class="shortcut-btn" data-seconds="1500">25分钟</button>
+                        <button class="shortcut-btn" data-seconds="3600">1小时</button>
+                    </div>
+                </div>
+
+                <!-- Tab2 番茄钟 -->
+                <div class="tab-content" id="tab-pomodoro">
+                    <div class="input-row">
+                        <label>工作(分):</label>
+                        <input type="number" id="pmWork" min="1" max="180" value="25">
+                    </div>
+                    <div class="input-row">
+                        <label>短休息(分):</label>
+                        <input type="number" id="pmShort" min="1" max="60" value="5">
+                        <label>长休息(分):</label>
+                        <input type="number" id="pmLong" min="1" max="120" value="15">
+                    </div>
+                    <div class="input-row">
+                        <label>几轮后长休息:</label>
+                        <input type="number" id="pmCycles" min="2" max="10" value="4">
+                    </div>
+                </div>
+
+                <!-- Tab3 声音 -->
+                <div class="tab-content" id="tab-sound">
+                    <div class="checkbox-row">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="chkSound" checked>
+                            <span class="checkmark"></span>
+                            <span>✅ 开启声音提醒</span>
+                        </label>
+                    </div>
+                    <div class="slider-row">
+                        <label>音量:</label>
+                        <input type="range" id="sliderVolume" min="0" max="100" value="50">
+                        <span id="volumeLabel">50%</span>
+                    </div>
+                </div>
+
+                <!-- Tab4 计次 -->
+                <div class="tab-content" id="tab-laps">
+                    <div class="input-row">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="chkRemind">
+                            <span class="checkmark"></span>
+                            <span>⏰ 到时提醒</span>
+                        </label>
+                        <input type="number" id="spinRemindMin" min="1" max="999" value="25">
+                        <label>分钟</label>
+                    </div>
+                    <div class="lap-list" id="lapList">
+                        <div class="lap-empty">暂无计次记录</div>
+                    </div>
+                    <button class="secondary-btn full-width" id="btnClearLaps">🗑 清空记录</button>
+                </div>
+
+                <!-- Tab5 记录 -->
+                <div class="tab-content" id="tab-records">
+                    <div class="checkbox-row">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="chkNamePrompt" checked>
+                            <span class="checkmark"></span>
+                            <span>📝 计时结束后弹出命名保存窗口</span>
+                        </label>
+                    </div>
+                    <div class="record-list" id="recordList">
+                        <div class="lap-empty">暂无使用记录</div>
+                    </div>
+                    <button class="secondary-btn full-width" id="btnClearRecords">🗑 清空记录</button>
+                </div>
+            </div>
+
+            <!-- 控制按钮 -->
+            <div class="control-row">
+                <button class="secondary-btn" id="btnReset">🔄 重置</button>
+                <button class="secondary-btn" id="btnStop" disabled>⏹ 停止</button>
+                <button class="secondary-btn" id="btnLap">📝 计次</button>
+                <button class="primary-btn" id="btnStart">▶ 开始</button>
+            </div>
+
+            <!-- 底部信息 -->
+            <div class="panel-footer">
+                <span>作者：军哥懂保 | 微信：xunijiayuan</span>
+                <span id="configInfo">📁 已保存</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 后台登录弹窗（多人模式） -->
+    <div class="modal hidden" id="loginModal">
+        <div class="modal-container">
+            <h2 class="modal-title">🔐 管理员登录</h2>
+            <div class="form-row">
+                <label>账号</label>
+                <input type="text" id="loginUser" placeholder="18180309010" autocomplete="off">
+            </div>
+            <div class="form-row">
+                <label>密码</label>
+                <input type="password" id="loginPass" placeholder="••••••••" autocomplete="off">
+            </div>
+            <button class="primary-btn full-width" id="btnLogin">登录</button>
+            <p class="modal-tip">默认管理员：18180309010</p>
+        </div>
+    </div>
+
+    <!-- 计时命名保存弹窗 -->
+    <div class="modal hidden" id="nameModal">
+        <div class="modal-container">
+            <h2 class="modal-title">📝 保存本次计时</h2>
+            <p class="record-summary" id="recordSummary">倒计时 · 10:00</p>
+            <div class="form-row">
+                <label>本次计时结束，为本次计时命名</label>
+                <input type="text" id="recordName" placeholder="给这次计时起个名字，如：写方案/看书/运动" autocomplete="off">
+            </div>
+            <div class="modal-btn-row">
+                <button class="secondary-btn" id="btnSkipRecord">不保存</button>
+                <button class="primary-btn" id="btnSaveRecord">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分享有奖弹窗 -->
+    <div class="modal hidden" id="shareModal">
+        <div class="modal-container share-container">
+            <button class="modal-close" id="btnShareClose">✕</button>
+            <h2 class="modal-title share-title">🎁 推广有惊喜 · 大使招募</h2>
+            <p class="share-subtitle">邀请好友下载使用，阶梯解锁大使身份 · 盲盒福利后期公布</p>
+
+            <div class="share-section">
+                <h3 class="share-section-title">🏆 阶梯奖励 · 大使招募</h3>
+                <div class="reward-list">
+                    <div class="reward-item"><span class="reward-dot" style="color:#6366f1">●</span><span class="reward-cond">邀请1人</span><span class="reward-prize" style="color:#6366f1">推广大使 · 开盲盒</span></div>
+                    <div class="reward-item"><span class="reward-dot" style="color:#a78bfa">●</span><span class="reward-cond">邀请5人</span><span class="reward-prize" style="color:#a78bfa">精英级大使 · 开盲盒</span></div>
+                    <div class="reward-item"><span class="reward-dot" style="color:#ec4899">●</span><span class="reward-cond">邀请10人</span><span class="reward-prize" style="color:#ec4899">骨灰级大使 · 开盲盒</span></div>
+                    <div class="reward-item"><span class="reward-dot" style="color:#fbbf24">●</span><span class="reward-cond">邀请20人</span><span class="reward-prize" style="color:#fbbf24">项目合伙人 · 开盲盒</span></div>
+                </div>
+                <p class="reward-note">🎁 盲盒奖励后期公布，达成后截图添加微信 xunijiayuan 领取</p>
+            </div>
+
+            <div class="share-section">
+                <h3 class="share-section-title vip-title">👑 VIP专属权益</h3>
+                <div class="benefit-grid">
+                    <div class="benefit-cell"><span class="benefit-icon">🌈</span><span>2027科技风专属主题皮肤</span></div>
+                    <div class="benefit-cell"><span class="benefit-icon">☁️</span><span>计时数据云同步（多设备）</span></div>
+                    <div class="benefit-cell"><span class="benefit-icon">🔔</span><span>自定义提醒音效上传</span></div>
+                    <div class="benefit-cell"><span class="benefit-icon">📋</span><span>无限计次记录保存</span></div>
+                    <div class="benefit-cell"><span class="benefit-icon">📤</span><span>记录一键导出 Excel/PDF</span></div>
+                    <div class="benefit-cell"><span class="benefit-icon">📈</span><span>番茄钟专注效率统计图表</span></div>
+                </div>
+            </div>
+
+            <div class="invite-code-box">
+                <span class="invite-label">我的邀请码</span>
+                <span class="invite-code" id="inviteCode">JG-TIMER-2027</span>
+                <button class="copy-btn" id="btnCopyInvite">📋 复制</button>
+            </div>
+
+            <div class="qr-row">
+                <div class="qr-code" id="qrCode"></div>
+                <div class="qr-text">
+                    <h4>📱 推广咨询中心</h4>
+                    <p>扫码添加微信<br>获取推广素材与佣金政策</p>
+                </div>
+            </div>
+
+            <div class="share-btn-row">
+                <button class="share-platform-btn" data-platform="wechat" style="background:#07c160">💬 微信</button>
+                <button class="share-platform-btn" data-platform="qq" style="background:#12b7f5">🐧 QQ</button>
+                <button class="share-platform-btn" data-platform="link" style="background:#6366f1">🔗 复制链接</button>
+            </div>
+
+            <p class="share-footer">🌐 www.ecojia.cn &nbsp;|&nbsp; 微信：xunijiayuan &nbsp;|&nbsp; 作者：军哥懂保</p>
+        </div>
+    </div>
+
+    <!-- 右键菜单（网页版） -->
+    <div class="context-menu hidden" id="contextMenu">
+        <div class="menu-item" data-action="show">📋 显示主面板</div>
+        <div class="menu-item" data-action="start">▶ 开始</div>
+        <div class="menu-item" data-action="pause">⏸ 暂停</div>
+        <div class="menu-item" data-action="stop">⏹ 停止计时</div>
+        <div class="menu-item" data-action="repeat">🔁 重复计时</div>
+        <div class="menu-item" data-action="reset">🔄 重置</div>
+        <div class="menu-separator"></div>
+        <div class="menu-item" data-action="login">🔐 管理员</div>
+    </div>
+
+    <script src="app.js?v=20261030b"></script>
+<script src="/static/js/promote.js?v=20261030" defer></script>
+</body>
+</html>
