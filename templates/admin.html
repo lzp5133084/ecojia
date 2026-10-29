@@ -1,28 +1,6 @@
 {% extends "base.html" %}
 {% from "icon_macro.html" import icon %}
-{% block title %}管理后台<!-- ═══ 推广管理（V2：二维码设置 + 推广关系） ═══ -->
-<section class="admin-card">
-  <h3>🎁 推广管理 <small>（二维码后台设置 · 全站即时生效）</small></h3>
-  <p class="admin-tip">左：推广微信群二维码（用户扫码进群咨询）｜右：合伙人 ¥999 支付二维码（满20人扫码加入，利益详情咨询站长）</p>
-  <div style="display:flex;gap:20px;flex-wrap:wrap;margin:10px 0 6px">
-    <div style="flex:1;min-width:220px;text-align:center;border:1px dashed rgba(251,191,36,.4);border-radius:12px;padding:14px">
-      <div style="font-weight:700;margin-bottom:8px">推广微信群二维码</div>
-      <img id="qr-group-preview" src="" alt="未设置" style="width:150px;height:150px;object-fit:contain;background:#fff;border-radius:8px;margin-bottom:8px">
-      <div><input type="file" id="qr-group-file" accept="image/*" style="font-size:12px"></div>
-      <button class="btn btn-gold btn-sm" style="margin-top:8px" onclick="uploadQr('group')">上传微信群二维码</button>
-    </div>
-    <div style="flex:1;min-width:220px;text-align:center;border:1px dashed rgba(251,191,36,.4);border-radius:12px;padding:14px">
-      <div style="font-weight:700;margin-bottom:8px">合伙人 ¥999 支付二维码</div>
-      <img id="qr-pay-preview" src="" alt="未设置" style="width:150px;height:150px;object-fit:contain;background:#fff;border-radius:8px;margin-bottom:8px">
-      <div><input type="file" id="qr-pay-file" accept="image/*" style="font-size:12px"></div>
-      <button class="btn btn-gold btn-sm" style="margin-top:8px" onclick="uploadQr('pay')">上传支付二维码</button>
-    </div>
-  </div>
-  <h4 style="margin:14px 0 8px">👥 推广关系（谁推广了谁）</h4>
-  <div id="promo-tree" style="font-size:12.5px;overflow-x:auto">加载中…</div>
-</section>
-
-{% endblock %}
+{% block title %}管理后台{% endblock %}
 {% block content %}
 
 <section class="page-head">
@@ -76,6 +54,28 @@
   </div>
 
   <div id="brick-list" class="brick-list"><div class="empty">加载中…</div></div>
+</section>
+
+<!-- ═══ 推广管理（V2：二维码设置 + 推广关系） ═══ -->
+<section class="admin-card">
+  <h3>🎁 推广管理 <small>（二维码后台设置 · 全站即时生效）</small></h3>
+  <p class="admin-tip">左：推广微信群二维码（用户扫码进群咨询）｜右：合伙人 ¥999 支付二维码（满20人扫码加入，利益详情咨询站长）</p>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;margin:10px 0 6px">
+    <div style="flex:1;min-width:220px;text-align:center;border:1px dashed rgba(251,191,36,.4);border-radius:12px;padding:14px">
+      <div style="font-weight:700;margin-bottom:8px">推广微信群二维码</div>
+      <img id="qr-group-preview" src="" alt="未设置" style="width:150px;height:150px;object-fit:contain;background:#fff;border-radius:8px;margin-bottom:8px">
+      <div><input type="file" id="qr-group-file" accept="image/*" style="font-size:12px"></div>
+      <button class="btn btn-gold btn-sm" style="margin-top:8px" onclick="uploadQr('group')">上传微信群二维码</button>
+    </div>
+    <div style="flex:1;min-width:220px;text-align:center;border:1px dashed rgba(251,191,36,.4);border-radius:12px;padding:14px">
+      <div style="font-weight:700;margin-bottom:8px">合伙人 ¥999 支付二维码</div>
+      <img id="qr-pay-preview" src="" alt="未设置" style="width:150px;height:150px;object-fit:contain;background:#fff;border-radius:8px;margin-bottom:8px">
+      <div><input type="file" id="qr-pay-file" accept="image/*" style="font-size:12px"></div>
+      <button class="btn btn-gold btn-sm" style="margin-top:8px" onclick="uploadQr('pay')">上传支付二维码</button>
+    </div>
+  </div>
+  <h4 style="margin:14px 0 8px">👥 推广关系（谁推广了谁）</h4>
+  <div id="promo-tree" style="font-size:12.5px;overflow-x:auto">加载中…</div>
 </section>
 
 {% endblock %}
