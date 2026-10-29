@@ -28,7 +28,7 @@ from datetime import datetime
 from functools import wraps
 
 from flask import (Flask, g, session, request, jsonify, Response,
-                   render_template, redirect, url_for)
+                   render_template, redirect, url_for, send_from_directory)
 from werkzeug.security import generate_password_hash, check_password_hash
 import agent_service
 
@@ -712,6 +712,12 @@ def footer_info():
     size_kb = round(total / 1024, 1)
     saved = datetime.fromtimestamp(latest).strftime("%Y-%m-%d %H:%M") if latest else "—"
     return {"version": VERSION, "size": f"{size_kb} KB", "saved": saved}
+
+
+@app.route("/timer/<path:filename>")
+def timer_static(filename):
+    """悬浮计时器版本检查等静态资源（访问路径 /timer/xxx）"""
+    return send_from_directory(os.path.join(BASE_DIR, "static", "timer"), filename)
 
 
 @app.route("/")
@@ -2154,3 +2160,4 @@ if __name__ == "__main__":
     print(f"作者：军哥懂保（微信：xunijiayuan）")
     print(f"访问：http://127.0.0.1:{port}")
     app.run(host=host, port=port, debug=False)
+
