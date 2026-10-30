@@ -11,8 +11,8 @@ const TimerState = { IDLE: 'idle', RUNNING: 'running', PAUSED: 'paused', FINISHE
 const PomodoroPhase = { WORK: 'work', SHORT_BREAK: 'short_break', LONG_BREAK: 'long_break' };
 
 // ============ 版本信息 ============
-const CURRENT_VERSION = "1.0.3";
-const CURRENT_VERSION_CODE = 4;
+const CURRENT_VERSION = "1.0.4";
+const CURRENT_VERSION_CODE = 5;
 const VERSION_CHECK_URL = "https://ecojia.cn/timer/version.json";
 
 const ModeIcons = { stopwatch: '⏱', countdown: '⏳', pomodoro: '🍅' };
@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUI();
     autoStartBallPosition();
     initUpdateCheck();   // 版本检查
+    initAd();           // 广告位加载
     setInterval(updateLoop, 200);   // 200ms tick，后台标签页自动降频但持续运行
 });
 
@@ -1232,5 +1233,85 @@ document.addEventListener('click', (e) => {
     const modal = $('shareModal');
     if (modal && !modal.classList.contains('hidden')) {
         if (e.target === modal) closeShareModal();
+    }
+});
+
+// ============ 广告位（配置化，三端统一读取 ad.json） ============
+let adConfig = null;
+
+async function initAd() {
+    try {
+        const r = await fetch('ad.json', { cache: 'no-store' });
+        if (!r.ok) return;
+        adConfig = await r.json();
+    } catch (e) {
+        return;
+    }
+    if (!adConfig || !adConfig.enabled || !adConfig.video) return;
+
+    // 入口条
+    const entry = $('adEntry');
+    if (entry) {
+        entry.hidden = false;
+        $('adEntryTitle').textContent = adConfig.title || adConfig.advertiser || '广告位招租';
+        entry.addEventListener('click', showAdModal);
+    }
+
+    // 自动弹窗（每天仅弹一次，避免打扰）
+    if (adConfig.autoPopup) {
+        const today = new Date().toDateString();
+        const popped = localStorage.getItem('ad_popup_date');
+        if (popped !== today) {
+            setTimeout(showAdModal, adConfig.popupDelay || 800);
+            localStorage.setItem('ad_popup_date', today);
+        }
+    }
+}
+
+function showAdModal() {
+    if (!adConfig) return;
+    const modal = $('adModal');
+    const video = $('adVideo');
+    if (!modal || !video) return;
+
+    $('adModalTitle').textContent = adConfig.title || '广告位招租';
+    $('adAdvertiser').textContent = (adConfig.advertiser || '广告位招租') + ' · 联系微信 xunijiayuan';
+
+    video.src = adConfig.video;
+    video.poster = adConfig.poster || '';
+
+    const linkBtn = $('adLinkBtn');
+    if (adConfig.link) {
+        linkBtn.href = adConfig.link;
+        linkBtn.textContent = adConfig.linkText || '了解详情 →';
+        linkBtn.classList.remove('hidden');
+    } else {
+        linkBtn.classList.add('hidden');
+    }
+
+    modal.classList.remove('hidden');
+    // 弹窗打开后尝试播放（静音自动播放成功率高；用户也可手动点播放）
+    video.muted = true;
+    video.play().catch(() => {});
+
+    $('btnAdClose').onclick = closeAdModal;
+}
+
+function closeAdModal() {
+    const modal = $('adModal');
+    const video = $('adVideo');
+    if (video) {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+    }
+    if (modal) modal.classList.add('hidden');
+}
+
+// 点击遮罩关闭广告弹窗
+document.addEventListener('click', (e) => {
+    const modal = $('adModal');
+    if (modal && !modal.classList.contains('hidden')) {
+        if (e.target === modal) closeAdModal();
     }
 });

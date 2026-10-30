@@ -1,0 +1,14 @@
+{
+  "_comment": "悬浮计时器 - 广告位配置（三端统一读取此文件，可随时替换）",
+  "enabled": true,
+  "advertiser": "广告位招租",
+  "title": "悬浮计时器 · 广告位",
+  "video": "ads/ad_placeholder.mp4",
+  "poster": "ads/ad_placeholder.jpg",
+  "link": "",
+  "linkText": "了解详情",
+  "autoPopup": true,
+  "popupDelay": 800,
+  "closeable": true,
+  "note": "替换方法：将新视频放到 ads/ 目录，修改 video 字段指向新文件名；如需外链广告，把 video 改成完整 http(s) 地址即可"
+}
