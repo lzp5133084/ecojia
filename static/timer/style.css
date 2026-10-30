@@ -841,6 +841,14 @@ body {
     font-weight: 600;
 }
 
+/* 设置项下方的小字说明 */
+.tab-tip {
+    margin-top: 8px;
+    font-size: 10.5px;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
 @media (max-width: 480px) {
     .download-row {
         flex-direction: column;

@@ -1,23 +1,23 @@
 {
   "_comment": "悬浮计时器三端版本检查配置 - 部署到 https://ecojia.cn/timer/version.json",
   "android": {
-    "versionCode": 3,
-    "versionName": "1.0.2",
-    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.2.apk",
-    "updateLog": "1. 推广有惊喜升级V2：注册+实名认证生成专属邀请码\n2. 好友经你的链接/邀请码注册才计入你名下\n3. 满20人¥999扫码加入项目合伙人\n4. 保留：到时提醒/重复计时/命名保存/自动升级",
+    "versionCode": 4,
+    "versionName": "1.0.3",
+    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.3.apk",
+    "updateLog": "1. 长按悬浮球改为稳定弹出操作菜单（同网页版左键菜单）\n2. 新增自定义时长，可精确设定时/分/秒\n3. 结束音效增强（闹铃音量+震动，不再微弱）\n4. 新增结束前语音提醒，默认剩余3秒播报，可自定义秒数或关闭",
     "forceUpdate": false
   },
   "desktop": {
-    "versionCode": 3,
-    "versionName": "1.0.2",
-    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.2.exe",
-    "updateLog": "1. 推广有惊喜升级V2：注册+实名认证生成专属邀请码\n2. 好友经你的链接/邀请码注册才计入你名下\n3. 满20人¥999扫码加入项目合伙人\n4. 保留：到时提醒/重复计时/命名保存/自动升级",
+    "versionCode": 4,
+    "versionName": "1.0.3",
+    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.3.exe",
+    "updateLog": "1. 新增结束前语音提醒，默认剩余3秒播报「还剩3秒」，可自定义秒数或关闭\n2. 结束音效增强：两组三连音，音量更响、响得更久\n3. 计时结束中文语音播报「时间到，计时结束」\n4. 悬浮球右键菜单支持重复计时",
     "forceUpdate": false
   },
   "web": {
-    "versionCode": 3,
-    "versionName": "1.0.2",
-    "updateLog": "1. 推广有惊喜升级V2：注册+实名认证生成专属邀请码\n2. 好友经你的链接/邀请码注册才计入你名下\n3. 满20人¥999扫码加入项目合伙人\n4. 保留：到时提醒/重复计时/命名保存/自动升级",
+    "versionCode": 4,
+    "versionName": "1.0.3",
+    "updateLog": "1. 新增结束前语音提醒，默认剩余3秒播报，可自定义秒数或关闭\n2. 结束音效增强：两组三连音，音量更响\n3. 计时结束中文语音播报\n4. 首页可直接下载安卓APK与电脑EXE",
     "forceUpdate": false
   }
 }

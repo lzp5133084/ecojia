@@ -11,8 +11,8 @@ const TimerState = { IDLE: 'idle', RUNNING: 'running', PAUSED: 'paused', FINISHE
 const PomodoroPhase = { WORK: 'work', SHORT_BREAK: 'short_break', LONG_BREAK: 'long_break' };
 
 // ============ 版本信息 ============
-const CURRENT_VERSION = "1.0.2";
-const CURRENT_VERSION_CODE = 3;
+const CURRENT_VERSION = "1.0.3";
+const CURRENT_VERSION_CODE = 4;
 const VERSION_CHECK_URL = "https://ecojia.cn/timer/version.json";
 
 const ModeIcons = { stopwatch: '⏱', countdown: '⏳', pomodoro: '🍅' };
@@ -38,6 +38,10 @@ let state = {
     remindEnabled: false,
     remindMin: 25,
     reminded: false,
+    // 倒计时结束前语音提醒：开关、提前秒数、本轮是否已提醒
+    preAlertEnabled: true,
+    preAlertSec: 3,
+    preAlerted: false,
     startTime: 0,
     lastTick: 0
 };
@@ -101,6 +105,8 @@ function startTimer() {
     if (state.timerState === TimerState.RUNNING) return;
 
     if (state.timerState === TimerState.IDLE) {
+        // 新一轮计时开始，重置结束前提醒标记
+        state.preAlerted = false;
         if (state.mode === TimerMode.COUNTDOWN) {
             if (state.remaining <= 0) {
                 state.remaining = state.totalDuration || 600;
@@ -135,6 +141,7 @@ function pauseTimer() {
 function resetTimer() {
     state.elapsed = 0;
     state.reminded = false;
+    state.preAlerted = false;
     state.timerState = TimerState.IDLE;
     if (state.mode === TimerMode.STOPWATCH) {
         state.remaining = 0;
@@ -252,6 +259,16 @@ function updateLoop() {
         if (state.mode !== TimerMode.STOPWATCH) {
             state.remaining = Math.max(0, state.totalDuration - state.elapsed);
 
+            // 结束前语音提醒：剩余时间首次进入设定秒数内触发一次，仅播报不打断
+            if (state.preAlertEnabled && !state.preAlerted
+                && state.remaining > 0 && state.remaining <= state.preAlertSec) {
+                state.preAlerted = true;
+                const sec = Math.round(state.remaining);
+                speak('还剩 ' + sec + ' 秒');
+                playSound('prealert');
+                sendNotification('⏳ 即将结束', '倒计时还剩 ' + sec + ' 秒');
+            }
+
             if (state.remaining <= 0) {
                 handleFinish();
             }
@@ -283,12 +300,15 @@ function handleFinish() {
         state.elapsed = 0;
         state.remaining = state.totalDuration;
         state.startTime = performance.now();
+        state.preAlerted = false;
         playSound('pomodoro');
+        speak('休息时间到');
         updatePhaseBadge();
     } else {
         state.timerState = TimerState.FINISHED;
         state.remaining = 0;
         playSound('finish');
+        speak('时间到，计时结束');
         sendNotification('⏰ 计时结束！', '时间到啦！休息一下吧～');
         updateUI();
         // 倒计时自然结束时，若开启命名提醒则弹出命名框
@@ -626,6 +646,20 @@ function initPanel() {
         $('volumeLabel').textContent = e.target.value + '%';
         saveConfig();
     });
+
+    // 倒计时结束前语音提醒设置
+    $('chkPreAlert').addEventListener('change', e => {
+        state.preAlertEnabled = e.target.checked;
+        state.preAlerted = false;
+        saveConfig();
+        if (e.target.checked) speak('结束前提醒已开启');
+    });
+    $('spinPreAlertSec').addEventListener('change', e => {
+        state.preAlertSec = Math.max(1, Math.min(600, parseInt(e.target.value) || 3));
+        e.target.value = state.preAlertSec;
+        state.preAlerted = false;
+        saveConfig();
+    });
 }
 
 function togglePanel() {
@@ -936,7 +970,8 @@ function playSound(type) {
             osc.frequency.value = freq;
             osc.type = 'sine';
             gain.gain.setValueAtTime(0, ctx.currentTime + when);
-            gain.gain.linearRampToValueAtTime(vol * 0.3, ctx.currentTime + when + 0.01);
+            // 音量放大到 0.5（原 0.3），到时提示更容易听到
+            gain.gain.linearRampToValueAtTime(Math.max(0.05, vol * 0.5), ctx.currentTime + when + 0.01);
             gain.gain.linearRampToValueAtTime(0, ctx.currentTime + when + dur);
             osc.start(ctx.currentTime + when);
             osc.stop(ctx.currentTime + when + dur + 0.05);
@@ -946,14 +981,38 @@ function playSound(type) {
         else if (type === 'pause') beep(660, 0.1);
         else if (type === 'reset') beep(440, 0.15);
         else if (type === 'finish') {
-            beep(1047, 0.2, 0);
-            beep(1319, 0.2, 0.25);
-            beep(1568, 0.4, 0.5);
+            // 结束音：两组三连音 + 加长，避免一次响完听不到
+            beep(1047, 0.25, 0);
+            beep(1319, 0.25, 0.3);
+            beep(1568, 0.55, 0.6);
+            beep(1047, 0.25, 1.3);
+            beep(1319, 0.25, 1.6);
+            beep(1568, 0.7, 1.9);
+        } else if (type === 'prealert') {
+            // 结束前提醒音：两声上扬短音
+            beep(880, 0.15, 0);
+            beep(1175, 0.22, 0.22);
         } else if (type === 'pomodoro') {
             beep(784, 0.15, 0);
             beep(988, 0.3, 0.2);
         }
     } catch (e) { /* 浏览器可能拦截 */ }
+}
+
+// ============ 语音播报（Web Speech API） ============
+
+/** 中文语音播报：结束前提醒与到时播报共用，浏览器不支持时静默跳过 */
+function speak(text) {
+    if (!state.soundEnabled) return;
+    if (!('speechSynthesis' in window)) return;
+    try {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'zh-CN';
+        u.rate = 1.05;
+        u.volume = Math.min(1, Math.max(0.5, state.volume));
+        window.speechSynthesis.speak(u);
+    } catch (e) { /* 忽略 */ }
 }
 
 // ============ 通知 ============
@@ -996,6 +1055,10 @@ function saveConfig() {
             enabled: state.remindEnabled,
             minutes: state.remindMin
         },
+        preAlert: {
+            enabled: state.preAlertEnabled,
+            seconds: state.preAlertSec
+        },
         ballPos: { left: ball.offsetLeft, top: ball.offsetTop }
     };
     try {
@@ -1035,6 +1098,12 @@ function loadConfig() {
         state.remindMin = rm.minutes || 25;
         $('chkRemind').checked = state.remindEnabled;
         $('spinRemindMin').value = state.remindMin;
+
+        const pa = cfg.preAlert || {};
+        state.preAlertEnabled = pa.enabled !== false;
+        state.preAlertSec = Math.max(1, pa.seconds || 3);
+        $('chkPreAlert').checked = state.preAlertEnabled;
+        $('spinPreAlertSec').value = state.preAlertSec;
 
         if (cfg.ballPos) {
             ball.style.left = cfg.ballPos.left + 'px';
