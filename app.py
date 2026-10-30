@@ -765,6 +765,13 @@ def vault_page():
     return render_template("vault.html")
 
 
+@app.route("/digital/")
+@app.route("/digital/<path:_p>")
+def digital_path_redirect(_p=""):
+    """修复用户常输错的路径：/digital/... → /vault"""
+    return redirect("/vault")
+
+
 @app.route("/wishes")
 def wishes_page():
     return render_template("wishes.html", products=get_products())
