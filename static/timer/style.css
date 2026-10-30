@@ -747,6 +747,110 @@ body {
 }
 
 /* ========================================
+   客户端下载区
+   ======================================== */
+.download-box {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(236, 72, 153, 0.10) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.28);
+}
+
+.download-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 9px;
+    letter-spacing: 0.4px;
+}
+
+.download-row {
+    display: flex;
+    gap: 9px;
+}
+
+.dl-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #fff;
+    border: 1px solid transparent;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    min-width: 0;
+}
+
+.dl-btn.apk {
+    background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.28);
+}
+
+.dl-btn.exe {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.30);
+}
+
+.dl-btn:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.45);
+}
+
+.dl-btn:active {
+    transform: translateY(0);
+}
+
+.dl-ico {
+    font-size: 19px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.dl-txt {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.dl-txt b {
+    font-size: 12.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.dl-txt small {
+    font-size: 10px;
+    opacity: 0.85;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dl-tip {
+    margin-top: 9px;
+    font-size: 10px;
+    line-height: 1.65;
+    color: var(--text-muted);
+}
+
+.dl-tip b {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+@media (max-width: 480px) {
+    .download-row {
+        flex-direction: column;
+    }
+    .dl-btn {
+        padding: 10px 12px;
+    }
+}
+
+/* ========================================
    右键菜单
    ======================================== */
 .context-menu {

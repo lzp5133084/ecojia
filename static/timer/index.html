@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>⏱ 悬浮计时器 - 军哥懂保</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱</text></svg>">
-    <link rel="stylesheet" href="style.css?v=20261030a">
+    <link rel="stylesheet" href="style.css?v=20261030d">
 </head>
 <body>
     <!-- 新版本提示条 -->
@@ -35,14 +35,14 @@
         </div>
     </div>
 
-    <!-- 主面板 -->
-    <div id="mainPanel" class="main-panel hidden">
+    <!-- 主面板（默认显示状态，任何人访问即可看到完整界面） -->
+    <div id="mainPanel" class="main-panel">
         <div class="panel-container">
             <!-- 标题栏 -->
             <div class="panel-header">
                 <div class="title-area">
                     <h1 class="app-title">⏱ 悬浮计时器</h1>
-                    <p class="app-subtitle">军哥懂保 · 2027科技版 <span class="version-tag" id="versionTag" title="点击检查更新">v1.0.1</span></p>
+                    <p class="app-subtitle">军哥懂保 · 2027科技版 <span class="version-tag" id="versionTag" title="点击检查更新">v1.0.2</span></p>
                 </div>
                 <div class="header-actions">
                     <button class="icon-btn share-btn" id="btnShare" title="推广有惊喜">🎁</button>
@@ -178,6 +178,26 @@
                 <button class="primary-btn" id="btnStart">▶ 开始</button>
             </div>
 
+            <!-- 客户端下载 -->
+            <div class="download-box">
+                <div class="download-title">📥 下载客户端 · 离线更好用</div>
+                <div class="download-row">
+                    <a class="dl-btn apk" href="悬浮计时器_v1.0.2.apk" download="悬浮计时器_v1.0.2.apk">
+                        <span class="dl-ico">📱</span>
+                        <span class="dl-txt"><b>安卓 APK</b><small>v1.0.2 · 悬浮球常驻</small></span>
+                    </a>
+                    <a class="dl-btn exe" href="悬浮计时器_v1.0.2.exe" download="悬浮计时器_v1.0.2.exe">
+                        <span class="dl-ico">💻</span>
+                        <span class="dl-txt"><b>电脑 EXE</b><small>v1.0.2 · Windows 免安装</small></span>
+                    </a>
+                </div>
+                <p class="dl-tip">
+                    <b>安卓安装：</b>点击下载 APK → 打开文件 → 允许「未知来源应用」→ 安装完成打开悬浮窗权限<br>
+                    <b>电脑安装：</b>点击下载 EXE → 双击运行（免安装绿色版）；若被 Windows 拦截，点「更多信息 → 仍要运行」<br>
+                    <b>提示：</b>网页版无需下载，功能与客户端一致；客户端可后台常驻、跨程序悬浮计时
+                </p>
+            </div>
+
             <!-- 底部信息 -->
             <div class="panel-footer">
                 <span>作者：军哥懂保 | 微信：xunijiayuan</span>
@@ -285,6 +305,6 @@
         <div class="menu-item" data-action="login">🔐 管理员</div>
     </div>
 
-    <script src="app.js?v=20261030c"></script>
+    <script src="app.js?v=20261030d"></script>
 </body>
 </html>
