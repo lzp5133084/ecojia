@@ -11,8 +11,8 @@ const TimerState = { IDLE: 'idle', RUNNING: 'running', PAUSED: 'paused', FINISHE
 const PomodoroPhase = { WORK: 'work', SHORT_BREAK: 'short_break', LONG_BREAK: 'long_break' };
 
 // ============ 版本信息 ============
-const CURRENT_VERSION = "1.0.1";
-const CURRENT_VERSION_CODE = 2;
+const CURRENT_VERSION = "1.0.2";
+const CURRENT_VERSION_CODE = 3;
 const VERSION_CHECK_URL = "https://ecojia.cn/timer/version.json";
 
 const ModeIcons = { stopwatch: '⏱', countdown: '⏳', pomodoro: '🍅' };
