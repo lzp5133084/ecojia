@@ -22,10 +22,12 @@
 """
 import base64
 import hashlib
+import hmac
 import re
 import json
 import os
 import sqlite3
+import time
 from datetime import datetime
 from functools import wraps
 
@@ -675,6 +677,17 @@ def init_db():
         except sqlite3.Error:
             pass  # 列已存在
     db.execute("CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT)")
+    # —— V2 统一权益：任意账号 × 任意项目 的 VIP 授权 ——
+    db.execute("""CREATE TABLE IF NOT EXISTS app_grants (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER NOT NULL,
+        app_key    TEXT    NOT NULL,
+        level      TEXT    NOT NULL DEFAULT 'vip',
+        expire_at  TEXT    DEFAULT '',
+        note       TEXT    DEFAULT '',
+        created_at TEXT    NOT NULL,
+        UNIQUE(user_id, app_key)
+    )""")
     db.commit()
     for r in db.execute("SELECT id FROM users WHERE invite_code IS NULL OR invite_code=''").fetchall():
         db.execute("UPDATE users SET invite_code=? WHERE id=?", ("ECJ%d" % (10000 + r[0]), r[0]))
@@ -2318,6 +2331,272 @@ def api_admin_promo_tree():
 
 
 # ══════════════════ 启动 ══════════════════
+# ══════════════════ 统一账号 · 跨项目权益 · 统一物料（V2） ══════════════════
+UNIFIED_ACCOUNT_SALT = "ecojia-unified-account"
+APP_KEYS = {
+    "screenpen": "鼠标画笔",
+    "ziliao": "资料百事通",
+    "huoxing": "火星计划",
+    "bigbox": "会员盲盒",
+    "portal": "数字生态家园",
+}
+APP_LEVELS = {"trial": "试用", "vip": "VIP", "svip": "SVIP", "partner": "合伙人"}
+
+
+def _set_setting(key, value):
+    db = get_db()
+    db.execute("INSERT INTO settings(key, value) VALUES(?,?) "
+               "ON CONFLICT(key) DO UPDATE SET value=excluded.value", (key, value))
+    db.commit()
+
+
+def _secret_str():
+    """secret_key 可能是 bytes（来自 secret_key.txt），统一转成字符串"""
+    sk = app.secret_key
+    if isinstance(sk, bytes):
+        return sk.decode("utf-8", "ignore")
+    return str(sk or "ecojia")
+
+
+def _sign_token(uid, days=30):
+    """给桌面/手机等非网页端签发长期登录 token（HMAC-SHA256，不依赖 cookie）"""
+    expire = int(time.time()) + int(days) * 86400
+    raw = "%d.%d" % (int(uid), expire)
+    key = _secret_str() + "|" + UNIFIED_ACCOUNT_SALT
+    sig = hmac.new(key.encode("utf-8"), raw.encode("utf-8"), hashlib.sha256).hexdigest()[:32]
+    return base64.urlsafe_b64encode(("%s.%s" % (raw, sig)).encode("utf-8")).decode("utf-8")
+
+
+def _read_token(token):
+    try:
+        raw = base64.urlsafe_b64decode(token.encode("utf-8")).decode("utf-8")
+        uid_s, exp_s, sig = raw.split(".")
+        uid, expire = int(uid_s), int(exp_s)
+        key = _secret_str() + "|" + UNIFIED_ACCOUNT_SALT
+        good = hmac.new(key.encode("utf-8"), ("%d.%d" % (uid, expire)).encode("utf-8"),
+                        hashlib.sha256).hexdigest()[:32]
+        if not hmac.compare_digest(sig, good) or expire < int(time.time()):
+            return None
+        return uid
+    except Exception:
+        return None
+
+
+def _token_user():
+    """统一取账号：优先 token（X-Auth-Token 头或 ?token=），其次网页 session"""
+    token = (request.headers.get("X-Auth-Token") or request.args.get("token") or "").strip()
+    uid = _read_token(token) if token else None
+    if not uid:
+        uid = session.get("uid")
+    if not uid:
+        return None
+    row = get_db().execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
+    return dict(row) if row else None
+
+
+def _grants_for(uid):
+    rows = get_db().execute(
+        "SELECT app_key, level, expire_at, note, created_at FROM app_grants "
+        "WHERE user_id=? ORDER BY id DESC", (uid,)).fetchall()
+    out = []
+    for r in rows:
+        item = dict(r)
+        item["app_name"] = APP_KEYS.get(item["app_key"], item["app_key"])
+        item["active"] = bool(item["expire_at"]) and item["expire_at"] >= now()
+        out.append(item)
+    return out
+
+
+def _account_payload(u):
+    grants = _grants_for(u["id"])
+    return {
+        "uid": u["id"], "username": u["username"], "nickname": u["nickname"],
+        "role": u["role"],
+        "invite_code": u.get("invite_code") or ("ECJ%d" % (10000 + u["id"])),
+        "grants": grants,
+        "vip": {g["app_key"]: {"level": g["level"], "expire_at": g["expire_at"],
+                               "active": g["active"]} for g in grants},
+    }
+
+
+@app.route("/api/account/register", methods=["POST"])
+def api_account_register():
+    """统一注册：网页/桌面/手机共用，注册的即数字生态家园账号"""
+    d = request.get_json(silent=True) or {}
+    username = (d.get("username") or "").strip()
+    password = d.get("password") or ""
+    nickname = (d.get("nickname") or "").strip() or username
+    ref = (d.get("ref") or "").strip().upper()
+    if not (3 <= len(username) <= 20):
+        return jsonify({"ok": False, "msg": "用户名需 3-20 个字符"}), 400
+    if len(password) < 6:
+        return jsonify({"ok": False, "msg": "密码至少 6 位"}), 400
+    db = get_db()
+    if db.execute("SELECT 1 FROM users WHERE username=?", (username,)).fetchone():
+        return jsonify({"ok": False, "msg": "用户名已存在，请直接登录"}), 400
+    inviter_id = None
+    if ref:
+        row = db.execute("SELECT id FROM users WHERE invite_code=?", (ref,)).fetchone()
+        inviter_id = row["id"] if row else None
+    is_first = db.execute("SELECT COUNT(*) c FROM users").fetchone()["c"] == 0
+    role = "admin" if is_first else "user"
+    cur = db.execute(
+        "INSERT INTO users(username, password_hash, nickname, role, inviter_id, created_at) "
+        "VALUES(?,?,?,?,?,?)",
+        (username, generate_password_hash(password), nickname, role, inviter_id, now()))
+    uid = cur.lastrowid
+    invite_code = "ECJ%d" % (10000 + uid)
+    db.execute("UPDATE users SET invite_code=? WHERE id=?", (invite_code, uid))
+    db.commit()
+    log_op("统一注册", "用户名:%s 来源:%s" % (username, d.get("app") or "web"), uid)
+    u = dict(db.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone())
+    return jsonify({"ok": True, "msg": "注册成功，该账号可登录 ecojia.cn 及全部子工具",
+                    "token": _sign_token(uid), "account": _account_payload(u)})
+
+
+@app.route("/api/account/login", methods=["POST"])
+def api_account_login():
+    d = request.get_json(silent=True) or {}
+    username = (d.get("username") or "").strip()
+    password = d.get("password") or ""
+    row = get_db().execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
+    if not row or not check_password_hash(row["password_hash"], password):
+        return jsonify({"ok": False, "msg": "用户名或密码错误"}), 400
+    if row["role"] == "disabled":
+        return jsonify({"ok": False, "msg": "账号已被禁用"}), 403
+    log_op("统一登录", "用户名:%s 来源:%s" % (username, d.get("app") or "web"), row["id"])
+    return jsonify({"ok": True, "msg": "登录成功", "token": _sign_token(row["id"]),
+                    "account": _account_payload(dict(row))})
+
+
+@app.route("/api/account/me")
+def api_account_me():
+    u = _token_user()
+    if not u:
+        return jsonify({"ok": False, "login": False, "msg": "未登录"}), 401
+    data = _account_payload(u)
+    app_key = (request.args.get("app") or "").strip()
+    if app_key:
+        g = data["vip"].get(app_key)
+        data["current_app"] = {"app": app_key, "app_name": APP_KEYS.get(app_key, app_key),
+                               "grant": g, "active": bool(g and g["active"])}
+    return jsonify({"ok": True, "login": True, "account": data})
+
+
+@app.route("/api/app/config")
+def api_app_config():
+    """统一物料下发：各项目、各端都从这里取二维码、收款码、宣传视频"""
+    app_key = (request.args.get("app") or "default").strip()
+    return jsonify({
+        "ok": True,
+        "app": app_key,
+        "app_name": APP_KEYS.get(app_key, app_key),
+        "site": "https://ecojia.cn",
+        "account_base": "https://ecojia.cn",
+        "register_url": "https://ecojia.cn/login",
+        "promo": {
+            "group_qr": _get_setting("promo_group_qr"),
+            "pay_qr": _get_setting("promo_pay_qr"),
+            "pay_price": _get_setting("promo_pay_price", "999"),
+            "wechat": "xunijiayuan",
+            "invite_base": "https://ecojia.cn/login?ref=",
+            "video_url": _get_setting("promo_video_url", ""),
+        },
+        "apps": APP_KEYS,
+        "levels": APP_LEVELS,
+    })
+
+
+@app.route("/api/admin/grants", methods=["GET", "POST", "DELETE"])
+@admin_required
+def api_admin_grants():
+    """后台：给任意账号开通任意项目的 VIP（盲盒发放、手动开通、续期、撤销）"""
+    db = get_db()
+    if request.method == "GET":
+        kw = (request.args.get("username") or "").strip()
+        if kw:
+            u = db.execute("SELECT id, username FROM users WHERE username=?", (kw,)).fetchone()
+            if not u:
+                return jsonify({"ok": False, "msg": "账号不存在"}), 404
+            rows = db.execute(
+                "SELECT g.*, u.username, u.nickname FROM app_grants g JOIN users u ON u.id=g.user_id "
+                "WHERE g.user_id=? ORDER BY g.id DESC", (u["id"],)).fetchall()
+        else:
+            rows = db.execute(
+                "SELECT g.*, u.username, u.nickname FROM app_grants g JOIN users u ON u.id=g.user_id "
+                "ORDER BY g.id DESC LIMIT 200").fetchall()
+        rows_out = []
+        for r in rows:
+            item = dict(r)
+            item["active"] = bool(item.get("expire_at")) and item["expire_at"] >= now()
+            item["app_name"] = APP_KEYS.get(item["app_key"], item["app_key"])
+            rows_out.append(item)
+        return jsonify({"ok": True, "apps": APP_KEYS, "levels": APP_LEVELS, "grants": rows_out})
+
+    d = request.get_json(silent=True) or {}
+    username = (d.get("username") or "").strip()
+    app_key = (d.get("app_key") or "").strip()
+    u = db.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
+    if not u:
+        return jsonify({"ok": False, "msg": "账号不存在"}), 404
+
+    if request.method == "DELETE" or d.get("revoke"):
+        db.execute("DELETE FROM app_grants WHERE user_id=? AND app_key=?", (u["id"], app_key))
+        db.commit()
+        log_op("撤销权益", "账号:%s 项目:%s" % (username, app_key), u["id"])
+        return jsonify({"ok": True, "msg": "已撤销 %s 的 %s 权益" % (username, app_key)})
+
+    if not app_key:
+        return jsonify({"ok": False, "msg": "请选择项目"}), 400
+    level = (d.get("level") or "vip").strip()
+    days = int(d.get("days") or 30)
+    expire_at = (d.get("expire_at") or "").strip()
+    if not expire_at:
+        expire_at = datetime.fromtimestamp(time.time() + days * 86400).strftime("%Y-%m-%d %H:%M:%S")
+    db.execute(
+        "INSERT INTO app_grants(user_id, app_key, level, expire_at, note, created_at) "
+        "VALUES(?,?,?,?,?,?) ON CONFLICT(user_id, app_key) DO UPDATE SET "
+        "level=excluded.level, expire_at=excluded.expire_at, note=excluded.note",
+        (u["id"], app_key, level, expire_at, (d.get("note") or "").strip(), now()))
+    db.commit()
+    log_op("开通权益", "账号:%s 项目:%s 等级:%s 到期:%s" % (username, app_key, level, expire_at), u["id"])
+    return jsonify({"ok": True, "msg": "%s 的 %s 已开通至 %s" % (username, app_key, expire_at)})
+
+
+@app.route("/api/admin/promo/video", methods=["GET", "POST"])
+@admin_required
+def api_admin_promo_video():
+    """后台：设置全站宣传视频（外链或在线上传 mp4/webm）"""
+    if request.method == "GET":
+        return jsonify({"ok": True, "video_url": _get_setting("promo_video_url", ""),
+                        "group_qr": _get_setting("promo_group_qr"),
+                        "pay_qr": _get_setting("promo_pay_qr"),
+                        "pay_price": _get_setting("promo_pay_price", "999")})
+    d = request.get_json(silent=True) or {}
+    url = (d.get("url") or "").strip()
+    if url:
+        if not re.match(r"^(https?://|/static/)", url):
+            return jsonify({"ok": False, "msg": "视频地址需以 http(s):// 或 /static/ 开头"}), 400
+        _set_setting("promo_video_url", url)
+        log_op("设置宣传视频", url)
+        return jsonify({"ok": True, "msg": "宣传视频已更新", "video_url": url})
+    m = re.match(r"^data:video/(mp4|webm);base64,(.+)$", d.get("data_url") or "", re.S)
+    if not m:
+        return jsonify({"ok": False, "msg": "请上传 mp4/webm 视频，或直接填视频外链"}), 400
+    raw = base64.b64decode(m.group(2))
+    if len(raw) > 80 * 1024 * 1024:
+        return jsonify({"ok": False, "msg": "视频不能超过 80MB"}), 400
+    updir = os.path.join(app.root_path, "static", "uploads")
+    os.makedirs(updir, exist_ok=True)
+    fname = "promo_video." + m.group(1)
+    with open(os.path.join(updir, fname), "wb") as f:
+        f.write(raw)
+    url = "/static/uploads/" + fname
+    _set_setting("promo_video_url", url)
+    log_op("上传宣传视频", "%d 字节" % len(raw))
+    return jsonify({"ok": True, "msg": "宣传视频已上传，全站立即生效", "video_url": url})
+
+
 init_db()
 
 if __name__ == "__main__":
