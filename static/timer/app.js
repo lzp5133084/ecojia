@@ -844,23 +844,26 @@ async function checkUpdate(manual = false) {
         const web = data.web;
         if (web && web.versionCode > CURRENT_VERSION_CODE) {
             showUpdateBanner(web);
-        } else if (manual) {
             if (tag) {
-                tag.textContent = '已是最新 v' + CURRENT_VERSION;
-                setTimeout(() => {
-                    tag.textContent = 'v' + CURRENT_VERSION;
-                    tag.classList.remove('checking');
-                }, 2000);
+                tag.classList.remove('checking');
+                tag.textContent = 'v' + CURRENT_VERSION;
+            }
+        } else if (tag) {
+            // 无新版：自动/手动检查都要结束“检查中...”状态，恢复显示版本号
+            tag.classList.remove('checking');
+            tag.textContent = manual ? '已是最新 v' + CURRENT_VERSION : 'v' + CURRENT_VERSION;
+            if (manual) {
+                setTimeout(() => { tag.textContent = 'v' + CURRENT_VERSION; }, 2000);
             }
         }
     } catch (e) {
         // 静默失败（服务器未部署时不打扰用户），手动检查才提示
-        if (manual && tag) {
-            tag.textContent = '检查失败';
-            setTimeout(() => {
-                tag.textContent = 'v' + CURRENT_VERSION;
-                tag.classList.remove('checking');
-            }, 2000);
+        if (tag) {
+            tag.classList.remove('checking');
+            tag.textContent = manual ? '检查失败' : 'v' + CURRENT_VERSION;
+            if (manual) {
+                setTimeout(() => { tag.textContent = 'v' + CURRENT_VERSION; }, 2000);
+            }
         }
     }
 }
