@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>⏱ 悬浮计时器 - 军哥懂保</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱</text></svg>">
-    <link rel="stylesheet" href="style.css?v=20261030d">
+    <link rel="stylesheet" href="style.css?v=20261031a">
 </head>
 <body>
     <!-- 新版本提示条 -->
@@ -42,7 +42,7 @@
             <div class="panel-header">
                 <div class="title-area">
                     <h1 class="app-title">⏱ 悬浮计时器</h1>
-                    <p class="app-subtitle">军哥懂保 · 2027科技版 <span class="version-tag" id="versionTag" title="点击检查更新">v1.0.2</span></p>
+                    <p class="app-subtitle">军哥懂保 · 2027科技版 <span class="version-tag" id="versionTag" title="点击检查更新">v1.0.4</span></p>
                 </div>
                 <div class="header-actions">
                     <button class="icon-btn share-btn" id="btnShare" title="推广有惊喜">🎁</button>
@@ -135,6 +135,16 @@
                         <input type="range" id="sliderVolume" min="0" max="100" value="50">
                         <span id="volumeLabel">50%</span>
                     </div>
+                    <div class="input-row" style="margin-top:10px">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="chkPreAlert" checked>
+                            <span class="checkmark"></span>
+                            <span>🔔 结束前提醒</span>
+                        </label>
+                        <input type="number" id="spinPreAlertSec" min="1" max="600" value="3">
+                        <label>秒（语音播报）</label>
+                    </div>
+                    <p class="tab-tip">倒计时剩余设定秒数时语音播报「还剩 N 秒」，默认 3 秒，仅提醒不打断计时。</p>
                 </div>
 
                 <!-- Tab4 计次 -->
@@ -182,13 +192,13 @@
             <div class="download-box">
                 <div class="download-title">📥 下载客户端 · 离线更好用</div>
                 <div class="download-row">
-                    <a class="dl-btn apk" href="悬浮计时器_v1.0.2.apk" download="悬浮计时器_v1.0.2.apk">
+                    <a class="dl-btn apk" href="悬浮计时器_v1.0.5.apk" download="悬浮计时器_v1.0.5.apk">
                         <span class="dl-ico">📱</span>
-                        <span class="dl-txt"><b>安卓 APK</b><small>v1.0.2 · 悬浮球常驻</small></span>
+                        <span class="dl-txt"><b>安卓 APK</b><small>v1.0.5 · 悬浮球常驻</small></span>
                     </a>
-                    <a class="dl-btn exe" href="悬浮计时器_v1.0.2.exe" download="悬浮计时器_v1.0.2.exe">
+                    <a class="dl-btn exe" href="悬浮计时器_v1.0.4.exe" download="悬浮计时器_v1.0.4.exe">
                         <span class="dl-ico">💻</span>
-                        <span class="dl-txt"><b>电脑 EXE</b><small>v1.0.2 · Windows 免安装</small></span>
+                        <span class="dl-txt"><b>电脑 EXE</b><small>v1.0.4 · Windows 免安装</small></span>
                     </a>
                 </div>
                 <p class="dl-tip">
@@ -196,6 +206,13 @@
                     <b>电脑安装：</b>点击下载 EXE → 双击运行（免安装绿色版）；若被 Windows 拦截，点「更多信息 → 仍要运行」<br>
                     <b>提示：</b>网页版无需下载，功能与客户端一致；客户端可后台常驻、跨程序悬浮计时
                 </p>
+            </div>
+
+            <!-- 广告位入口（配置化，后期替换广告商只需改 ad.json） -->
+            <div class="ad-entry" id="adEntry" hidden>
+                <span class="ad-badge">广告</span>
+                <span class="ad-entry-title" id="adEntryTitle">广告位招租</span>
+                <span class="ad-entry-btn">▶ 观看</span>
             </div>
 
             <!-- 底部信息 -->
@@ -305,6 +322,24 @@
         <div class="menu-item" data-action="login">🔐 管理员</div>
     </div>
 
-    <script src="app.js?v=20261030e"></script>
+    <!-- 广告视频弹窗（配置化，三端统一读取 ad.json） -->
+    <div class="modal hidden" id="adModal">
+        <div class="modal-container ad-container">
+            <div class="ad-header">
+                <span class="ad-badge">广告</span>
+                <span class="ad-title" id="adModalTitle">广告位招租</span>
+                <button class="modal-close" id="btnAdClose">✕</button>
+            </div>
+            <div class="ad-video-wrap">
+                <video id="adVideo" playsinline controls preload="metadata" poster=""></video>
+            </div>
+            <div class="ad-footer">
+                <span class="ad-advertiser" id="adAdvertiser">广告位招租 · 联系微信 xunijiayuan</span>
+                <a class="ad-link-btn hidden" id="adLinkBtn" href="#" target="_blank" rel="noopener">了解详情 →</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=20261031a"></script>
 </body>
 </html>
