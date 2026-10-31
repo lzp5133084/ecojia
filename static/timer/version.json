@@ -1,10 +1,10 @@
 {
   "_comment": "悬浮计时器三端版本检查配置 - 部署到 https://ecojia.cn/timer/version.json",
   "android": {
-    "versionCode": 5,
-    "versionName": "1.0.4",
-    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.4.apk",
-    "updateLog": "1. 新增广告视频位（启动弹窗，可配置、可替换）\n2. 手机长按菜单修复+自定义时长+结束音效增强+结束前语音提醒（v1.0.3延续）",
+    "versionCode": 6,
+    "versionName": "1.0.5",
+    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.5.apk",
+    "updateLog": "1. 修复安卓端广告视频“只有声音没有画面”的问题（VideoView 改为 TextureView 播放，透明弹窗内也能正常出画）\n2. 广告视频等比居中显示，不再被拉伸变形\n3. 关闭弹窗自动释放播放器，避免音频残留",
     "forceUpdate": false
   },
   "desktop": {
