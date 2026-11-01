@@ -1,10 +1,10 @@
 {
   "_comment": "悬浮计时器三端版本检查配置 - 部署到 https://ecojia.cn/timer/version.json",
   "android": {
-    "versionCode": 6,
-    "versionName": "1.0.5",
-    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.5.apk",
-    "updateLog": "1. 修复安卓端广告视频“只有声音没有画面”的问题（VideoView 改为 TextureView 播放，透明弹窗内也能正常出画）\n2. 广告视频等比居中显示，不再被拉伸变形\n3. 关闭弹窗自动释放播放器，避免音频残留",
+    "versionCode": 7,
+    "versionName": "1.0.6",
+    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.6.apk",
+    "updateLog": "1. 补齐番茄钟模式：专注结束自动进入休息、休息结束自动开始下一轮，专注/休息时长可自定义\n2. 新增秒表计次：正计时/番茄钟运行中一键记录分段用时，自动算累计\n3. 新增「重复上次」：一键复用上次的模式与时长并立即开始\n4. 使用记录区分显示番茄钟类型\n5. 延续 v1.0.5 广告视频画面修复",
     "forceUpdate": false
   },
   "desktop": {
