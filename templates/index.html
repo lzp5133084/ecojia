@@ -58,6 +58,14 @@
       <span>{{ icon("clock") }} 三种计时</span><span>{{ icon("package") }} 三端同步</span><span>{{ icon("save") }} 记录保存</span><span>{{ icon("gem") }} 推广大使</span>
     </div>
     <a class="btn btn-gold btn-lg mp-btn" href="https://ecojia.cn/timer/" target="_blank">立即使用 {{ icon("arrowright") }}</a>
+    {% elif mp.name == "资料百事通" %}
+    <p class="mp-scope">全民共创资料库 · AI 帮您找资料</p>
+    <p class="mp-desc">查资料 · 传资料 · 赚积分，出院记录、诊断证明、各类单据……<br>
+    大家上传、大家共享、大家受益。</p>
+    <div class="mp-feats">
+      <span>{{ icon("search") }} AI智能搜索</span><span>{{ icon("users") }} 社区共创</span><span>{{ icon("trophy") }} 贡献等级</span><span>{{ icon("gem") }} VIP权益</span>
+    </div>
+    <a class="btn btn-gold btn-lg mp-btn" href="{{ mp.url }}" target="_blank">立即进入 {{ icon("arrowright") }}</a>
     {% else %}
     <p class="mp-scope">{{ mp.scope }}</p>
     <p class="mp-desc">{{ mp.desc }}</p>
