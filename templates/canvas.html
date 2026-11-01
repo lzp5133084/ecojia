@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}在线画板 · 鼠标画笔{% endblock %}
+{% block content %}
+{# ==================================================================
+   在线画板（旗舰模板）
+   与桌面端鼠标画笔 8 种工具对齐：pen/hl/line/arrow/rect/ellipse/text/eraser
+   颜色 8 色、笔宽 1-40、撤销、清空、保存 PNG
+   ================================================================== #}
+<style>
+:root{
+  --bg-0:#0C0E13; --bg-1:#12141B; --card:#1D2029; --card-bd:rgba(232,200,122,0.28);
+  --gold:#E8C87A; --gold-l:#F5E0A8;
+}
+.canvas-wrap{display:flex;flex-direction:column;height:calc(100vh - 120px);gap:10px;}
+.toolbar{background:var(--card);border:1px solid var(--card-bd);border-radius:12px;
+  padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.tbtn{background:#12141A;color:#D5D9E1;border:1px solid #2A2D36;border-radius:8px;
+  padding:8px 12px;cursor:pointer;font-size:12px;font-weight:600;}
+.tbtn.active{background:var(--gold-soft);color:var(--gold-l);border-color:var(--gold);}
+.tbtn:hover{background:#2A2D36;}
+.color-dot{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;}
+.color-dot.active{border-color:#fff;transform:scale(1.15);}
+.width-range{width:120px;accent-color:var(--gold);}
+.width-val{color:var(--gold-l);font-size:12px;font-weight:700;min-width:28px;text-align:center;}
+.action-btn{background:linear-gradient(90deg,var(--gold),var(--gold-l));color:#14161C;
+  border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:12px;cursor:pointer;}
+.action-btn.secondary{background:#2A2D36;color:#C9CDD6;border:1px solid #4A4E58;}
+.canvas-area{flex:1;background:#1a1c22;border:1px solid var(--card-bd);border-radius:12px;
+  overflow:hidden;position:relative;}
+#drawCanvas{display:block;background:#fff;cursor:crosshair;touch-action:none;}
+@media(max-width:600px){
+  .toolbar{gap:6px;padding:8px;}
+  .tbtn{padding:6px 8px;font-size:11px;}
+  .width-range{width:80px;}
+}
+</style>
+
+<div class="canvas-wrap">
+  <div class="toolbar">
+    <button class="tbtn active" data-tool="pen">✏️ 画笔</button>
+    <button class="tbtn" data-tool="hl">🖍️ 荧光</button>
+    <button class="tbtn" data-tool="line">📏 直线</button>
+    <button class="tbtn" data-tool="arrow">➡️ 箭头</button>
+    <button class="tbtn" data-tool="rect">▭ 矩形</button>
+    <button class="tbtn" data-tool="ellipse">⬭ 椭圆</button>
+    <button class="tbtn" data-tool="text">T 文字</button>
+    <button class="tbtn" data-tool="eraser">🧹 橡皮</button>
+    <span style="width:1px;height:24px;background:#3A3E48;margin:0 4px;"></span>
+    <div id="colorList"></div>
+    <span style="width:1px;height:24px;background:#3A3E48;margin:0 4px;"></span>
+    <input type="range" class="width-range" id="widthRange" min="1" max="40" value="4">
+    <span class="width-val" id="widthVal">4</span>
+    <span style="flex:1;"></span>
+    <button class="action-btn secondary" id="btnUndo">↩ 撤销</button>
+    <button class="action-btn secondary" id="btnClear">🗑 清空</button>
+    <button class="action-btn" id="btnSave">💾 保存PNG</button>
+  </div>
+  <div class="canvas-area">
+    <canvas id="drawCanvas"></canvas>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const COLORS=["#E8C87A","#FF4D5E","#FF9F45","#3DDC97","#38E1E8","#4C8DFF","#B57BFF","#FFFFFF"];
+const SHAPE_TOOLS=new Set(["line","arrow","rect","ellipse"]);
+const FREE_TOOLS=new Set(["pen","hl","eraser"]);
+
+let tool="pen", color="#E8C87A", width=4;
+const canvas=document.getElementById("drawCanvas");
+const ctx=canvas.getContext("2d");
+let drawing=false, startX=0, startY=0, snapshot=null;
+const history=[]; // 撤销栈：每步是 ImageData
+
+// ---- 颜色列表 ----
+const colorList=document.getElementById("colorList");
+COLORS.forEach((c,i)=>{
+  const d=document.createElement("div");
+  d.className="color-dot"+(i===0?" active":"");
+  d.style.background=c;
+  d.title=c;
+  d.onclick=()=>{document.querySelectorAll(".color-dot").forEach(x=>x.classList.remove("active"));
+    d.classList.add("active");color=c;};
+  colorList.appendChild(d);
+});
+
+// ---- 工具切换 ----
+document.querySelectorAll(".tbtn").forEach(b=>{
+  b.onclick=()=>{document.querySelectorAll(".tbtn").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");tool=b.dataset.tool;};
+});
+
+// ---- 笔宽 ----
+const wR=document.getElementById("widthRange"), wV=document.getElementById("widthVal");
+wR.oninput=()=>{width=+wR.value;wV.textContent=width;};
+
+// ---- 画布尺寸 ----
+function resizeCanvas(){
+  const area=canvas.parentElement;
+  const w=area.clientWidth, h=area.clientHeight;
+  // 保留已有内容
+  const tmp=document.createElement("canvas");tmp.width=canvas.width;tmp.height=canvas.height;
+  tmp.getContext("2d").drawImage(canvas,0,0);
+  canvas.width=w;canvas.height=h;
+  ctx.lineCap="round";ctx.lineJoin="round";
+  ctx.drawImage(tmp,0,0);
+  // 重新填充白底（drawImage 带透明，补白底）
+  // 注意：如果历史内容已画在白底色上，直接保留即可
+}
+window.addEventListener("resize",resizeCanvas);
+
+function fillWhite(){
+  ctx.save();ctx.globalCompositeOperation="destination-over";
+  ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();
+}
+
+function saveHistory(){
+  if(history.length>30)history.shift();
+  history.push(ctx.getImageData(0,0,canvas.width,canvas.height));
+}
+
+function getPos(e){
+  const r=canvas.getBoundingClientRect();
+  const t=e.touches?e.touches[0]:e;
+  return {x:t.clientX-r.left, y:t.clientY-r.top};
+}
+
+function setStroke(){
+  if(tool==="eraser"){ctx.globalCompositeOperation="destination-out";ctx.strokeStyle="rgba(0,0,0,1)";}
+  else{ctx.globalCompositeOperation="source-over";
+    ctx.strokeStyle= tool==="hl"? hexA(color,0.45):color;}
+  ctx.lineWidth= tool==="hl"? width*2.5 : width;
+  ctx.fillStyle=color;
+}
+function hexA(hex,a){const h=hex.replace("#","");const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);return `rgba(${r},${g},${b},${a})`;}
+
+function startDraw(e){
+  e.preventDefault();
+  const p=getPos(e);drawing=true;startX=p.x;startY=p.y;
+  setStroke();
+  saveHistory();
+  if(FREE_TOOLS.has(tool)){
+    ctx.beginPath();ctx.moveTo(p.x,p.y);
+  }else if(tool==="text"){
+    const txt=prompt("输入文字：");
+    if(txt){ctx.font=`${width*4}px sans-serif`;ctx.fillText(txt,p.x,p.y);}
+    drawing=false;return;
+  }else{
+    snapshot=ctx.getImageData(0,0,canvas.width,canvas.height);
+  }
+}
+function moveDraw(e){
+  if(!drawing)return;e.preventDefault();
+  const p=getPos(e);
+  if(tool==="pen"||tool==="hl"||tool==="eraser"){
+    ctx.lineTo(p.x,p.y);ctx.stroke();
+  }else if(SHAPE_TOOLS.has(tool)){
+    ctx.putImageData(snapshot,0,0);
+    ctx.beginPath();
+    if(tool==="line"){ctx.moveTo(startX,startY);ctx.lineTo(p.x,p.y);}
+    else if(tool==="arrow"){
+      ctx.moveTo(startX,startY);ctx.lineTo(p.x,p.y);
+      const ang=Math.atan2(p.y-startY,p.x-startX);const len=Math.min(15,width*1.5);
+      ctx.lineTo(p.x-len*Math.cos(ang-0.4),p.y-len*Math.sin(ang-0.4));
+      ctx.moveTo(p.x,p.y);
+      ctx.lineTo(p.x-len*Math.cos(ang+0.4),p.y-len*Math.sin(ang+0.4));
+    }
+    else if(tool==="rect"){ctx.strokeRect(startX,startY,p.x-startX,p.y-startY);}
+    else if(tool==="ellipse"){
+      ctx.ellipse((startX+p.x)/2,(startY+p.y)/2,Math.abs(p.x-startX)/2,Math.abs(p.y-startY)/2,0,0,Math.PI*2);
+    }
+    ctx.stroke();
+  }
+}
+function endDraw(e){drawing=false;}
+
+canvas.addEventListener("mousedown",startDraw);
+canvas.addEventListener("mousemove",moveDraw);
+canvas.addEventListener("mouseup",endDraw);
+canvas.addEventListener("mouseleave",endDraw);
+canvas.addEventListener("touchstart",startDraw,{passive:false});
+canvas.addEventListener("touchmove",moveDraw,{passive:false});
+canvas.addEventListener("touchend",endDraw);
+
+// ---- 操作 ----
+document.getElementById("btnUndo").onclick=()=>{
+  if(history.length){ctx.putImageData(history.pop(),0,0);}
+};
+document.getElementById("btnClear").onclick=()=>{
+  if(confirm("清空全部笔迹？")){saveHistory();ctx.clearRect(0,0,canvas.width,canvas.height);}
+};
+document.getElementById("btnSave").onclick=()=>{
+  // 保存时补白底
+  const tmp=document.createElement("canvas");tmp.width=canvas.width;tmp.height=canvas.height;
+  const tc=tmp.getContext("2d");tc.fillStyle="#fff";tc.fillRect(0,0,tmp.width,tmp.height);
+  tc.drawImage(canvas,0,0);
+  const a=document.createElement("a");a.download="screenpen_"+Date.now()+".png";
+  a.href=tmp.toDataURL("image/png");a.click();toast("已保存图片");
+};
+
+// 初始化
+resizeCanvas();
+</script>
+{% endblock %}

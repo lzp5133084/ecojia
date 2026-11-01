@@ -1530,6 +1530,33 @@ def admin_page():
                            product_status=PRODUCT_STATUS)
 
 
+@app.route("/profile")
+def profile_page():
+    """个人中心：与桌面端鼠标画笔个人中心100%对齐（旗舰模板，后续项目复用）"""
+    if not session.get("uid"):
+        return redirect(url_for("login_page") + "?next=/profile")
+    u = current_user()
+    # 服务端直接组装权益+物料，前端无需再调带 token 的接口
+    account = _account_payload(u)
+    promo = {
+        "group_qr": _get_setting("promo_group_qr"),
+        "pay_qr": _get_setting("promo_pay_qr"),
+        "pay_price": _get_setting("promo_pay_price", "999"),
+        "wechat": "xunijiayuan",
+        "invite_base": "https://ecojia.cn/login?ref=",
+        "video_url": _get_setting("promo_video_url", ""),
+    }
+    vip = account.get("vip", {}).get("screenpen", {})
+    return render_template("profile.html", user=u, account=account, promo=promo,
+                           screenpen_vip=vip, app_key="screenpen")
+
+
+@app.route("/canvas")
+def canvas_page():
+    """在线画板：与桌面端8种画笔工具对齐（浏览器内画布）"""
+    return render_template("canvas.html", user=current_user())
+
+
 # ══════════════════ 统一账号 API（V0.1本地实现，预留打通） ══════════════════
 @app.route("/api/auth/register", methods=["POST"])
 def api_register():
