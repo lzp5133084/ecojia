@@ -1,10 +1,10 @@
 {
   "_comment": "悬浮计时器三端版本检查配置 - 部署到 https://ecojia.cn/timer/version.json",
   "android": {
-    "versionCode": 7,
-    "versionName": "1.0.6",
-    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.6.apk",
-    "updateLog": "1. 补齐番茄钟模式：专注结束自动进入休息、休息结束自动开始下一轮，专注/休息时长可自定义\n2. 新增秒表计次：正计时/番茄钟运行中一键记录分段用时，自动算累计\n3. 新增「重复上次」：一键复用上次的模式与时长并立即开始\n4. 使用记录区分显示番茄钟类型\n5. 延续 v1.0.5 广告视频画面修复",
+    "versionCode": 8,
+    "versionName": "1.0.7",
+    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.7.apk",
+    "updateLog": "1. 最低支持系统从 Android 8.0 降到 Android 5.0（与旗舰「鼠标画笔」一致），安卓手表/电视盒子/老手机可正常安装\n2. 声明不强制要求触摸屏与手表形态，商店兼容性判定更宽松\n3. 首页改为旗舰产品卡片：安卓 APP / 电脑端 一键下载安装\n4. 延续 v1.0.6 番茄钟、计次、重复上次三端功能对齐",
     "forceUpdate": false
   },
   "desktop": {

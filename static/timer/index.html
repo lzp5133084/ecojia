@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>⏱ 悬浮计时器 - 军哥懂保</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱</text></svg>">
-    <link rel="stylesheet" href="style.css?v=20261031a">
+    <link rel="stylesheet" href="style.css?v=20261102a">
 </head>
 <body>
     <!-- 新版本提示条 -->
@@ -49,6 +49,34 @@
                     <button class="icon-btn" id="btnCollapse" title="收起">👇</button>
                     <button class="icon-btn" id="btnClose" title="关闭">✕</button>
                 </div>
+            </div>
+
+            <!-- 主打产品卡片（对标旗舰「鼠标画笔」格式：徽章 + 大标题 + 卖点胶囊 + 主按钮 + 双端安装） -->
+            <div class="hero-card">
+                <span class="hero-badge">主打产品 1 · 已上线</span>
+                <h2 class="hero-title">悬浮计时器</h2>
+                <p class="hero-slogan">学习 · 办公 · 直播必备的三端计时神器</p>
+                <p class="hero-desc">正计时 / 倒计时 / 番茄钟三模式，计时球常驻任意界面；计次分段、记录留档、结束前语音提醒。网页打开即用，手机与电脑一键安装。</p>
+                <div class="hero-chips">
+                    <span class="chip">⏱ 三端同步</span>
+                    <span class="chip">🍅 番茄钟</span>
+                    <span class="chip">📋 计次分段</span>
+                    <span class="chip">🎯 悬浮常驻</span>
+                </div>
+                <button class="hero-primary" id="btnWebNow">网页版即用 →</button>
+                <div class="hero-install">
+                    <a class="install-btn" href="悬浮计时器_v1.0.7.apk" download="悬浮计时器_v1.0.7.apk">
+                        <span class="install-ico">📱</span>
+                        <b>安卓 APP</b>
+                        <small>安卓 5.0+ · 手表可装</small>
+                    </a>
+                    <a class="install-btn" href="悬浮计时器_v1.0.4.exe" download="悬浮计时器_v1.0.4.exe">
+                        <span class="install-ico">💻</span>
+                        <b>电脑端</b>
+                        <small>Windows 免安装</small>
+                    </a>
+                </div>
+                <p class="hero-tip" id="installTip">📥 点击即下载安装包；安卓首次安装需允许「未知来源」</p>
             </div>
 
             <!-- 模式切换 -->
@@ -192,9 +220,9 @@
             <div class="download-box">
                 <div class="download-title">📥 下载客户端 · 离线更好用</div>
                 <div class="download-row">
-                    <a class="dl-btn apk" href="悬浮计时器_v1.0.6.apk" download="悬浮计时器_v1.0.6.apk">
+                    <a class="dl-btn apk" href="悬浮计时器_v1.0.7.apk" download="悬浮计时器_v1.0.7.apk">
                         <span class="dl-ico">📱</span>
-                        <span class="dl-txt"><b>安卓 APK</b><small>v1.0.6 · 悬浮球常驻</small></span>
+                        <span class="dl-txt"><b>安卓 APK</b><small>v1.0.7 · 安卓 5.0+ 手表可装</small></span>
                     </a>
                     <a class="dl-btn exe" href="悬浮计时器_v1.0.4.exe" download="悬浮计时器_v1.0.4.exe">
                         <span class="dl-ico">💻</span>
@@ -340,6 +368,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=20261031a"></script>
+    <script src="app.js?v=20261102a"></script>
 </body>
 </html>

@@ -544,6 +544,20 @@ function initPanel() {
     });
 
     // 控制按钮
+    // 主打卡片「网页版即用」：滚动到计时区并聚焦开始按钮
+    const btnWebNow = document.getElementById('btnWebNow');
+    if (btnWebNow) {
+        btnWebNow.addEventListener('click', () => {
+            const target = document.querySelector('.time-display') || btnStart;
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => btnStart.focus(), 450);
+            btnWebNow.textContent = '已进入网页版 · 点「开始」→';
+            setTimeout(() => {
+                btnWebNow.textContent = '网页版即用 →';
+            }, 2500);
+        });
+    }
+
     btnStart.addEventListener('click', () => {
         if (state.timerState === TimerState.RUNNING) pauseTimer();
         else startTimer();
