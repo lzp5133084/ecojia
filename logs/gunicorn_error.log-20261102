@@ -1,0 +1,12 @@
+[2026-11-01 16:17:04 +0800] [1842247] [INFO] Starting gunicorn 26.2.0
+[2026-11-01 16:17:04 +0800] [1842247] [INFO] Listening at: http://127.0.0.1:8400 (1842247)
+[2026-11-01 16:17:04 +0800] [1842247] [INFO] Using worker: sync
+[2026-11-01 16:17:04 +0800] [1842251] [INFO] Booting worker with pid: 1842251
+[2026-11-01 16:17:04 +0800] [1842252] [INFO] Booting worker with pid: 1842252
+[2026-11-01 16:17:04 +0800] [1842247] [INFO] Control socket listening at /home/ubuntu/.gunicorn/gunicorn.ctl
+[2026-11-02 03:57:07 +0800] [1842247] [INFO] Handling signal: term
+[2026-11-02 03:57:07 +0800] [1842251] [INFO] Worker exiting (pid: 1842251)
+[2026-11-02 03:57:07 +0800] [1842252] [INFO] Worker exiting (pid: 1842252)
+[2026-11-02 03:57:07 +0800] [1842247] [INFO] Worker (pid:1842251) was sent SIGTERM!
+[2026-11-02 03:57:07 +0800] [1842247] [INFO] Worker (pid:1842252) was sent SIGTERM!
+[2026-11-02 03:57:07 +0800] [1842247] [INFO] Shutting down: Master
