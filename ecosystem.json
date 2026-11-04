@@ -311,7 +311,7 @@
       "image": "宝塔面板镜像",
       "price": "192元/1年",
       "expire": "2027-10-14",
-      "status": "已部署：门户8400 / 资料百事通8300 / 静态工具8080（nginx），systemd 托管、开机自启",
+      "status": "已部署：门户8400 / 资料百事通8300 / 静态工具8080（nginx），systemd 托管、开机自启；更新中心/updates（Caddy 静态，APK/EXE 自动更新分发）",
       "ssh_user": "ubuntu（Ubuntu 24.04.4 LTS，非宝塔镜像；sudo 免密）"
     },
     "tunnel": {
@@ -478,6 +478,18 @@
       "method": "GET",
       "path": "/api/huoxing/records",
       "desc": "火星平面羽毛记录（每根绒毛=一条记录，原型预留）",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/updates/apps.json",
+      "desc": "全栈更新中心：全量应用更新清单（APK/EXE 自动更新分发）",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/updates/<appid>/version.json",
+      "desc": "单应用更新清单（versionCode/apkUrl/exeUrl/sha256/changelog）",
       "auth": "公开"
     }
   ],
