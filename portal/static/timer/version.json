@@ -1,0 +1,24 @@
+{
+  "_comment": "悬浮计时器三端版本检查配置 - 部署到 https://ecojia.cn/timer/version.json",
+  "android": {
+    "versionCode": 8,
+    "versionName": "1.0.7",
+    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.7.apk",
+    "updateLog": "1. 最低支持系统从 Android 8.0 降到 Android 5.0（与旗舰「鼠标画笔」一致），安卓手表/电视盒子/老手机可正常安装\n2. 声明不强制要求触摸屏与手表形态，商店兼容性判定更宽松\n3. 首页改为旗舰产品卡片：安卓 APP / 电脑端 一键下载安装\n4. 延续 v1.0.6 番茄钟、计次、重复上次三端功能对齐",
+    "forceUpdate": false
+  },
+  "desktop": {
+    "versionCode": 5,
+    "versionName": "1.0.4",
+    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.4.exe",
+    "updateLog": "1. 新增广告视频位（启动弹窗，可配置、可替换）\n2. 结束前语音提醒+音效增强+中文TTS播报（v1.0.3延续）",
+    "forceUpdate": false
+  },
+  "web": {
+    "versionCode": 5,
+    "versionName": "1.0.4",
+    "updateLog": "1. 新增广告视频位（弹窗，可配置、可替换）\n2. 结束前语音提醒+音效增强（v1.0.3延续）",
+    "forceUpdate": false
+  }
+}
+
