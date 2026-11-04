@@ -8,7 +8,7 @@
     "wechat": "xunijiayuan",
     "positioning": "本网站是整个数字生态的底座：所有产品共用统一入口、统一账号、统一数据源；后续新工具以「积木」方式持续加入，加入后自动出现在门户与许愿墙。",
     "data_file": "ecosystem.json",
-    "updated_at": "2026-10-23",
+    "updated_at": "2026-11-05",
     "security_note": "本文件为公开数据源，禁止写入任何密码、密钥、Token；服务器与第三方凭据一律存放在腾讯云站内信 / Windows凭据管理器，不落库不落文件。",
     "usage": "其他程序或网页可直接读取本文件（或调用 /api/ecosystem/manifest）获取生态全部信息；新增/修改积木只需改本文件，服务自动热加载。",
     "style": "2027星霓暖赛博风（用户选定，豆包 doubao-seed-2.1-turbo 生成方案）"
@@ -187,6 +187,30 @@
       "main": true,
       "url": "https://ecojia.cn/timer/",
       "desc": "2027科技风悬浮计时器，三端同步：正计时、倒计时、番茄钟，悬浮球不打断工作，计时记录自动保存，内置推广有惊喜大使招募体系。"
+    },
+    {
+      "no": "15",
+      "name": "多码集",
+      "en": "DuoMaJi",
+      "scope": "个人 · 商家 · 大众",
+      "icon": "🗂️",
+      "status": "已上线",
+      "main": true,
+      "url": "https://ecojia.cn/duomaji/",
+      "desc": "线上百宝箱卡片墙：二维码集/链接集/文档集/文件集多集卡片管理，增删改查+操作历史+记忆存档导出导入，数据仅存本机浏览器隐私安全，三端自适应；另提供 Windows 桌面版下载（可直连本地程序与文档）。"
+    },
+    {
+      "no": "16",
+      "name": "秘密MM",
+      "en": "Secret MM",
+      "scope": "个人 · 情感",
+      "icon": "🌙",
+      "status": "已上线",
+      "main": true,
+      "url": "https://ecojia.cn/mm/",
+      "desc": "心事寄存、梦境存档、暗号房间与人生高性价比自检的温馨心灵空间，数据云端存储仅本人可见，三端自适应。",
+      "repo": "secret-mm",
+      "port": 8321
     }
   ],
   "hardware": [
