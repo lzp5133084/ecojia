@@ -28,7 +28,7 @@ import json
 import os
 import sqlite3
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import (Flask, g, session, request, jsonify, Response,
@@ -38,7 +38,7 @@ import agent_service
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "ecojia.db")
-VERSION = "V1.8"
+VERSION = "V1.9"
 
 # 资料百事通公网入口（已部署到腾讯云服务器；备案后切换为 ziliao.ecojia.cn）
 MAIN_SITE_URL = "http://118.24.173.246:8300"
@@ -243,6 +243,13 @@ HX_RES_MODE_LABEL = {m["key"]: m["label"] for m in HX_RES_MODES}
 HX_RES_VISIBILITY = {"public": "资源广场可见", "family": "仅家庭链可见"}
 HX_RES_CLAIM_STATUS = {"pending": "待确认", "approved": "已通过",
                        "rejected": "已拒绝", "cancelled": "已取消"}
+# 举报：所有居民可对广场资源提交举报，管理员统一处置
+HX_RES_REPORT_REASONS = {"illegal": "违法违规", "fraud": "盗号 / 诈骗",
+                         "infringe": "侵犯他人权益", "spam": "垃圾广告",
+                         "invalid": "内容失效", "other": "其他问题"}
+HX_RES_REPORT_STATUS = {"pending": "待处理", "dismissed": "已驳回",
+                        "actioned": "已处置"}
+HX_RES_EXPIRE_WARN_DAYS = 7  # 到期提醒阈值：剩余天数 ≤ 7 时提醒
 
 HX_DEMO_IDENTITY = {
     "did": "did:mars:ecojia:6a1f3c9d8b2e4f70a5c6d7e8f9012345",
@@ -714,6 +721,19 @@ def init_db():
     );
     CREATE INDEX IF NOT EXISTS idx_hx_res_claim_r ON hx_res_claims(resource_id, status);
     CREATE INDEX IF NOT EXISTS idx_hx_res_claim_u ON hx_res_claims(claimant_uid, status);
+    CREATE TABLE IF NOT EXISTS hx_res_reports (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        resource_id  INTEGER NOT NULL,
+        reporter_uid INTEGER NOT NULL,
+        reason       TEXT NOT NULL,
+        detail       TEXT DEFAULT '',
+        status       TEXT NOT NULL DEFAULT 'pending',
+        created_at   TEXT NOT NULL,
+        handled_at   TEXT DEFAULT '',
+        handle_note  TEXT DEFAULT ''
+    );
+    CREATE INDEX IF NOT EXISTS idx_hx_res_report_r ON hx_res_reports(resource_id, status);
+    CREATE INDEX IF NOT EXISTS idx_hx_res_report_s ON hx_res_reports(status, created_at);
     """)
     # —— V1.7 兼容迁移：老库补列（新列已在 CREATE TABLE 中，老库走 ALTER） ——
     for col, ddl in (("unlock_at", "TEXT DEFAULT ''"),
@@ -1484,6 +1504,19 @@ def hx_res_expired(res):
     return bool(exp) and exp < now()[:10]
 
 
+def hx_res_days_left(res):
+    """剩余天数：无有效期为 None；过期返回负数"""
+    exp = (res.get("expire_at") if isinstance(res, dict) else res["expire_at"]) or ""
+    exp = exp.strip()
+    if not exp:
+        return None
+    try:
+        delta = datetime.strptime(exp, "%Y-%m-%d") - datetime.strptime(now()[:10], "%Y-%m-%d")
+    except ValueError:
+        return None
+    return delta.days
+
+
 def hx_res_state(res):
     """资源对外的状态文案（数据库只存 active/off）"""
     if res.get("deleted"):
@@ -1521,6 +1554,8 @@ def hx_res_out(res, me=None, my_claim=None):
     d["visibility_label"] = HX_RES_VISIBILITY.get(d["visibility"], "")
     d["left"] = max(0, (d["stock"] or 0) - (d["claimed"] or 0))
     d["expired"] = hx_res_expired(d)
+    d["days_left"] = hx_res_days_left(d)
+    d["expiring"] = bool(d["days_left"] is not None and d["days_left"] <= HX_RES_EXPIRE_WARN_DAYS)
     d["state"] = hx_res_state(d)
     d["secret_preview"] = hx_res_mask(secret)
     d["has_secret"] = bool(secret.strip())
@@ -1605,7 +1640,8 @@ def api_hx_res_list():
     if not u:
         return jsonify({"ok": True, "login": False, "tab": "plaza", "items": [],
                         "categories": HX_RES_CATEGORIES, "modes": HX_RES_MODES,
-                        "stats": {"plaza": 0, "mine": 0, "claims": 0, "pending": 0}})
+                        "stats": {"plaza": 0, "mine": 0, "claims": 0, "pending": 0,
+                                  "expiring": 0, "is_admin": False}})
     db = get_db()
     me = u["id"]
     tab = (request.args.get("tab") or "plaza").strip()
@@ -1623,11 +1659,17 @@ def api_hx_res_list():
                       "SELECT resource_id, COUNT(*) c, "
                       "SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END) p "
                       "FROM hx_res_claims WHERE owner_uid=? GROUP BY resource_id", (me,)).fetchall()}
+        rep_counts = {r["resource_id"]: r["c"] for r in db.execute(
+            "SELECT rep.resource_id, COUNT(*) c FROM hx_res_reports rep "
+            "JOIN hx_resources r ON r.id=rep.resource_id "
+            "WHERE r.user_id=? AND rep.status='pending' GROUP BY rep.resource_id",
+            (me,)).fetchall()}
         for r in rows:
             d = hx_res_out(dict(r), me)
             cnt = counts.get(d["id"], {"total": 0, "pending": 0})
             d["claims_count"] = cnt["total"]
             d["pending_count"] = cnt["pending"] or 0
+            d["reports_count"] = rep_counts.get(d["id"], 0)
             items.append(d)
     elif tab == "claims":
         rows = db.execute(
@@ -1700,9 +1742,16 @@ def api_hx_res_list():
                               "ON r.id=c.resource_id WHERE c.owner_uid=? "
                               "AND r.deleted=0 AND c.status='pending'",
                               (me,)).fetchone()["c"],
+        "expiring": db.execute("SELECT COUNT(*) c FROM hx_resources WHERE user_id=? "
+                               "AND deleted=0 AND status IN ('active','sold') "
+                               "AND expire_at != '' AND expire_at <= ?",
+                               (me, (datetime.strptime(now()[:10], "%Y-%m-%d")
+                                     + timedelta(days=HX_RES_EXPIRE_WARN_DAYS)).strftime("%Y-%m-%d"))).fetchone()["c"],
+        "is_admin": u["role"] == "admin",
     }
     return jsonify({"ok": True, "login": True, "tab": tab, "items": items,
                     "categories": HX_RES_CATEGORIES, "modes": HX_RES_MODES,
+                    "report_reasons": HX_RES_REPORT_REASONS,
                     "stats": stats})
 
 
@@ -1968,6 +2017,10 @@ def api_hx_res_detail(rid):
         and out["left"] > 0 and (not claim_d or claim_d["status"] in ("rejected", "cancelled")))
     out["can_apply"] = bool(res["user_id"] != me and res["mode"] == "apply")
     out["claims"] = hx_res_claims_for(rid) if res["user_id"] == me else []
+    if res["user_id"] == me:
+        out["reports_count"] = get_db().execute(
+            "SELECT COUNT(*) c FROM hx_res_reports WHERE resource_id=? AND status='pending'",
+            (rid,)).fetchone()["c"]
     if claim_d:
         out["claim"] = {"id": claim_d["id"], "status": claim_d["status"],
                         "status_label": HX_RES_CLAIM_STATUS.get(claim_d["status"], ""),
@@ -1975,6 +2028,144 @@ def api_hx_res_detail(rid):
                         "created_at": claim_d["created_at"],
                         "decided_at": claim_d["decided_at"] or ""}
     return jsonify({"ok": True, "resource": out})
+
+
+@app.route("/api/huoxing/resources/<int:rid>/report", methods=["POST"])
+@login_required
+def api_hx_res_report(rid):
+    """举报资源：同一用户对同一资源只保留一条待处理举报"""
+    u = current_user()
+    db = get_db()
+    row = db.execute("SELECT * FROM hx_resources WHERE id=? AND deleted=0", (rid,)).fetchone()
+    if not row:
+        return jsonify({"ok": False, "msg": "资源不存在或已删除"}), 404
+    if row["user_id"] == u["id"]:
+        return jsonify({"ok": False, "msg": "不能举报自己发布的资源"}), 400
+    dup = db.execute("SELECT id FROM hx_res_reports WHERE resource_id=? AND reporter_uid=? "
+                     "AND status='pending'", (rid, u["id"])).fetchone()
+    if dup:
+        return jsonify({"ok": False, "msg": "你已举报过这份资源，管理员会尽快处理"}), 400
+    d = request.get_json(silent=True) or {}
+    reason = (d.get("reason") or "").strip()
+    if reason not in HX_RES_REPORT_REASONS:
+        return jsonify({"ok": False, "msg": "请选择举报原因"}), 400
+    detail = (d.get("detail") or "").strip()[:300]
+    db.execute("INSERT INTO hx_res_reports(resource_id, reporter_uid, reason, detail, "
+               "status, created_at) VALUES(?,?,?,?,'pending',?)",
+               (rid, u["id"], reason, detail, now()))
+    db.commit()
+    log_op("火星平面·举报共享资源", f"资源ID:{rid} 原因:{HX_RES_REPORT_REASONS[reason]}", u["id"])
+    return jsonify({"ok": True, "msg": "举报已提交，管理员会尽快核实处理"})
+
+
+@app.route("/api/huoxing/reports")
+@admin_required
+def api_hx_res_report_list():
+    """管理员查看举报：pending 待处理 / dismissed 已驳回 / actioned 已处置 / all"""
+    status = (request.args.get("status") or "pending").strip()
+    if status not in ("pending", "dismissed", "actioned", "all"):
+        return jsonify({"ok": False, "msg": "状态不正确"}), 400
+    where = "" if status == "all" else "AND rep.status=?"
+    args = () if status == "all" else (status,)
+    rows = get_db().execute(
+        f"SELECT rep.*, r.title AS res_title, r.category AS res_category, "
+        f"r.status AS res_status, r.deleted AS res_deleted, r.user_id AS owner_uid, "
+        f"u.nickname AS reporter_nickname, i.mars_name AS reporter_mars, i.did AS reporter_did "
+        f"FROM hx_res_reports rep "
+        f"JOIN hx_resources r ON r.id=rep.resource_id "
+        f"JOIN users u ON u.id=rep.reporter_uid "
+        f"LEFT JOIN hx_identity i ON i.user_id=rep.reporter_uid "
+        f"WHERE 1=1 {where} ORDER BY rep.id DESC LIMIT 100", args).fetchall()
+    counts = {s: get_db().execute("SELECT COUNT(*) c FROM hx_res_reports WHERE status=?",
+                                  (s,)).fetchone()["c"] for s in HX_RES_REPORT_STATUS}
+    items = []
+    for r in rows:
+        d = dict(r)
+        d["reason_label"] = HX_RES_REPORT_REASONS.get(d["reason"], d["reason"])
+        d["status_label"] = HX_RES_REPORT_STATUS.get(d["status"], d["status"])
+        d["reporter"] = {"nickname": d.pop("reporter_nickname", ""),
+                         "mars_name": d.pop("reporter_mars", "") or "火星居民",
+                         "did": d.pop("reporter_did", "")}
+        d.pop("owner_uid", None)
+        items.append(d)
+    return jsonify({"ok": True, "items": items, "counts": counts})
+
+
+@app.route("/api/huoxing/reports/<int:repid>/handle", methods=["POST"])
+@admin_required
+def api_hx_res_report_handle(repid):
+    """管理员处置举报：dismiss 驳回 / takedown 下架资源"""
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    action = (d.get("action") or "").strip()
+    if action not in ("dismiss", "takedown"):
+        return jsonify({"ok": False, "msg": "处置动作不正确"}), 400
+    db = get_db()
+    rep = db.execute("SELECT * FROM hx_res_reports WHERE id=?", (repid,)).fetchone()
+    if not rep:
+        return jsonify({"ok": False, "msg": "举报记录不存在"}), 404
+    if rep["status"] != "pending":
+        return jsonify({"ok": False, "msg": "这条举报已经处理过了"}), 400
+    note = (d.get("note") or "").strip()[:200]
+    ts = now()
+    if action == "takedown":
+        row = db.execute("SELECT * FROM hx_resources WHERE id=? AND deleted=0",
+                         (rep["resource_id"],)).fetchone()
+        if row:
+            db.execute("UPDATE hx_resources SET status='off', updated_at=? WHERE id=?",
+                       (ts, rep["resource_id"]))
+            db.execute("UPDATE hx_res_reports SET status='actioned', handled_at=?, "
+                       "handle_note=? WHERE resource_id=? AND status='pending'",
+                       (ts, note or "管理员核实后下架", rep["resource_id"]))
+            db.commit()
+            log_op("火星平面·举报处置下架", f"资源ID:{rep['resource_id']} 举报ID:{repid}", u["id"])
+            return jsonify({"ok": True, "msg": "已下架该资源，相关举报标记为已处置"})
+        db.execute("UPDATE hx_res_reports SET status='actioned', handled_at=?, handle_note=? "
+                   "WHERE id=?", (ts, note or "资源已被删除", repid))
+        db.commit()
+        return jsonify({"ok": True, "msg": "资源已不存在，举报已标记处置"})
+    db.execute("UPDATE hx_res_reports SET status='dismissed', handled_at=?, handle_note=? "
+               "WHERE id=?", (ts, note, repid))
+    db.commit()
+    log_op("火星平面·举报驳回", f"举报ID:{repid}", u["id"])
+    return jsonify({"ok": True, "msg": "已驳回这条举报"})
+
+
+@app.route("/api/huoxing/resources/<int:rid>/renew", methods=["POST"])
+@login_required
+def api_hx_res_renew(rid):
+    """一键续期：从今天（或原到期日）向后顺延，避免资源悄悄过期"""
+    u = current_user()
+    db = get_db()
+    row = db.execute("SELECT * FROM hx_resources WHERE id=? AND deleted=0", (rid,)).fetchone()
+    if not row:
+        return jsonify({"ok": False, "msg": "资源不存在或已删除"}), 404
+    if row["user_id"] != u["id"]:
+        return jsonify({"ok": False, "msg": "只能续期自己发布的资源"}), 403
+    d = request.get_json(silent=True) or {}
+    try:
+        days = int(d.get("days") or 30)
+    except (TypeError, ValueError):
+        days = 30
+    if not (1 <= days <= 365):
+        return jsonify({"ok": False, "msg": "续期天数需在 1-365 之间"}), 400
+    today = now()[:10]
+    base = row["expire_at"] if (row["expire_at"] or "").strip() and row["expire_at"] > today else today
+    try:
+        new_expire = (datetime.strptime(base, "%Y-%m-%d") + timedelta(days=days)).strftime("%Y-%m-%d")
+    except ValueError:
+        return jsonify({"ok": False, "msg": "原有效期格式异常，请编辑资源重新设置"}), 400
+    db.execute("UPDATE hx_resources SET expire_at=?, updated_at=? WHERE id=?",
+               (new_expire, now(), rid))
+    f = hx_res_form(dict(row))
+    f["expire_at"] = new_expire
+    hx_identity_for(u)
+    block = hx_append_block(db, u["id"], "resource_renew", rid, hx_res_payload(f))
+    db.commit()
+    log_op("火星平面·资源续期", f"ID:{rid} → {new_expire}", u["id"])
+    row = db.execute("SELECT * FROM hx_resources WHERE id=?", (rid,)).fetchone()
+    return jsonify({"ok": True, "msg": f"已续期至 {new_expire}，续期动作已写入身份链",
+                    "resource": hx_res_out(dict(row), u["id"]), "block": block})
 
 
 # ══════════════════ V1.7 · 护照互认验证器（任何人可离线验真） ══════════════════

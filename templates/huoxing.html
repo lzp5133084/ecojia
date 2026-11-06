@@ -135,8 +135,27 @@
       </div>
     </div>
 
+    <div class="hx-res-expiry" id="hxResExpiry" hidden>
+      <span class="hx-res-expiry-ic">{{ icon("clock") }}</span>
+      <span class="hx-res-expiry-txt">你有 <b id="hxResExpiryN">0</b> 份共享资源已过期或将在 7 天内到期，过期后会从广场自动隐藏</span>
+      <button class="btn btn-ghost btn-sm" type="button" id="hxResExpiryGo">去续期</button>
+    </div>
+
     <div class="hx-res-cats" id="hxResCats" aria-label="资源类型"></div>
     <div class="hx-res-grid" id="hxResGrid"></div>
+
+    <div class="hx-res-admin" id="hxResAdmin" hidden>
+      <div class="hx-res-admin-head">
+        <h4>{{ icon("shieldlock") }} 举报处理（管理员）</h4>
+        <div class="hx-res-admin-tabs" id="hxRepTabs">
+          <button type="button" class="active" data-status="pending">待处理</button>
+          <button type="button" data-status="actioned">已处置</button>
+          <button type="button" data-status="dismissed">已驳回</button>
+        </div>
+      </div>
+      <div id="hxRepList"></div>
+    </div>
+
     <div class="hx-res-footnote">
       <span class="hx-res-dot"></span>
       <span>共享有边界：请勿发布违法、盗号或侵犯他人权益的内容；资源正文加密打码展示，领取通过后才向领取者发放。发布、修改、下架都会写入你的火星身份链。</span>
@@ -570,7 +589,8 @@
   const MOODS = ["开心","幸福","骄傲","感恩","平静","怀念","难过","坚定"];
   const ACTION_LABEL = {genesis:"创世", create:"新增", update:"修改", delete:"删除", identity:"身份",
                         witness:"见证", family:"家庭链", legacy:"遗产约定",
-                        resource:"共享资源", resource_edit:"资源修改", resource_del:"资源下架"};
+                        resource:"共享资源", resource_edit:"资源修改", resource_del:"资源下架",
+                        resource_renew:"资源续期"};
   const WITNESS_CATS = ["荣耀", "重要"];
   let DATA = null;
   let filterCat = "全部";
@@ -1422,7 +1442,7 @@
   });
 
   /* ══════════════ V1.8 个人共享资源 ══════════════ */
-  const RES = {login:IS_LOGIN, tab:"plaza", cat:"全部", kw:"", sort:"new",
+  const RES = {login:IS_LOGIN, tab:"plaza", cat:"全部", kw:"", sort:"new", reasons:{},
                items:[], cats:[], stats:{plaza:0, mine:0, claims:0, pending:0}, loading:false};
   let lastResSecret = "", lastResContact = "";
 
@@ -1456,6 +1476,7 @@
     if(!d.ok) return;
     RES.login = !!d.login;
     RES.cats = d.categories || [];
+    RES.reasons = d.report_reasons || {};
     RES.stats = d.stats || RES.stats;
     RES.items = d.items || [];
     $("hxResPlazaN").textContent = RES.stats.plaza || 0;
@@ -1463,9 +1484,27 @@
     $("hxResClaimN").textContent = RES.stats.claims || 0;
     $("hxResMineN").parentElement.title = RES.stats.pending
       ? `有 ${RES.stats.pending} 条领取申请待你审核` : "你发布的共享资源";
+    renderResExpiry();
+    if(RES.stats.is_admin) loadResReports();
+    else $("hxResAdmin").hidden = true;
     renderResCats();
     renderResGrid();
     if(!silent) toast("共享资源已刷新");
+  }
+
+  function renderResExpiry(){
+    const n = RES.stats.expiring || 0;
+    const bn = $("hxResExpiry");
+    if(!RES.login || n <= 0){ bn.hidden = true; return; }
+    $("hxResExpiryN").textContent = n;
+    bn.hidden = false;
+  }
+
+  function switchResTab(tab){
+    RES.tab = tab;
+    document.querySelectorAll("#hxResTabs button").forEach(x=>
+      x.classList.toggle("active", x.dataset.tab === tab));
+    loadRes(true);
   }
 
   function renderResCats(){
@@ -1509,9 +1548,13 @@
       ? `<span class="hx-res-state ${claimState==="approved"?"ok":(claimState==="pending"?"warn":"dead")}">${esc(d.claim.status_label)}</span>`
       : `<span class="hx-res-state ${resStateClass(st)}">${esc(st)}</span>`;
     let acts = `<button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResOpen(${d.id})">详情</button>`;
+    const expTag = d.expired
+      ? `<span class="hx-res-exp-tag bad">已过期</span>`
+      : (d.expiring ? `<span class="hx-res-exp-tag warn">剩${d.days_left}天</span>` : "");
     if(RES.tab === "mine"){
       acts += `<button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResEdit(${d.id})">编辑</button>`;
       acts += `<button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResToggle(${d.id},'${d.status==="active"?"off":"active"}')">${d.status==="active"?"下架":"上架"}</button>`;
+      if(d.expiring) acts += `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResRenew(${d.id})">续期30天</button>`;
       acts += `<button class="btn btn-ghost btn-sm hx-res-del" type="button" onclick="window.hxResDelete(${d.id})">删除</button>`;
     }else if(RES.tab === "claims"){
       if(claimState === "pending")
@@ -1528,7 +1571,7 @@
       acts += `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResOpen(${d.id})" ${d.left<=0?"disabled":""}>${d.left<=0?"已领完":"领取"}</button>`;
     }
     const extra = RES.tab === "mine"
-      ? `<span class="hx-res-badge ${d.pending_count?"pending":""}">${iconHtml("users")}${d.claims_count||0} 人申请${d.pending_count?` · ${d.pending_count} 待审`:""}</span>`
+      ? `<span class="hx-res-badge ${d.pending_count?"pending":""}">${iconHtml("users")}${d.claims_count||0} 人申请${d.pending_count?` · ${d.pending_count} 待审`:""}</span>${d.reports_count?`<span class="hx-res-badge pending">${iconHtml("shieldlock")}被举报 ${d.reports_count}</span>`:""}`
       : "";
     return `<div class="hx-res-card" style="--c:${color}">
       <div class="hx-res-card-top">
@@ -1541,6 +1584,7 @@
         <span>${iconHtml("package")}剩余 <b>${d.left}</b> / ${d.stock}</span>
         <span>${iconHtml("zap")}${esc(d.mode_label)}</span>
         <span>${iconHtml("clock")}${d.expired ? "已过期" : (d.expire_at ? esc(d.expire_at) : "长期有效")}</span>
+        ${expTag}
       </div>
       <div class="hx-res-meta">
         <b>${esc(d.publisher.mars_name)}</b><span class="dot"></span>
@@ -1675,10 +1719,12 @@
         </div>`;
       }
       html += `<div class="hx-res-detail-acts">
+        ${d.expire_at ? `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResRenew(${d.id})">续期30天</button>` : ""}
         <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResEdit(${d.id})">编辑资源</button>
         <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResToggle(${d.id},'${d.status==="active"?"off":"active"}')">${d.status==="active"?"下架资源":"重新上架"}</button>
         <button class="btn btn-ghost btn-sm hx-res-del" type="button" onclick="window.hxResDelete(${d.id})">删除资源</button>
-      </div>`;
+      </div>
+      ${d.reports_count ? `<div class="hx-res-report-note">${iconHtml("shieldlock")}这份资源有 <b>${d.reports_count}</b> 条待处理举报，请自查内容合规性，管理员核实后会下架违规资源。</div>` : ""}`;
     }else if(d.claimable){
       html += `<div class="hx-res-claimbox">
         <b style="font-size:13px;color:#ffd9ef">${d.mode==="free"?"这份资源可以直接领取":"向发布者申请领取"}</b>
@@ -1697,8 +1743,133 @@
       html += `<div class="hx-res-claimbox"><b style="font-size:13px;color:rgba(255,255,255,.7)">这份资源已经被领完了</b>
         <div class="hx-res-claim-tip">可以去资源广场看看其他居民的分享。</div></div>`;
     }
+    if(!d.mine){
+      html += `<div class="hx-res-detail-acts hx-res-detail-acts-left">
+        <button class="btn btn-ghost btn-sm hx-res-report-btn" type="button" onclick="window.hxResReportToggle(${d.id})">${iconHtml("shieldlock")} 举报此资源</button>
+      </div>
+      <div id="hxResReportBox" hidden></div>`;
+    }
     $("hxResDetailBody").innerHTML = html;
   }
+
+  window.hxResReportToggle = function(rid){
+    const box = $("hxResReportBox");
+    if(!box) return;
+    if(!box.hidden){ box.hidden = true; return; }
+    const reasons = RES.reasons || {illegal:"违法违规", fraud:"盗号 / 诈骗",
+      infringe:"侵犯他人权益", spam:"垃圾广告", invalid:"内容失效", other:"其他问题"};
+    box.innerHTML = `<div class="hx-res-claimbox hx-res-reportbox">
+      <b style="font-size:13px;color:#ffd9ef">举报这份资源</b>
+      <div class="hx-reason-pick" id="hxReasonPick">
+        ${Object.entries(reasons).map(([k,v],i)=>
+          `<button type="button" class="hx-res-cat-chip ${i===0?"active":""}" data-reason="${k}">${esc(v)}</button>`).join("")}
+      </div>
+      <textarea id="resReportDetail" rows="2" maxlength="300" placeholder="补充说明问题（选填，最多 300 字）"></textarea>
+      <div class="hx-res-claim-tip">举报会匿名转交给管理员核实；恶意举报会被记录。请勿重复提交。</div>
+      <button class="btn btn-gold btn-sm" type="button" id="resReportBtn" onclick="window.hxResReportSubmit(${rid})">提交举报</button>
+    </div>`;
+    box.hidden = false;
+    box.querySelectorAll("#hxReasonPick .hx-res-cat-chip").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        box.querySelectorAll("#hxReasonPick .hx-res-cat-chip").forEach(x=>x.classList.remove("active"));
+        b.classList.add("active");
+      });
+    });
+    box.scrollIntoView({behavior:"smooth", block:"nearest"});
+  };
+
+  window.hxResReportSubmit = async function(rid){
+    const pick = document.querySelector("#hxReasonPick .hx-res-cat-chip.active");
+    const btn = $("resReportBtn");
+    if(btn) btn.disabled = true;
+    const d = await api(`/api/huoxing/resources/${rid}/report`, {
+      method:"POST",
+      body: JSON.stringify({reason: pick ? pick.dataset.reason : "",
+                            detail: ($("resReportDetail")||{value:""}).value.trim()})
+    });
+    if(btn) btn.disabled = false;
+    if(!d.ok) return;
+    toast(d.msg || "举报已提交");
+    const box = $("hxResReportBox");
+    if(box){
+      box.innerHTML = `<div class="hx-res-claimbox hx-res-reportbox">
+        <b style="font-size:13px;color:#7ee2a8">举报已提交</b>
+        <div class="hx-res-claim-tip">管理员会尽快核实处理。感谢你一起维护共享环境。</div>
+      </div>`;
+    }
+  };
+
+  window.hxResRenew = async function(id){
+    if(!confirm("确定续期 30 天吗？\n续期后到期日从今天（或原到期日，取较晚者）向后顺延 30 天，并写入身份链。")) return;
+    const d = await api(`/api/huoxing/resources/${id}/renew`, {
+      method:"POST", body: JSON.stringify({days:30})
+    });
+    if(!d.ok) return;
+    toast(d.msg || "已续期");
+    closeModal("hxResDetail");
+    await loadRes(true);
+  };
+
+  /* ══════════ 管理员：举报处理 ══════════ */
+  const REP = {tab:"pending", items:[], counts:{}};
+
+  async function loadResReports(){
+    const d = await api(`/api/huoxing/reports?status=${REP.tab}`);
+    if(!d.ok){ $("hxResAdmin").hidden = true; return; }
+    REP.items = d.items || [];
+    REP.counts = d.counts || {};
+    $("hxResAdmin").hidden = false;
+    renderResReports();
+  }
+
+  function renderResReports(){
+    const box = $("hxRepList");
+    const names = {pending:"待处理", actioned:"已处置", dismissed:"已驳回"};
+    $("hxRepTabs").querySelectorAll("button").forEach(b=>{
+      b.textContent = names[b.dataset.status] + (b.dataset.status === "pending" && (REP.counts.pending || 0) ? ` ${REP.counts.pending}` : "");
+    });
+    if(!REP.items.length){
+      box.innerHTML = `<div class="hx-res-report-empty">暂无${names[REP.tab]}的举报${REP.tab==="pending"?"，广场很干净。":""}</div>`;
+      return;
+    }
+    box.innerHTML = REP.items.map(r=>`<div class="hx-res-report-item ${r.status==="pending"?"pending":""}">
+      <div class="hx-res-claim-top">
+        <b>${esc(r.res_title)}</b>
+        <span>${esc(r.status_label)} · ${esc(String(r.created_at||"").slice(5,16))}</span>
+      </div>
+      <div class="hx-res-claim-msg">类型：${esc(r.res_category)} · 举报人：${esc(r.reporter.mars_name)} · 原因：<b style="color:#ff9ec4">${esc(r.reason_label)}</b></div>
+      ${r.detail ? `<div class="hx-res-claim-msg">说明：${esc(r.detail)}</div>` : ""}
+      ${r.handle_note ? `<div class="hx-res-claim-msg">处置备注：${esc(r.handle_note)}</div>` : ""}
+      <div class="hx-res-claim-acts">
+        ${r.res_deleted ? `<button class="btn btn-ghost btn-sm" type="button" disabled>资源已删除</button>` :
+        `<button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResOpen(${r.resource_id})">查看资源</button>`}
+        ${r.status === "pending" ? `
+          <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResReportHandle(${r.id},${r.resource_id},'dismiss')">驳回举报</button>
+          <button class="btn btn-gold btn-sm hx-res-del" type="button" onclick="window.hxResReportHandle(${r.id},${r.resource_id},'takedown')">下架资源</button>` : ""}
+      </div>
+    </div>`).join("");
+  }
+
+  window.hxResReportHandle = async function(repid, rid, action){
+    const label = action === "takedown" ? "下架这份被举报的资源" : "驳回这条举报";
+    if(!confirm(`确定${label}吗？`)) return;
+    const d = await api(`/api/huoxing/reports/${repid}/handle`, {
+      method:"POST", body: JSON.stringify({action})
+    });
+    if(!d.ok) return;
+    toast(d.msg || "已处理");
+    await loadResReports();
+    await loadRes(true);
+  };
+
+  $("hxResExpiryGo").addEventListener("click", ()=>switchResTab("mine"));
+  $("hxRepTabs").querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      REP.tab = b.dataset.status;
+      $("hxRepTabs").querySelectorAll("button").forEach(x=>x.classList.toggle("active", x===b));
+      loadResReports();
+    });
+  });
 
   $("hxResForm").addEventListener("submit", async function(e){
     e.preventDefault();

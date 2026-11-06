@@ -1511,6 +1511,50 @@ body.hx-lock{overflow:hidden}
 .hx-res-dot{width:6px;height:6px;border-radius:50%;background:#f472b6;flex:none;margin-top:6px;
   box-shadow:0 0 8px rgba(244,114,182,.8)}
 
+/* 到期提醒横幅 */
+.hx-res-expiry{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:11px 14px;
+  border-radius:13px;background:linear-gradient(120deg,rgba(255,215,107,.14),rgba(244,114,182,.10));
+  border:1px solid rgba(255,215,107,.4);font-size:12.5px;color:#ffe9b3;flex-wrap:wrap}
+.hx-res-expiry-ic{display:flex;align-items:center;color:#ffd76b}
+.hx-res-expiry-ic .ic{width:17px;height:17px}
+.hx-res-expiry-txt{flex:1;min-width:180px;line-height:1.6}
+.hx-res-expiry-txt b{color:#ffd76b;font-size:14px}
+.hx-res-exp-tag{display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;
+  padding:1px 7px;border-radius:99px}
+.hx-res-exp-tag.warn{color:#ffd76b;background:rgba(255,215,107,.14);border:1px solid rgba(255,215,107,.4)}
+.hx-res-exp-tag.bad{color:#ff9a9a;background:rgba(255,120,120,.12);border:1px solid rgba(255,120,120,.4)}
+
+/* 举报 */
+.hx-res-report-btn{color:rgba(255,255,255,.55)!important}
+.hx-res-report-btn:hover{color:#ff9ec4!important;border-color:rgba(255,158,196,.5)!important}
+.hx-res-detail-acts-left{justify-content:flex-start}
+.hx-res-reportbox{border-color:rgba(255,158,196,.4);
+  background:linear-gradient(135deg,rgba(255,158,196,.09),rgba(255,215,107,.05))}
+.hx-reason-pick{display:flex;flex-wrap:wrap;gap:7px}
+.hx-res-report-note{font-size:12px;line-height:1.75;color:#ffb3d2;padding:10px 13px;
+  border-radius:11px;background:rgba(255,158,196,.08);border:1px dashed rgba(255,158,196,.4)}
+.hx-res-report-note b{color:#ffd76b}
+
+/* 管理员举报处理面板 */
+.hx-res-admin{margin-top:16px;padding:14px 16px;border-radius:15px;
+  background:rgba(0,0,0,.24);border:1px solid rgba(255,158,196,.28)}
+.hx-res-admin-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  flex-wrap:wrap;margin-bottom:11px}
+.hx-res-admin-head h4{margin:0;font-size:14px;color:#ffd9ef;display:flex;align-items:center;gap:7px}
+.hx-res-admin-head h4 .ic{width:15px;height:15px;color:#ff9ec4}
+.hx-res-admin-tabs{display:flex;gap:6px}
+.hx-res-admin-tabs button{font-family:inherit;font-size:11.5px;cursor:pointer;color:var(--muted);
+  background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.12);padding:5px 11px;
+  border-radius:99px;transition:.2s}
+.hx-res-admin-tabs button:hover{color:var(--text);border-color:rgba(255,158,196,.45)}
+.hx-res-admin-tabs button.active{color:#2a1035;background:linear-gradient(135deg,#ff9ec4,#f472b6);
+  border-color:transparent;font-weight:700}
+.hx-res-report-item{display:flex;flex-direction:column;gap:6px;padding:11px 13px;border-radius:12px;
+  background:rgba(0,0,0,.26);border:1px solid rgba(255,255,255,.08);margin-bottom:9px}
+.hx-res-report-item.pending{border-color:rgba(255,158,196,.4);background:rgba(255,158,196,.06)}
+.hx-res-report-empty{padding:16px;text-align:center;font-size:12.5px;
+  color:rgba(255,255,255,.5);border:1px dashed rgba(255,255,255,.14);border-radius:11px}
+
 /* 详情弹窗 */
 .hx-res-detail-card{width:min(680px,94vw)}
 .hx-res-detail{display:flex;flex-direction:column;gap:12px}
@@ -1582,6 +1626,10 @@ body.hx-lock{overflow:hidden}
   .hx-res-toolbar .hx-search{min-width:100%}
   .hx-res-grid{grid-template-columns:1fr}
   .hx-res-footnote{font-size:11px}
+  .hx-res-expiry{font-size:11.5px}
+  .hx-res-admin{padding:12px 11px}
+  .hx-res-admin-tabs{width:100%}
+  .hx-res-admin-tabs button{flex:1;padding:5px 8px}
 }
 
 /* —— 年报页 —— */
