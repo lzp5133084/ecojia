@@ -103,6 +103,46 @@
   </section>
 
 
+  <!-- ══════════ 个人共享资源（V1.8） ══════════ -->
+  <section class="hx-res" id="hxResSec">
+    <div class="hx-guide-head">
+      <h3>{{ icon("package") }} 个人共享资源</h3>
+      <button class="hx-q" type="button" data-tip="把自己用不完的权益放上来：VIP 账号、优惠券、行业权益、置换、打赏、免费领取。资源正文（账号 / 卡密 / 链接）和联系方式只有你本人和审核通过的领取者能看到，列表里永远只显示打码内容。">?</button>
+      <span id="hxResSummary">VIP账号 · 优惠券 · 行业权益 · 置换 · 打赏 · 免费领取</span>
+    </div>
+
+    <div class="hx-res-top">
+      <div class="hx-res-tabs" id="hxResTabs">
+        <button type="button" class="active" data-tab="plaza">{{ icon("globe") }} 资源广场 <em id="hxResPlazaN">0</em></button>
+        <button type="button" data-tab="mine">{{ icon("package") }} 我的发布 <em id="hxResMineN">0</em></button>
+        <button type="button" data-tab="claims">{{ icon("heart") }} 我的领取 <em id="hxResClaimN">0</em></button>
+      </div>
+      <button class="btn btn-gold btn-sm" id="hxResAdd" type="button">{{ icon("pluscircle") }} 发布共享资源</button>
+    </div>
+
+    <div class="hx-res-toolbar">
+      <div class="hx-search">
+        {{ icon("search") }}
+        <input id="hxResSearch" type="search" placeholder="搜索资源标题、说明、发布者…" autocomplete="off">
+      </div>
+      <div class="hx-toolbar-right">
+        <select id="hxResSort" class="hx-select" aria-label="资源排序">
+          <option value="new">最新发布</option>
+          <option value="stock">剩余数量优先</option>
+          <option value="expire">即将到期优先</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" id="hxResRefresh" type="button">{{ icon("zap") }} 刷新</button>
+      </div>
+    </div>
+
+    <div class="hx-res-cats" id="hxResCats" aria-label="资源类型"></div>
+    <div class="hx-res-grid" id="hxResGrid"></div>
+    <div class="hx-res-footnote">
+      <span class="hx-res-dot"></span>
+      <span>共享有边界：请勿发布违法、盗号或侵犯他人权益的内容；资源正文加密打码展示，领取通过后才向领取者发放。发布、修改、下架都会写入你的火星身份链。</span>
+    </div>
+  </section>
+
   <!-- ══════════ 七类历程统计 ══════════ -->
   <section class="hx-cats" id="hxCats" aria-label="历程分类"></section>
 
@@ -443,6 +483,83 @@
   </div>
 </div>
 
+<!-- ══════════ 发布 / 编辑共享资源弹窗（V1.8） ══════════ -->
+<div class="hx-modal" id="hxResModal" hidden>
+  <div class="hx-modal-card">
+    <div class="hx-modal-head">
+      <h3 id="hxResModalTitle">{{ icon("package") }} 发布共享资源</h3>
+      <button class="hx-modal-close" type="button" data-close="hxResModal" aria-label="关闭">✕</button>
+    </div>
+    <form id="hxResForm" class="hx-form">
+      <input type="hidden" id="resId" value="">
+      <div class="hx-field hx-field-full">
+        <label>资源类型 <button class="hx-q" type="button" data-tip="选一个最贴近的类型即可：VIP 账号指各类会员；优惠券指满减券、体验券、兑换码；行业权益指渠道名额、行业资源；置换是以物换物；打赏是随喜后领取；免费领取是纯分享。">?</button></label>
+        <div class="hx-pick" id="resCatPick"></div>
+      </div>
+      <div class="hx-field">
+        <label for="resTitle">资源标题 <span class="hx-required">*</span></label>
+        <input id="resTitle" type="text" maxlength="60" placeholder="例如：视频会员月卡 1 张" required>
+      </div>
+      <div class="hx-field">
+        <label for="resStock">可发放数量 <button class="hx-q" type="button" data-tip="同一份资源一共能发放多少份。领取成功后自动扣减；已经发放的数量不能改小。">?</button></label>
+        <input id="resStock" type="number" min="1" max="9999" value="1">
+      </div>
+      <div class="hx-field hx-field-full">
+        <label for="resDesc">资源说明</label>
+        <textarea id="resDesc" rows="3" maxlength="1200" placeholder="写清楚是什么资源、怎么用、有什么限制，方便别人判断是否需要。"></textarea>
+      </div>
+      <div class="hx-field hx-field-full">
+        <label for="resSecret">资源内容（账号 / 卡密 / 链接） <button class="hx-q" type="button" data-tip="这里是真正发放的东西。列表里只会显示打码预览，只有你本人和审核通过的领取者能看到明文。置换 / 打赏可写「通过后私聊发放」。">?</button></label>
+        <textarea id="resSecret" rows="3" maxlength="800" placeholder="例如：兑换码 ABCD-1234-EFGH；或写「通过后加微信发送」"></textarea>
+        <div class="hx-field-note">「直接领取」必须填写资源内容；「申请领取」可留空，审核通过后私下发放</div>
+      </div>
+      <div class="hx-field">
+        <label>领取方式</label>
+        <div class="hx-vis">
+          <label class="hx-vis-item"><input type="radio" name="resMode" value="free" checked><span>{{ icon("zap") }} 直接领取</span></label>
+          <label class="hx-vis-item"><input type="radio" name="resMode" value="apply"><span>{{ icon("users") }} 申请领取</span></label>
+        </div>
+        <div class="hx-field-note">直接领取：点击即得；申请领取：你确认后才发放</div>
+      </div>
+      <div class="hx-field">
+        <label>可见范围</label>
+        <div class="hx-vis">
+          <label class="hx-vis-item"><input type="radio" name="resVis" value="public" checked><span>{{ icon("eye") }} 资源广场</span></label>
+          <label class="hx-vis-item"><input type="radio" name="resVis" value="family"><span>{{ icon("users") }} 仅家庭链</span></label>
+        </div>
+        <div class="hx-field-note">选「仅家庭链」时，只有已确认的家人能看到这份资源</div>
+      </div>
+      <div class="hx-field">
+        <label for="resExpire">有效期至 <button class="hx-q" type="button" data-tip="过期后资源自动从广场隐藏，不能再领取。留空表示长期有效。">?</button></label>
+        <input id="resExpire" type="date" min="">
+        <div class="hx-field-note">留空表示长期有效</div>
+      </div>
+      <div class="hx-field">
+        <label for="resContact">联系方式（选填）</label>
+        <input id="resContact" type="text" maxlength="120" placeholder="微信 / 手机 / QQ，审核通过后对方可见">
+      </div>
+      <div class="hx-form-foot">
+        <span class="hx-form-tip" id="hxResFormTip">发布后会写入身份链，资源正文不会上链</span>
+        <div class="hx-form-btns">
+          <button class="btn btn-ghost btn-sm" type="button" data-close="hxResModal">取消</button>
+          <button class="btn btn-gold btn-sm" type="submit" id="hxResSave">发布资源</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════ 资源共享详情 / 领取 / 审核弹窗（V1.8） ══════════ -->
+<div class="hx-modal" id="hxResDetail" hidden>
+  <div class="hx-modal-card hx-res-detail-card">
+    <div class="hx-modal-head">
+      <h3 id="hxResDetailTitle">{{ icon("package") }} 资源详情</h3>
+      <button class="hx-modal-close" type="button" data-close="hxResDetail" aria-label="关闭">✕</button>
+    </div>
+    <div id="hxResDetailBody" class="hx-res-detail"></div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -452,7 +569,8 @@
   const NS = "http://www.w3.org/2000/svg";
   const MOODS = ["开心","幸福","骄傲","感恩","平静","怀念","难过","坚定"];
   const ACTION_LABEL = {genesis:"创世", create:"新增", update:"修改", delete:"删除", identity:"身份",
-                        witness:"见证", family:"家庭链", legacy:"遗产约定"};
+                        witness:"见证", family:"家庭链", legacy:"遗产约定",
+                        resource:"共享资源", resource_edit:"资源修改", resource_del:"资源下架"};
   const WITNESS_CATS = ["荣耀", "重要"];
   let DATA = null;
   let filterCat = "全部";
@@ -1303,6 +1421,396 @@
     }
   });
 
+  /* ══════════════ V1.8 个人共享资源 ══════════════ */
+  const RES = {login:IS_LOGIN, tab:"plaza", cat:"全部", kw:"", sort:"new",
+               items:[], cats:[], stats:{plaza:0, mine:0, claims:0, pending:0}, loading:false};
+  let lastResSecret = "", lastResContact = "";
+
+  function iconHtml(name, cls){
+    return `<svg class="ic${cls ? " "+cls : ""}" aria-hidden="true"><use href="#i-${name}"></use></svg>`;
+  }
+  function resStateClass(st){
+    if(st === "可领取") return "ok";
+    if(st === "已领完" || st === "已过期" || st === "已删除") return "dead";
+    return "warn";
+  }
+  function resEmpty(title, desc, extra){
+    return `<div class="hx-res-empty"><h4>${title}</h4><p>${desc}</p>${extra || ""}</div>`;
+  }
+  function resNeedLogin(){
+    if(RES.login) return false;
+    toast("请先登录，才能发布或领取共享资源", false);
+    setTimeout(()=>{ location.href = "/login"; }, 900);
+    return true;
+  }
+
+  async function loadRes(silent){
+    if(!RES.login && RES.cats.length){
+      renderResCats(); renderResGrid(); return;
+    }
+    if(RES.loading) return;
+    RES.loading = true;
+    const qs = new URLSearchParams({tab:RES.tab, cat:RES.cat, q:RES.kw, sort:RES.sort});
+    const d = await api("/api/huoxing/resources?" + qs.toString());
+    RES.loading = false;
+    if(!d.ok) return;
+    RES.login = !!d.login;
+    RES.cats = d.categories || [];
+    RES.stats = d.stats || RES.stats;
+    RES.items = d.items || [];
+    $("hxResPlazaN").textContent = RES.stats.plaza || 0;
+    $("hxResMineN").textContent = RES.stats.mine || 0;
+    $("hxResClaimN").textContent = RES.stats.claims || 0;
+    $("hxResMineN").parentElement.title = RES.stats.pending
+      ? `有 ${RES.stats.pending} 条领取申请待你审核` : "你发布的共享资源";
+    renderResCats();
+    renderResGrid();
+    if(!silent) toast("共享资源已刷新");
+  }
+
+  function renderResCats(){
+    const box = $("hxResCats");
+    box.innerHTML = `<button type="button" class="hx-res-cat-chip ${RES.cat==="全部"?"active":""}" data-rescat="全部" style="--c:#ffd76b">${iconHtml("grid")}全部类型</button>` +
+      RES.cats.map(c=>`<button type="button" class="hx-res-cat-chip ${RES.cat===c.key?"active":""}" data-rescat="${esc(c.key)}" style="--c:${c.color}">${iconHtml(c.icon)}${esc(c.key)}</button>`).join("");
+    box.querySelectorAll(".hx-res-cat-chip").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        RES.cat = b.dataset.rescat;
+        renderResCats();
+        loadRes(true);
+      });
+    });
+  }
+
+  function renderResGrid(){
+    const box = $("hxResGrid");
+    if(!RES.login){
+      box.innerHTML = resEmpty("共享资源池",
+        "登录后就能浏览其他火星居民分享的 VIP 账号、优惠券、行业权益、置换与打赏资源，也可以把自己的闲置权益放上来。",
+        `<a class="btn btn-gold btn-sm" href="/login">登录后查看</a>`);
+      return;
+    }
+    if(!RES.items.length){
+      const tip = RES.tab === "mine"
+        ? ["还没有发布过共享资源", "把你用不完的会员、优惠券、行业名额放上来，让闲置权益流动起来。", `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResAdd()">发布第一份资源</button>`]
+        : RES.tab === "claims"
+        ? ["还没有领取记录", "去资源广场看看，遇到需要的资源可以申请领取。", ""]
+        : ["这一栏还很安静", "换个类型或关键词试试，也可以成为第一个分享的人。", `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResAdd()">发布共享资源</button>`];
+      box.innerHTML = resEmpty(tip[0], tip[1], tip[2]);
+      return;
+    }
+    box.innerHTML = RES.items.map(resCard).join("");
+  }
+
+  function resCard(d){
+    const st = d.state || "可领取";
+    const color = d.color || "#f472b6";
+    const claimState = (RES.tab === "claims" && d.claim) ? d.claim.status : "";
+    const topBadge = claimState
+      ? `<span class="hx-res-state ${claimState==="approved"?"ok":(claimState==="pending"?"warn":"dead")}">${esc(d.claim.status_label)}</span>`
+      : `<span class="hx-res-state ${resStateClass(st)}">${esc(st)}</span>`;
+    let acts = `<button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResOpen(${d.id})">详情</button>`;
+    if(RES.tab === "mine"){
+      acts += `<button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResEdit(${d.id})">编辑</button>`;
+      acts += `<button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResToggle(${d.id},'${d.status==="active"?"off":"active"}')">${d.status==="active"?"下架":"上架"}</button>`;
+      acts += `<button class="btn btn-ghost btn-sm hx-res-del" type="button" onclick="window.hxResDelete(${d.id})">删除</button>`;
+    }else if(RES.tab === "claims"){
+      if(claimState === "pending")
+        acts += `<button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResCancel(${d.id},${d.claim.id})">取消申请</button>`;
+      if(claimState === "approved")
+        acts += `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResOpen(${d.id})">查看内容</button>`;
+    }else if(d.mine){
+      acts += `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResEdit(${d.id})">管理</button>`;
+    }else if(d.claim_status === "approved"){
+      acts += `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResOpen(${d.id})">查看内容</button>`;
+    }else if(d.claim_status === "pending"){
+      acts += `<button class="btn btn-ghost btn-sm" type="button" disabled>等待确认</button>`;
+    }else{
+      acts += `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResOpen(${d.id})" ${d.left<=0?"disabled":""}>${d.left<=0?"已领完":"领取"}</button>`;
+    }
+    const extra = RES.tab === "mine"
+      ? `<span class="hx-res-badge ${d.pending_count?"pending":""}">${iconHtml("users")}${d.claims_count||0} 人申请${d.pending_count?` · ${d.pending_count} 待审`:""}</span>`
+      : "";
+    return `<div class="hx-res-card" style="--c:${color}">
+      <div class="hx-res-card-top">
+        <span class="hx-res-cat">${iconHtml((RES.cats.find(c=>c.key===d.category)||{}).icon || "package")}${esc(d.category)}</span>
+        ${topBadge}
+      </div>
+      <h4 class="hx-res-title">${esc(d.title)}</h4>
+      <p class="hx-res-desc">${esc(d.description) || "发布者没有填写说明，点击详情看看。"}</p>
+      <div class="hx-res-stats">
+        <span>${iconHtml("package")}剩余 <b>${d.left}</b> / ${d.stock}</span>
+        <span>${iconHtml("zap")}${esc(d.mode_label)}</span>
+        <span>${iconHtml("clock")}${d.expired ? "已过期" : (d.expire_at ? esc(d.expire_at) : "长期有效")}</span>
+      </div>
+      <div class="hx-res-meta">
+        <b>${esc(d.publisher.mars_name)}</b><span class="dot"></span>
+        <span>${d.mine ? "我发布的" : "火星居民"}</span>${extra}
+      </div>
+      <div class="hx-res-acts">${acts}</div>
+    </div>`;
+  }
+
+  function renderResPickers(){
+    const cat = RES.cat !== "全部" ? RES.cat : "VIP账号";
+    $("resCatPick").innerHTML = RES.cats.map(c=>
+      `<button class="hx-pick-item${c.key===cat?" active":""}" type="button" data-rescat="${esc(c.key)}" style="--c:${c.color}"><i></i>${esc(c.key)}</button>`
+    ).join("") || `<span class="hx-field-note">类型加载中…</span>`;
+    $("resCatPick").querySelectorAll(".hx-pick-item").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        $("resCatPick").querySelectorAll(".hx-pick-item").forEach(x=>x.classList.remove("active"));
+        b.classList.add("active");
+      });
+    });
+  }
+
+  function openResForm(item){
+    if(resNeedLogin()) return;
+    renderResPickers();
+    $("hxResModalTitle").innerHTML = iconHtml("package") + " " + (item ? "编辑共享资源" : "发布共享资源");
+    $("hxResSave").textContent = item ? "保存修改" : "发布资源";
+    $("hxResFormTip").textContent = item
+      ? "修改会写入身份链；已发放数量不能小于历史领取数" : "发布后会写入身份链，资源正文不会上链";
+    $("resId").value = item ? item.id : "";
+    $("resTitle").value = item ? item.title : "";
+    $("resDesc").value = item ? (item.description||"") : "";
+    $("resSecret").value = item ? (item.secret||"") : "";
+    $("resStock").value = item ? item.stock : 1;
+    $("resContact").value = item ? (item.contact||"") : "";
+    $("resExpire").value = item ? (item.expire_at||"") : "";
+    $("resExpire").min = new Date().toISOString().slice(0,10);
+    const cat = item ? item.category : (RES.cat !== "全部" ? RES.cat : "VIP账号");
+    $("resCatPick").querySelectorAll(".hx-pick-item").forEach(x=>x.classList.toggle("active", x.dataset.rescat === cat));
+    document.querySelectorAll("input[name=resMode]").forEach(x=>{
+      x.checked = item ? item.mode === x.value : x.value === "free";
+    });
+    document.querySelectorAll("input[name=resVis]").forEach(x=>{
+      x.checked = item ? item.visibility === x.value : x.value === "public";
+    });
+    openModal("hxResModal");
+    setTimeout(()=>$("resTitle").focus(), 60);
+  }
+
+  window.hxResAdd = function(){ openResForm(null); };
+  window.hxResEdit = async function(id){
+    const d = await api(`/api/huoxing/resources/${id}`);
+    if(!d.ok) return;
+    closeModal("hxResDetail");
+    openResForm(d.resource);
+  };
+  window.hxResOpen = async function(id){
+    const d = await api(`/api/huoxing/resources/${id}`);
+    if(!d.ok) return;
+    renderResDetail(d.resource);
+    openModal("hxResDetail");
+  };
+  window.hxResCopySecret = ()=>window.hxCopy(lastResSecret);
+  window.hxResCopyContact = ()=>window.hxCopy(lastResContact);
+
+  function renderResDetail(d){
+    lastResSecret = d.secret || "";
+    lastResContact = d.contact || "";
+    $("hxResDetailTitle").innerHTML = iconHtml("package") + " " + esc(d.title);
+    let html = `<div class="hx-res-detail-head">
+      <h4>${esc(d.title)}</h4>
+      <div class="hx-res-detail-tags">
+        <span class="hx-res-cat" style="--c:${d.color}">${iconHtml((RES.cats.find(c=>c.key===d.category)||{}).icon||"package")}${esc(d.category)}</span>
+        <span class="hx-res-state ${resStateClass(d.state)}">${esc(d.state)}</span>
+      </div>
+    </div>`;
+
+    html += `<div class="hx-res-publisher">
+      <div class="hx-avatar-xs">${identicon(d.publisher.avatar_seed || d.publisher.did || d.publisher.mars_name)}</div>
+      <div><b>${esc(d.publisher.mars_name)}</b><span>${esc(d.publisher.did) || "火星居民"}</span></div>
+      <em>${d.mine ? "我发布的" : "发布者"}</em>
+    </div>`;
+
+    if(d.description) html += `<div class="hx-res-detail-desc">${esc(d.description)}</div>`;
+
+    html += `<div class="hx-res-detail-grid">
+      <div class="hx-res-kv">领取方式<b>${esc(d.mode_label)}</b></div>
+      <div class="hx-res-kv">剩余 / 总数<b>${d.left} / ${d.stock}</b></div>
+      <div class="hx-res-kv">有效期至<b>${d.expire_at ? esc(d.expire_at) : "长期有效"}</b></div>
+      <div class="hx-res-kv">可见范围<b>${esc(d.visibility_label)}</b></div>
+    </div>`;
+
+    if(d.visible){
+      html += `<div class="hx-res-secret">
+        <div class="hx-res-secret-label">${iconHtml("key")}资源内容（仅你与领取者可见）
+          ${d.secret ? `<button class="hx-res-copy" type="button" onclick="window.hxResCopySecret()">复制</button>` : ""}
+        </div>
+        <pre class="hx-res-secret-val">${esc(d.secret) || "发布者没有填写文字内容，请通过下方联系方式获取"}</pre>
+      </div>`;
+      if(d.contact){
+        html += `<div class="hx-res-secret">
+          <div class="hx-res-secret-label">${iconHtml("link")}发布者联系方式
+            <button class="hx-res-copy" type="button" onclick="window.hxResCopyContact()">复制</button>
+          </div>
+          <pre class="hx-res-secret-val">${esc(d.contact)}</pre>
+        </div>`;
+      }
+    }else{
+      html += `<div class="hx-res-secret locked">
+        <div class="hx-res-secret-label">${iconHtml("lock")}资源内容已打码，领取通过后发放</div>
+        <pre>${esc(d.secret_preview) || "发布者选择审核通过后私下发放"}</pre>
+      </div>`;
+    }
+
+    if(d.mine){
+      if(d.claims && d.claims.length){
+        const waiting = d.claims.filter(c=>c.status==="pending").length;
+        html += `<div class="hx-res-claims">
+          <div class="hx-res-claims-head"><b>领取申请（${d.claims.length}）</b><span>${waiting ? `${waiting} 条待审核` : "全部已处理"}</span></div>
+          ${d.claims.map(c=>`<div class="hx-res-claim-item ${c.status==="pending"?"pending":""}">
+            <div class="hx-res-claim-top">
+              <b>${esc(c.claimant.mars_name)} · ${esc(c.claimant.nickname||"火星居民")}</b>
+              <span>${esc(c.status_label)} · ${esc(String(c.created_at||"").slice(5,16))}</span>
+            </div>
+            ${c.message ? `<div class="hx-res-claim-msg">留言：${esc(c.message)}</div>` : ""}
+            ${c.contact ? `<div class="hx-res-claim-msg">联系方式：${esc(c.contact)}</div>` : ""}
+            ${c.status==="pending" ? `<div class="hx-res-claim-acts">
+              <button class="btn btn-gold btn-sm" type="button" onclick="window.hxResDecide(${d.id},${c.id},'approve')">通过并发放</button>
+              <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResDecide(${d.id},${c.id},'reject')">拒绝</button>
+            </div>` : ""}
+          </div>`).join("")}
+        </div>`;
+      }
+      html += `<div class="hx-res-detail-acts">
+        <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResEdit(${d.id})">编辑资源</button>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResToggle(${d.id},'${d.status==="active"?"off":"active"}')">${d.status==="active"?"下架资源":"重新上架"}</button>
+        <button class="btn btn-ghost btn-sm hx-res-del" type="button" onclick="window.hxResDelete(${d.id})">删除资源</button>
+      </div>`;
+    }else if(d.claimable){
+      html += `<div class="hx-res-claimbox">
+        <b style="font-size:13px;color:#ffd9ef">${d.mode==="free"?"这份资源可以直接领取":"向发布者申请领取"}</b>
+        ${d.can_apply ? `<textarea id="resClaimMsg" rows="2" maxlength="300" placeholder="留言说明用途，方便发布者判断（选填）"></textarea>
+        <input id="resClaimContact" type="text" maxlength="120" placeholder="你的联系方式，方便发布者发放（选填）">` : ""}
+        <div class="hx-res-claim-tip">${d.mode==="free"
+          ? "点击后立即领取并显示资源内容，先到先得，请珍惜他人的分享。"
+          : "提交后需要发布者确认；通过后你就能在这里看到资源内容与联系方式。"}</div>
+        <button class="btn btn-gold btn-sm" type="button" id="resClaimBtn" onclick="window.hxResClaim(${d.id})">${d.mode==="free"?"立即领取":"提交领取申请"}</button>
+      </div>`;
+    }else if(!d.mine && d.claim && d.claim.status === "pending"){
+      html += `<div class="hx-res-claimbox"><b style="font-size:13px;color:#ffd9ef">申请已提交</b>
+        <div class="hx-res-claim-tip">等待发布者确认。通过后资源内容会在这里显示，可在「我的领取」里随时查看。</div>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResCancel(${d.id},${d.claim.id})">取消申请</button></div>`;
+    }else if(!d.mine && d.left <= 0){
+      html += `<div class="hx-res-claimbox"><b style="font-size:13px;color:rgba(255,255,255,.7)">这份资源已经被领完了</b>
+        <div class="hx-res-claim-tip">可以去资源广场看看其他居民的分享。</div></div>`;
+    }
+    $("hxResDetailBody").innerHTML = html;
+  }
+
+  $("hxResForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    if(resNeedLogin()) return;
+    const id = $("resId").value;
+    const cat = pickValue($("resCatPick"), "rescat");
+    if(!cat){ toast("请选择资源类型", false); return; }
+    const modeEl = document.querySelector("input[name=resMode]:checked");
+    const visEl = document.querySelector("input[name=resVis]:checked");
+    const body = {
+      category: cat,
+      title: $("resTitle").value.trim(),
+      description: $("resDesc").value.trim(),
+      secret: $("resSecret").value.trim(),
+      stock: Number($("resStock").value || 1),
+      mode: modeEl ? modeEl.value : "free",
+      visibility: visEl ? visEl.value : "public",
+      expire_at: $("resExpire").value || "",
+      contact: $("resContact").value.trim()
+    };
+    if(!body.title){ toast("请填写资源标题", false); return; }
+    if(body.mode === "free" && !body.secret){
+      toast("「直接领取」必须填写资源内容，否则领取者拿不到东西", false); return;
+    }
+    const btn = $("hxResSave");
+    btn.disabled = true;
+    const d = await api(id ? `/api/huoxing/resources/${id}` : "/api/huoxing/resources", {
+      method: id ? "PUT" : "POST",
+      body: JSON.stringify(body)
+    });
+    btn.disabled = false;
+    if(!d.ok) return;
+    closeModal("hxResModal");
+    toast(d.msg || "已保存");
+    RES.tab = "mine";
+    document.querySelectorAll("#hxResTabs button").forEach(x=>x.classList.toggle("active", x.dataset.tab==="mine"));
+    await loadRes(true);
+    if(!id && d.resource) await load(true);
+  });
+
+  window.hxResClaim = async function(id){
+    if(resNeedLogin()) return;
+    const msgEl = $("resClaimMsg"), ctEl = $("resClaimContact"), btn = $("resClaimBtn");
+    if(btn) btn.disabled = true;
+    const d = await api(`/api/huoxing/resources/${id}/claim`, {
+      method:"POST",
+      body: JSON.stringify({message: msgEl ? msgEl.value.trim() : "",
+                           contact: ctEl ? ctEl.value.trim() : ""})
+    });
+    if(btn) btn.disabled = false;
+    if(!d.ok) return;
+    toast(d.msg || "操作成功");
+    await loadRes(true);
+    await window.hxResOpen(id);
+  };
+
+  window.hxResDecide = async function(rid, cid, action){
+    const label = action === "approve" ? "通过这份领取申请" : "拒绝这份领取申请";
+    if(!confirm(`确定${label}吗？`)) return;
+    const d = await api(`/api/huoxing/resources/${rid}/claims/${cid}/decide`, {
+      method:"POST", body: JSON.stringify({action})
+    });
+    if(!d.ok) return;
+    toast(d.msg || "已处理");
+    await loadRes(true);
+    await window.hxResOpen(rid);
+  };
+
+  window.hxResCancel = async function(rid, cid){
+    if(!confirm("确定取消这条领取申请吗？")) return;
+    const d = await api(`/api/huoxing/resources/${rid}/claims/${cid}`, {method:"DELETE"});
+    if(!d.ok) return;
+    toast(d.msg || "已取消");
+    if(document.querySelector("#hxResDetail:not([hidden])")) await window.hxResOpen(rid);
+    await loadRes(true);
+  };
+
+  window.hxResToggle = async function(id, status){
+    const d = await api(`/api/huoxing/resources/${id}/status`, {
+      method:"POST", body: JSON.stringify({status})
+    });
+    if(!d.ok) return;
+    toast(d.msg || "已更新");
+    closeModal("hxResDetail");
+    await loadRes(true);
+  };
+
+  window.hxResDelete = async function(id){
+    if(!confirm("确定删除这份共享资源吗？\n删除后将从广场下架，链上会留下删除痕迹。")) return;
+    const d = await api(`/api/huoxing/resources/${id}`, {method:"DELETE"});
+    if(!d.ok) return;
+    toast(d.msg || "已删除");
+    closeModal("hxResDetail");
+    await loadRes(true);
+  };
+
+  $("hxResTabs").querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      RES.tab = b.dataset.tab;
+      $("hxResTabs").querySelectorAll("button").forEach(x=>x.classList.toggle("active", x===b));
+      loadRes(true);
+    });
+  });
+  $("hxResAdd").addEventListener("click", ()=>openResForm(null));
+  $("hxResRefresh").addEventListener("click", ()=>loadRes(false));
+  let resSearchTimer = null;
+  $("hxResSearch").addEventListener("input", (e)=>{
+    clearTimeout(resSearchTimer);
+    resSearchTimer = setTimeout(()=>{ RES.kw = e.target.value.trim(); loadRes(true); }, 180);
+  });
+  $("hxResSort").addEventListener("change", (e)=>{ RES.sort = e.target.value; loadRes(true); });
+
   /* ---------- 加载 ---------- */
   async function load(silent){
     if(!silent) $("hxLoading").hidden = false;
@@ -1326,6 +1834,7 @@
   }
 
   load();
+  loadRes(true);
 })();
 </script>
 {% endblock %}

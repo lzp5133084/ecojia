@@ -38,7 +38,7 @@ import agent_service
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "ecojia.db")
-VERSION = "V1.7"
+VERSION = "V1.8"
 
 # 资料百事通公网入口（已部署到腾讯云服务器；备案后切换为 ziliao.ecojia.cn）
 MAIN_SITE_URL = "http://118.24.173.246:8300"
@@ -220,6 +220,29 @@ HX_LEVELS = [
 ]
 PUBLIC_BASE = os.environ.get("ZSTJ_PUBLIC_BASE", "https://ecojia.cn")
 HX_GENESIS_HASH = "0" * 64
+
+# ══════════════════ V1.8 · 火星平面「个人共享资源」 ══════════════════
+# 用户把自己用不完、愿意分享的权益放上来：VIP 账号、优惠券、行业权益、
+# 置换、打赏、免费领取。资源正文（账号 / 卡密 / 兑换码）与联系方式永远
+# 不出现在列表接口里，只有发布者本人和审核通过的领取者能看到明文。
+HX_RES_CATEGORIES = [
+    {"key": "VIP账号", "color": "#ffd76b", "icon": "key", "desc": "会员账号 / 激活码"},
+    {"key": "优惠券", "color": "#5ce1e6", "icon": "gem", "desc": "满减券 / 体验券 / 兑换码"},
+    {"key": "行业权益", "color": "#7ee2a8", "icon": "trophy", "desc": "渠道名额 / 行业资源"},
+    {"key": "置换", "color": "#c084fc", "icon": "puzzle", "desc": "以物换物 / 资源互换"},
+    {"key": "打赏", "color": "#f472b6", "icon": "heart", "desc": "随喜打赏后领取"},
+    {"key": "免费领取", "color": "#ff9ec4", "icon": "sparkles", "desc": "纯分享，先到先得"},
+]
+HX_RES_CATS = [c["key"] for c in HX_RES_CATEGORIES]
+HX_RES_COLOR = {c["key"]: c["color"] for c in HX_RES_CATEGORIES}
+HX_RES_MODES = [
+    {"key": "free", "label": "直接领取", "desc": "点击即领，先到先得"},
+    {"key": "apply", "label": "申请领取", "desc": "发布者同意后发放"},
+]
+HX_RES_MODE_LABEL = {m["key"]: m["label"] for m in HX_RES_MODES}
+HX_RES_VISIBILITY = {"public": "资源广场可见", "family": "仅家庭链可见"}
+HX_RES_CLAIM_STATUS = {"pending": "待确认", "approved": "已通过",
+                       "rejected": "已拒绝", "cancelled": "已取消"}
 
 HX_DEMO_IDENTITY = {
     "did": "did:mars:ecojia:6a1f3c9d8b2e4f70a5c6d7e8f9012345",
@@ -659,6 +682,38 @@ def init_db():
         note           TEXT DEFAULT '',
         updated_at     TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS hx_resources (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id     INTEGER NOT NULL,
+        category    TEXT NOT NULL,
+        title       TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        secret      TEXT DEFAULT '',
+        stock       INTEGER NOT NULL DEFAULT 1,
+        claimed     INTEGER NOT NULL DEFAULT 0,
+        mode        TEXT NOT NULL DEFAULT 'free',
+        visibility  TEXT NOT NULL DEFAULT 'public',
+        expire_at   TEXT DEFAULT '',
+        contact     TEXT DEFAULT '',
+        status      TEXT NOT NULL DEFAULT 'active',
+        deleted     INTEGER NOT NULL DEFAULT 0,
+        created_at  TEXT NOT NULL,
+        updated_at  TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_hx_res_owner ON hx_resources(user_id, deleted, status);
+    CREATE TABLE IF NOT EXISTS hx_res_claims (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        resource_id  INTEGER NOT NULL,
+        owner_uid    INTEGER NOT NULL,
+        claimant_uid INTEGER NOT NULL,
+        message      TEXT DEFAULT '',
+        contact      TEXT DEFAULT '',
+        status       TEXT NOT NULL DEFAULT 'pending',
+        created_at   TEXT NOT NULL,
+        decided_at   TEXT DEFAULT ''
+    );
+    CREATE INDEX IF NOT EXISTS idx_hx_res_claim_r ON hx_res_claims(resource_id, status);
+    CREATE INDEX IF NOT EXISTS idx_hx_res_claim_u ON hx_res_claims(claimant_uid, status);
     """)
     # —— V1.7 兼容迁移：老库补列（新列已在 CREATE TABLE 中，老库走 ALTER） ——
     for col, ddl in (("unlock_at", "TEXT DEFAULT ''"),
@@ -1402,6 +1457,524 @@ def api_hx_legacy_set():
     db.commit()
     log_op("火星身份证·遗产约定", f"继承人:{heir_name or heir_did[:18]}", u["id"])
     return jsonify({"ok": True, "msg": "遗产约定已写入你的身份链"})
+
+
+# ══════════════════ V1.8 · 火星平面「个人共享资源」 ══════════════════
+def hx_res_mask(text):
+    """资源内容打码：列表接口永远不下发明文，只给前后各两位"""
+    s = (text or "").strip()
+    if not s:
+        return ""
+    if len(s) <= 4:
+        return "••••"
+    return s[:2] + "••••" + (s[-2:] if len(s) > 10 else "")
+
+
+def hx_res_family_uids(user_id):
+    """已确认的家庭链成员（双向）"""
+    rows = get_db().execute(
+        "SELECT user_id, family_uid FROM hx_family WHERE status='confirmed' "
+        "AND (user_id=? OR family_uid=?)", (user_id, user_id)).fetchall()
+    return {r["family_uid"] if r["user_id"] == user_id else r["user_id"] for r in rows}
+
+
+def hx_res_expired(res):
+    exp = (res.get("expire_at") if isinstance(res, dict) else res["expire_at"]) or ""
+    exp = exp.strip()
+    return bool(exp) and exp < now()[:10]
+
+
+def hx_res_state(res):
+    """资源对外的状态文案（数据库只存 active/off）"""
+    if res.get("deleted"):
+        return "已删除"
+    if hx_res_expired(res):
+        return "已过期"
+    if res.get("status") == "off":
+        return "已下架"
+    if (res.get("stock") or 0) - (res.get("claimed") or 0) <= 0:
+        return "已领完"
+    return "可领取"
+
+
+def hx_res_payload(data):
+    """上链内容只放公开字段，资源正文与联系方式永不写入链"""
+    return hx_json({k: data.get(k) or "" for k in
+                    ("category", "title", "description", "stock", "mode",
+                     "visibility", "expire_at")})
+
+
+def hx_res_out(res, me=None, my_claim=None):
+    """列表输出：去掉正文与联系方式，只给打码预览"""
+    d = dict(res)
+    secret = d.pop("secret", "")
+    d.pop("contact", "")
+    ident = hx_identity_brief(d["user_id"]) or {}
+    owner = get_db().execute("SELECT nickname FROM users WHERE id=?", (d["user_id"],)).fetchone()
+    d["publisher"] = {
+        "mars_name": ident.get("mars_name") or (owner["nickname"] if owner else "火星居民"),
+        "did": ident.get("did", ""),
+        "avatar_seed": ident.get("avatar_seed", ""),
+    }
+    d["color"] = HX_RES_COLOR.get(d["category"], "#f472b6")
+    d["mode_label"] = HX_RES_MODE_LABEL.get(d["mode"], d["mode"])
+    d["visibility_label"] = HX_RES_VISIBILITY.get(d["visibility"], "")
+    d["left"] = max(0, (d["stock"] or 0) - (d["claimed"] or 0))
+    d["expired"] = hx_res_expired(d)
+    d["state"] = hx_res_state(d)
+    d["secret_preview"] = hx_res_mask(secret)
+    d["has_secret"] = bool(secret.strip())
+    d["mine"] = (me == d["user_id"])
+    d["claim_status"] = (my_claim or {}).get("status", "")
+    d["claim_status_label"] = HX_RES_CLAIM_STATUS.get(d["claim_status"], "")
+    return d
+
+
+def hx_res_form(d):
+    try:
+        stock = int(d.get("stock") if d.get("stock") is not None else 1)
+    except (TypeError, ValueError):
+        stock = 1
+    return {
+        "category": (d.get("category") or "").strip(),
+        "title": (d.get("title") or "").strip(),
+        "description": (d.get("description") or "").strip(),
+        "secret": (d.get("secret") or "").strip(),
+        "stock": stock,
+        "mode": (d.get("mode") or "free").strip(),
+        "visibility": (d.get("visibility") or "public").strip(),
+        "expire_at": (d.get("expire_at") or "").strip(),
+        "contact": (d.get("contact") or "").strip(),
+    }
+
+
+def hx_res_validate(f, claimed=0):
+    if f["category"] not in HX_RES_CATS:
+        return "请选择正确的资源类型"
+    if not (1 <= len(f["title"]) <= 60):
+        return "资源标题需 1-60 个字"
+    if len(f["description"]) > 1200:
+        return "资源说明最多 1200 个字"
+    if len(f["secret"]) > 800:
+        return "资源内容最多 800 个字"
+    if not (1 <= f["stock"] <= 9999):
+        return "可发放数量需在 1-9999 之间"
+    if f["stock"] < claimed:
+        return f"已经有 {claimed} 份通过审核，数量不能小于已发放数"
+    if f["mode"] not in ("free", "apply"):
+        return "领取方式不正确"
+    if f["mode"] == "free" and not f["secret"]:
+        return "「直接领取」必须填写资源内容（账号 / 卡密 / 链接），否则领取者拿不到东西"
+    if f["visibility"] not in HX_RES_VISIBILITY:
+        return "可见范围不正确"
+    if f["expire_at"]:
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", f["expire_at"]):
+            return "有效期格式：2027-01-01"
+        if f["expire_at"] < now()[:10]:
+            return "有效期需要设置在今天或之后"
+    if len(f["contact"]) > 120:
+        return "联系方式最多 120 个字"
+    return ""
+
+
+def hx_res_claims_for(resource_id):
+    """发布者视角：某份资源下的全部领取申请"""
+    rows = get_db().execute(
+        "SELECT c.*, u.nickname, i.mars_name, i.did, i.avatar_seed "
+        "FROM hx_res_claims c JOIN users u ON u.id=c.claimant_uid "
+        "LEFT JOIN hx_identity i ON i.user_id=c.claimant_uid "
+        "WHERE c.resource_id=? "
+        "ORDER BY CASE c.status WHEN 'pending' THEN 0 ELSE 1 END, c.id DESC",
+        (resource_id,)).fetchall()
+    out = []
+    for r in rows:
+        d = dict(r)
+        d["status_label"] = HX_RES_CLAIM_STATUS.get(d["status"], d["status"])
+        d["claimant"] = {"nickname": d.pop("nickname", ""),
+                         "mars_name": d.pop("mars_name", "") or "火星居民",
+                         "did": d.pop("did", ""),
+                         "avatar_seed": d.pop("avatar_seed", "")}
+        out.append(d)
+    return out
+
+
+@app.route("/api/huoxing/resources")
+def api_hx_res_list():
+    """共享资源列表：资源广场 / 我的发布 / 我的领取（访客返回空列表）"""
+    u = current_user()
+    if not u:
+        return jsonify({"ok": True, "login": False, "tab": "plaza", "items": [],
+                        "categories": HX_RES_CATEGORIES, "modes": HX_RES_MODES,
+                        "stats": {"plaza": 0, "mine": 0, "claims": 0, "pending": 0}})
+    db = get_db()
+    me = u["id"]
+    tab = (request.args.get("tab") or "plaza").strip()
+    cat = (request.args.get("cat") or "全部").strip()
+    kw = (request.args.get("q") or "").strip().lower()
+    sort = (request.args.get("sort") or "new").strip()
+    family = hx_res_family_uids(me)
+    items = []
+
+    if tab == "mine":
+        rows = db.execute("SELECT * FROM hx_resources WHERE user_id=? AND deleted=0 "
+                          "ORDER BY created_at DESC, id DESC", (me,)).fetchall()
+        counts = {r["resource_id"]: {"total": r["c"], "pending": r["p"]}
+                  for r in db.execute(
+                      "SELECT resource_id, COUNT(*) c, "
+                      "SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END) p "
+                      "FROM hx_res_claims WHERE owner_uid=? GROUP BY resource_id", (me,)).fetchall()}
+        for r in rows:
+            d = hx_res_out(dict(r), me)
+            cnt = counts.get(d["id"], {"total": 0, "pending": 0})
+            d["claims_count"] = cnt["total"]
+            d["pending_count"] = cnt["pending"] or 0
+            items.append(d)
+    elif tab == "claims":
+        rows = db.execute(
+            "SELECT r.*, c.id AS cid, c.status AS cstatus, c.message AS cmessage, "
+            "c.created_at AS ccreated, c.decided_at AS cdecided "
+            "FROM hx_res_claims c JOIN hx_resources r ON r.id=c.resource_id "
+            "WHERE c.claimant_uid=? AND r.deleted=0 "
+            "ORDER BY c.id DESC", (me,)).fetchall()
+        for r in rows:
+            d = hx_res_out(dict(r), me, {"status": r["cstatus"]})
+            d["claim"] = {"id": r["cid"], "status": r["cstatus"],
+                          "status_label": HX_RES_CLAIM_STATUS.get(r["cstatus"], r["cstatus"]),
+                          "message": r["cmessage"] or "",
+                          "created_at": r["ccreated"], "decided_at": r["cdecided"] or ""}
+            items.append(d)
+    else:
+        tab = "plaza"
+        rows = db.execute("SELECT * FROM hx_resources WHERE deleted=0 "
+                          "AND status IN ('active','sold') "
+                          "ORDER BY created_at DESC, id DESC").fetchall()
+        my_claims = {r["resource_id"]: dict(r) for r in db.execute(
+            "SELECT resource_id, status FROM hx_res_claims WHERE claimant_uid=? "
+            "ORDER BY id DESC", (me,)).fetchall()}
+        for r in rows:
+            res = dict(r)
+            if hx_res_expired(res):
+                continue
+            if res["visibility"] == "family" and res["user_id"] != me \
+                    and res["user_id"] not in family:
+                continue
+            items.append(hx_res_out(res, me, my_claims.get(res["id"])))
+        # 同一份资源若有多条历史申请，以最新一条为准
+        seen = {}
+        for d in items:
+            seen[d["id"]] = d
+        items = list(seen.values())
+
+    if cat and cat != "全部":
+        items = [d for d in items if d["category"] == cat]
+    if kw:
+        items = [d for d in items if kw in (
+            f"{d['title']} {d['description']} {d['category']} "
+            f"{d['publisher']['mars_name']}").lower()]
+    if sort == "stock":
+        items.sort(key=lambda d: (-d["left"], d["id"]))
+    elif sort == "expire":
+        items.sort(key=lambda d: (d["expire_at"] or "9999-12-31", d["id"]))
+    else:
+        items.sort(key=lambda d: (d["created_at"], d["id"]), reverse=True)
+
+    plaza_n = 0
+    for r in db.execute("SELECT user_id, visibility, expire_at FROM hx_resources "
+                        "WHERE deleted=0 AND status IN ('active','sold')").fetchall():
+        if hx_res_expired(dict(r)):
+            continue
+        if r["visibility"] == "family" and r["user_id"] != me \
+                and r["user_id"] not in family:
+            continue
+        plaza_n += 1
+
+    stats = {
+        "plaza": plaza_n,
+        "mine": db.execute("SELECT COUNT(*) c FROM hx_resources WHERE deleted=0 "
+                           "AND user_id=?", (me,)).fetchone()["c"],
+        "claims": db.execute("SELECT COUNT(*) c FROM hx_res_claims c JOIN hx_resources r "
+                             "ON r.id=c.resource_id WHERE c.claimant_uid=? "
+                             "AND r.deleted=0 AND c.status IN ('pending','approved')",
+                             (me,)).fetchone()["c"],
+        "pending": db.execute("SELECT COUNT(*) c FROM hx_res_claims c JOIN hx_resources r "
+                              "ON r.id=c.resource_id WHERE c.owner_uid=? "
+                              "AND r.deleted=0 AND c.status='pending'",
+                              (me,)).fetchone()["c"],
+    }
+    return jsonify({"ok": True, "login": True, "tab": tab, "items": items,
+                    "categories": HX_RES_CATEGORIES, "modes": HX_RES_MODES,
+                    "stats": stats})
+
+
+@app.route("/api/huoxing/resources", methods=["POST"])
+@login_required
+def api_hx_res_create():
+    """发布一份共享资源：写入数据库，同时把公开字段写入身份链"""
+    u = current_user()
+    f = hx_res_form(request.get_json(silent=True) or {})
+    err = hx_res_validate(f)
+    if err:
+        return jsonify({"ok": False, "msg": err}), 400
+    db = get_db()
+    hx_identity_for(u)
+    ts = now()
+    cur = db.execute(
+        "INSERT INTO hx_resources(user_id, category, title, description, secret, stock, "
+        "claimed, mode, visibility, expire_at, contact, status, deleted, created_at, updated_at) "
+        "VALUES(?,?,?,?,?,?,0,?,?,?,?, 'active', 0,?,?)",
+        (u["id"], f["category"], f["title"], f["description"], f["secret"], f["stock"],
+         f["mode"], f["visibility"], f["expire_at"], f["contact"], ts, ts))
+    rid = cur.lastrowid
+    block = hx_append_block(db, u["id"], "resource", rid, hx_res_payload(f))
+    db.commit()
+    log_op("火星平面·发布共享资源", f"{f['category']}·{f['title']}", u["id"])
+    row = db.execute("SELECT * FROM hx_resources WHERE id=?", (rid,)).fetchone()
+    return jsonify({"ok": True, "msg": "资源已发布，公开信息已写入你的身份链",
+                    "resource": hx_res_out(dict(row), u["id"]), "block": block})
+
+
+@app.route("/api/huoxing/resources/<int:rid>", methods=["PUT"])
+@login_required
+def api_hx_res_update(rid):
+    """修改自己发布的资源：正文可改，已发放数量只增不减"""
+    u = current_user()
+    db = get_db()
+    row = db.execute("SELECT * FROM hx_resources WHERE id=? AND deleted=0", (rid,)).fetchone()
+    if not row:
+        return jsonify({"ok": False, "msg": "资源不存在或已删除"}), 404
+    if row["user_id"] != u["id"]:
+        return jsonify({"ok": False, "msg": "只能修改自己发布的资源"}), 403
+    f = hx_res_form(request.get_json(silent=True) or {})
+    err = hx_res_validate(f, row["claimed"])
+    if err:
+        return jsonify({"ok": False, "msg": err}), 400
+    ts = now()
+    db.execute("UPDATE hx_resources SET category=?, title=?, description=?, secret=?, stock=?, "
+               "mode=?, visibility=?, expire_at=?, contact=?, updated_at=? WHERE id=?",
+               (f["category"], f["title"], f["description"], f["secret"], f["stock"],
+                f["mode"], f["visibility"], f["expire_at"], f["contact"], ts, rid))
+    # 之前因领完自动下架的资源，补充库存后重新上架
+    if row["status"] == "sold" and f["stock"] - row["claimed"] > 0:
+        db.execute("UPDATE hx_resources SET status='active' WHERE id=?", (rid,))
+    block = hx_append_block(db, u["id"], "resource_edit", rid, hx_res_payload(f))
+    db.commit()
+    log_op("火星平面·修改共享资源", f"{f['category']}·{f['title']}", u["id"])
+    row = db.execute("SELECT * FROM hx_resources WHERE id=?", (rid,)).fetchone()
+    return jsonify({"ok": True, "msg": "资源已更新，修改动作已写入身份链",
+                    "resource": hx_res_out(dict(row), u["id"]), "block": block})
+
+
+@app.route("/api/huoxing/resources/<int:rid>", methods=["DELETE"])
+@login_required
+def api_hx_res_delete(rid):
+    """删除自己发布的资源（软删除，链上留痕）"""
+    u = current_user()
+    db = get_db()
+    row = db.execute("SELECT * FROM hx_resources WHERE id=? AND deleted=0", (rid,)).fetchone()
+    if not row:
+        return jsonify({"ok": False, "msg": "资源不存在"}), 404
+    if row["user_id"] != u["id"]:
+        return jsonify({"ok": False, "msg": "只能删除自己发布的资源"}), 403
+    db.execute("UPDATE hx_resources SET deleted=1, updated_at=? WHERE id=?", (now(), rid))
+    hx_append_block(db, u["id"], "resource_del", rid, hx_res_payload(dict(row)))
+    db.commit()
+    log_op("火星平面·删除共享资源", f"{row['category']}·{row['title']}", u["id"])
+    return jsonify({"ok": True, "msg": "资源已删除，删除动作已写入身份链"})
+
+
+@app.route("/api/huoxing/resources/<int:rid>/status", methods=["POST"])
+@login_required
+def api_hx_res_status(rid):
+    """上架 / 下架自己的资源"""
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    status = (d.get("status") or "").strip()
+    if status not in ("active", "off"):
+        return jsonify({"ok": False, "msg": "状态不正确"}), 400
+    db = get_db()
+    row = db.execute("SELECT * FROM hx_resources WHERE id=? AND deleted=0", (rid,)).fetchone()
+    if not row:
+        return jsonify({"ok": False, "msg": "资源不存在"}), 404
+    if row["user_id"] != u["id"]:
+        return jsonify({"ok": False, "msg": "只能操作自己发布的资源"}), 403
+    db.execute("UPDATE hx_resources SET status=?, updated_at=? WHERE id=?", (status, now(), rid))
+    db.commit()
+    log_op("火星平面·资源上下架", f"ID:{rid} → {status}", u["id"])
+    return jsonify({"ok": True, "msg": "已上架" if status == "active" else "已下架"})
+
+
+@app.route("/api/huoxing/resources/<int:rid>/claim", methods=["POST"])
+@login_required
+def api_hx_res_claim(rid):
+    """领取资源：直接领取自动通过；申请领取等发布者确认"""
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    db = get_db()
+    row = db.execute("SELECT * FROM hx_resources WHERE id=? AND deleted=0", (rid,)).fetchone()
+    if not row:
+        return jsonify({"ok": False, "msg": "资源不存在或已删除"}), 404
+    if row["user_id"] == u["id"]:
+        return jsonify({"ok": False, "msg": "这是你自己发布的资源"}), 400
+    if row["visibility"] == "family" and row["user_id"] not in hx_res_family_uids(u["id"]):
+        return jsonify({"ok": False, "msg": "这份资源仅对发布者的家庭链开放"}), 403
+    if row["status"] == "sold":
+        return jsonify({"ok": False, "msg": "这份资源已经被领完了"}), 400
+    if row["status"] != "active":
+        return jsonify({"ok": False, "msg": "资源已下架，暂时无法领取"}), 400
+    if hx_res_expired(row):
+        return jsonify({"ok": False, "msg": "资源已过有效期"}), 400
+    left = (row["stock"] or 0) - (row["claimed"] or 0)
+    if left <= 0:
+        db.execute("UPDATE hx_resources SET status='sold', updated_at=? WHERE id=?", (now(), rid))
+        db.commit()
+        return jsonify({"ok": False, "msg": "这份资源已经被领完了"}), 400
+    claim = db.execute("SELECT * FROM hx_res_claims WHERE resource_id=? AND claimant_uid=? "
+                       "ORDER BY id DESC LIMIT 1", (rid, u["id"])).fetchone()
+    if claim and claim["status"] in ("pending", "approved"):
+        return jsonify({"ok": False, "msg": "你已经申请过这份资源了"}), 400
+    message = (d.get("message") or "").strip()[:300]
+    contact = (d.get("contact") or "").strip()[:120]
+    ts = now()
+    if row["mode"] == "free":
+        if claim:
+            db.execute("UPDATE hx_res_claims SET status='approved', message=?, contact=?, "
+                       "created_at=?, decided_at=? WHERE id=?",
+                       (message, contact, ts, ts, claim["id"]))
+        else:
+            db.execute("INSERT INTO hx_res_claims(resource_id, owner_uid, claimant_uid, message, "
+                       "contact, status, created_at, decided_at) VALUES(?,?,?,?,?, 'approved',?,?)",
+                       (rid, row["user_id"], u["id"], message, contact, ts, ts))
+        db.execute("UPDATE hx_resources SET claimed=claimed+1, updated_at=? WHERE id=?", (ts, rid))
+        if left - 1 <= 0:
+            db.execute("UPDATE hx_resources SET status='sold' WHERE id=?", (rid,))
+        db.commit()
+        log_op("火星平面·领取共享资源", f"{row['category']}·{row['title']}", u["id"])
+        return jsonify({"ok": True, "auto": True, "msg": "领取成功，资源内容已发放",
+                        "secret": row["secret"], "contact": row["contact"]})
+    if claim:
+        db.execute("UPDATE hx_res_claims SET status='pending', message=?, contact=?, "
+                   "created_at=?, decided_at='' WHERE id=?",
+                   (message, contact, ts, claim["id"]))
+    else:
+        db.execute("INSERT INTO hx_res_claims(resource_id, owner_uid, claimant_uid, message, "
+                   "contact, status, created_at) VALUES(?,?,?,?,?, 'pending',?)",
+                   (rid, row["user_id"], u["id"], message, contact, ts))
+    db.commit()
+    log_op("火星平面·申请共享资源", f"{row['category']}·{row['title']}", u["id"])
+    return jsonify({"ok": True, "auto": False,
+                    "msg": "申请已提交，等待发布者确认后发放"})
+
+
+@app.route("/api/huoxing/resources/<int:rid>/claims")
+@login_required
+def api_hx_res_claims(rid):
+    """发布者查看自己资源下的领取申请"""
+    u = current_user()
+    db = get_db()
+    row = db.execute("SELECT * FROM hx_resources WHERE id=? AND deleted=0", (rid,)).fetchone()
+    if not row:
+        return jsonify({"ok": False, "msg": "资源不存在"}), 404
+    if row["user_id"] != u["id"]:
+        return jsonify({"ok": False, "msg": "只有发布者可以查看申请"}), 403
+    return jsonify({"ok": True, "claims": hx_res_claims_for(rid)})
+
+
+@app.route("/api/huoxing/resources/<int:rid>/claims/<int:cid>/decide", methods=["POST"])
+@login_required
+def api_hx_res_decide(rid, cid):
+    """发布者审核领取申请：approve 通过 / reject 拒绝"""
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    action = (d.get("action") or "").strip()
+    if action not in ("approve", "reject"):
+        return jsonify({"ok": False, "msg": "审核动作不正确"}), 400
+    db = get_db()
+    row = db.execute("SELECT * FROM hx_resources WHERE id=? AND deleted=0", (rid,)).fetchone()
+    if not row:
+        return jsonify({"ok": False, "msg": "资源不存在"}), 404
+    if row["user_id"] != u["id"]:
+        return jsonify({"ok": False, "msg": "只有发布者可以审核"}), 403
+    claim = db.execute("SELECT * FROM hx_res_claims WHERE id=? AND resource_id=?",
+                       (cid, rid)).fetchone()
+    if not claim:
+        return jsonify({"ok": False, "msg": "申请记录不存在"}), 404
+    if claim["status"] != "pending":
+        return jsonify({"ok": False, "msg": "这条申请已经处理过了"}), 400
+    ts = now()
+    if action == "approve":
+        left = (row["stock"] or 0) - (row["claimed"] or 0)
+        if left <= 0:
+            return jsonify({"ok": False, "msg": "剩余数量不足，请先调高数量或拒绝申请"}), 400
+        db.execute("UPDATE hx_res_claims SET status='approved', decided_at=? WHERE id=?",
+                   (ts, cid))
+        db.execute("UPDATE hx_resources SET claimed=claimed+1, updated_at=? WHERE id=?",
+                   (ts, rid))
+        if left - 1 <= 0:
+            db.execute("UPDATE hx_resources SET status='sold' WHERE id=?", (rid,))
+        db.commit()
+        log_op("火星平面·通过资源申请", f"资源ID:{rid} 申请ID:{cid}", u["id"])
+        return jsonify({"ok": True, "msg": "已通过，对方现在可以查看资源内容了"})
+    db.execute("UPDATE hx_res_claims SET status='rejected', decided_at=? WHERE id=?", (ts, cid))
+    db.commit()
+    log_op("火星平面·拒绝资源申请", f"资源ID:{rid} 申请ID:{cid}", u["id"])
+    return jsonify({"ok": True, "msg": "已拒绝这条申请"})
+
+
+@app.route("/api/huoxing/resources/<int:rid>/claims/<int:cid>", methods=["DELETE"])
+@login_required
+def api_hx_res_claim_cancel(rid, cid):
+    """领取者取消自己还在待确认的申请"""
+    u = current_user()
+    db = get_db()
+    claim = db.execute("SELECT * FROM hx_res_claims WHERE id=? AND resource_id=?",
+                       (cid, rid)).fetchone()
+    if not claim:
+        return jsonify({"ok": False, "msg": "申请记录不存在"}), 404
+    if claim["claimant_uid"] != u["id"]:
+        return jsonify({"ok": False, "msg": "只能取消自己的申请"}), 403
+    if claim["status"] != "pending":
+        return jsonify({"ok": False, "msg": "这条申请已经处理过了"}), 400
+    db.execute("UPDATE hx_res_claims SET status='cancelled', decided_at=? WHERE id=?", (now(), cid))
+    db.commit()
+    log_op("火星平面·取消资源申请", f"资源ID:{rid} 申请ID:{cid}", u["id"])
+    return jsonify({"ok": True, "msg": "申请已取消"})
+
+
+@app.route("/api/huoxing/resources/<int:rid>")
+@login_required
+def api_hx_res_detail(rid):
+    """资源详情：本人 / 已通过者可见正文与联系方式；发布者附全部申请"""
+    u = current_user()
+    me = u["id"]
+    db = get_db()
+    row = db.execute("SELECT * FROM hx_resources WHERE id=? AND deleted=0", (rid,)).fetchone()
+    if not row:
+        return jsonify({"ok": False, "msg": "资源不存在或已删除"}), 404
+    res = dict(row)
+    family = hx_res_family_uids(me)
+    if res["user_id"] != me:
+        if res["visibility"] == "family" and res["user_id"] not in family:
+            return jsonify({"ok": False, "msg": "这份资源仅对发布者的家庭链开放"}), 403
+    claim = db.execute("SELECT * FROM hx_res_claims WHERE resource_id=? AND claimant_uid=? "
+                       "ORDER BY id DESC LIMIT 1", (rid, me)).fetchone()
+    claim_d = dict(claim) if claim else None
+    out = hx_res_out(res, me, claim_d)
+    visible = (res["user_id"] == me) or (claim_d and claim_d["status"] == "approved")
+    out["secret"] = res["secret"] if visible else ""
+    out["contact"] = res["contact"] if visible else ""
+    out["visible"] = bool(visible)
+    out["claimable"] = bool(
+        res["user_id"] != me and res["status"] == "active" and not out["expired"]
+        and out["left"] > 0 and (not claim_d or claim_d["status"] in ("rejected", "cancelled")))
+    out["can_apply"] = bool(res["user_id"] != me and res["mode"] == "apply")
+    out["claims"] = hx_res_claims_for(rid) if res["user_id"] == me else []
+    if claim_d:
+        out["claim"] = {"id": claim_d["id"], "status": claim_d["status"],
+                        "status_label": HX_RES_CLAIM_STATUS.get(claim_d["status"], ""),
+                        "message": claim_d["message"] or "",
+                        "created_at": claim_d["created_at"],
+                        "decided_at": claim_d["decided_at"] or ""}
+    return jsonify({"ok": True, "resource": out})
 
 
 # ══════════════════ V1.7 · 护照互认验证器（任何人可离线验真） ══════════════════
