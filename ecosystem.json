@@ -8,7 +8,7 @@
     "wechat": "xunijiayuan",
     "positioning": "本网站是整个数字生态的底座：所有产品共用统一入口、统一账号、统一数据源；后续新工具以「积木」方式持续加入，加入后自动出现在门户与许愿墙。",
     "data_file": "ecosystem.json",
-    "updated_at": "2026-10-23",
+    "updated_at": "2026-11-05",
     "security_note": "本文件为公开数据源，禁止写入任何密码、密钥、Token；服务器与第三方凭据一律存放在腾讯云站内信 / Windows凭据管理器，不落库不落文件。",
     "usage": "其他程序或网页可直接读取本文件（或调用 /api/ecosystem/manifest）获取生态全部信息；新增/修改积木只需改本文件，服务自动热加载。",
     "style": "2027星霓暖赛博风（用户选定，豆包 doubao-seed-2.1-turbo 生成方案）"
@@ -187,6 +187,30 @@
       "main": true,
       "url": "https://ecojia.cn/timer/",
       "desc": "2027科技风悬浮计时器，三端同步：正计时、倒计时、番茄钟，悬浮球不打断工作，计时记录自动保存，内置推广有惊喜大使招募体系。"
+    },
+    {
+      "no": "15",
+      "name": "多码集",
+      "en": "DuoMaJi",
+      "scope": "个人 · 商家 · 大众",
+      "icon": "🗂️",
+      "status": "已上线",
+      "main": true,
+      "url": "https://ecojia.cn/duomaji/",
+      "desc": "线上百宝箱卡片墙：二维码集/链接集/文档集/文件集多集卡片管理，增删改查+操作历史+记忆存档导出导入，数据仅存本机浏览器隐私安全，三端自适应；另提供 Windows 桌面版下载（可直连本地程序与文档）。"
+    },
+    {
+      "no": "16",
+      "name": "秘密MM",
+      "en": "Secret MM",
+      "scope": "个人 · 情感",
+      "icon": "🌙",
+      "status": "已上线",
+      "main": true,
+      "url": "https://ecojia.cn/mm/",
+      "desc": "心事寄存、梦境存档、暗号房间与人生高性价比自检的温馨心灵空间，数据云端存储仅本人可见，三端自适应。",
+      "repo": "secret-mm",
+      "port": 8321
     }
   ],
   "hardware": [
@@ -287,7 +311,7 @@
       "image": "宝塔面板镜像",
       "price": "192元/1年",
       "expire": "2027-10-14",
-      "status": "已部署：门户8400 / 资料百事通8300 / 静态工具8080（nginx），systemd 托管、开机自启",
+      "status": "已部署：门户8400 / 资料百事通8300 / 静态工具8080（nginx），systemd 托管、开机自启；更新中心/updates（Caddy 静态，APK/EXE 自动更新分发）",
       "ssh_user": "ubuntu（Ubuntu 24.04.4 LTS，非宝塔镜像；sudo 免密）"
     },
     "tunnel": {
@@ -454,6 +478,18 @@
       "method": "GET",
       "path": "/api/huoxing/records",
       "desc": "火星平面羽毛记录（每根绒毛=一条记录，原型预留）",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/updates/apps.json",
+      "desc": "全栈更新中心：全量应用更新清单（APK/EXE 自动更新分发）",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/updates/<appid>/version.json",
+      "desc": "单应用更新清单（versionCode/apkUrl/exeUrl/sha256/changelog）",
       "auth": "公开"
     }
   ],
@@ -821,63 +857,63 @@
       "name": "分身旁观 · 个人语料记录",
       "en": "",
       "repo": "fenshenguanguan",
-      "type": "Python 桌面程序",
+      "type": "HTML 网页版 + Python 桌面程序",
       "entry": "main.py",
       "run": "python main.py（含 GUI）",
       "port": null,
-      "url": null,
+      "url": "https://tools.ecojia.cn/fenshen-pangguan/",
       "size_kb": 119,
-      "updated": "2026-07-19",
-      "status": "本地软件",
+      "updated": "2026-11-05",
+      "status": "已上线·HTTPS",
       "desc": "个人语料记录系统：采集与沉淀个人日常语料，用于 AI 训练与个人知识库建设。",
       "steps": [
-        "本地运行 python main.py 打开图形界面",
-        "按界面引导录入/粘贴语料，打标签分类",
-        "支持导出 JSONL 训练格式与按标签检索"
+        "网页版：打开链接即用，语料录入/分类/双评分/搜索筛选/图表统计/导出导入，数据保存在本机浏览器",
+        "本地桌面版：python main.py 打开图形界面（含语音/窗口/剪贴板采集引擎）",
+        "支持导出 JSON / CSV / Markdown 备份与恢复"
       ],
-      "note": "对应产品矩阵 02「语料收集器」，网页版规划中。"
+      "note": "对应产品矩阵 02「语料收集器」；HTML 网页版 2026-11-05 上线，桌面采集软件版联系作者获取。"
     },
     {
       "no": "T18",
       "name": "客资雷达",
       "en": "",
-      "repo": null,
-      "type": "本地电脑软件（EXE）",
+      "repo": "ai-lead-radar",
+      "type": "HTML 看板 + 本地采集软件（开源）",
       "entry": "本地程序",
       "run": "本机运行（非网页）",
       "port": null,
-      "url": null,
+      "url": "https://tools.ecojia.cn/lead-radar/",
       "size_kb": 0,
-      "updated": "—",
-      "status": "本地软件",
+      "updated": "2026-11-05",
+      "status": "已上线·HTTPS",
       "desc": "客户资源雷达式管理软件：客户录入、跟进提醒、雷达视图展示客户分布与跟进优先级。",
       "steps": [
-        "本机安装并启动程序（EXE）",
-        "录入客户信息并设置跟进周期",
-        "雷达视图按跟进紧急度排序，到点自动提醒"
+        "网页版：打开链接即用，线索录入/状态流转（候选→已审核→已联系→已成交）/筛选统计/CSV 导出，数据保存在本机浏览器",
+        "本地采集版：GitHub 克隆 ai-lead-radar，双击启动后访问 127.0.0.1:8765",
+        "四搜索引擎并行采集公开需求，只入库真实引用链接，人工审核后才可使用"
       ],
-      "note": "本地电脑软件（未托管 GitHub）；如需在线版可到许愿墙许愿催更网页版。"
+      "note": "HTML 看板版 2026-11-05 上线；本地四引擎采集版开源于 GitHub lzp5133084/ai-lead-radar。"
     },
     {
       "no": "T19",
       "name": "理赔资料助手",
       "en": "",
       "repo": null,
-      "type": "本地电脑软件（EXE）",
+      "type": "HTML 网页版 + 本地电脑软件",
       "entry": "本地程序",
       "run": "本机运行（非网页）",
       "port": null,
-      "url": null,
+      "url": "https://tools.ecojia.cn/claims-doc-assistant/",
       "size_kb": 0,
-      "updated": "—",
-      "status": "本地软件",
+      "updated": "2026-11-05",
+      "status": "已上线·HTTPS",
       "desc": "理赔材料整理与进度跟踪软件：案件建档、材料清单核对、进度节点跟踪，理赔不再跑断腿。",
       "steps": [
-        "本机安装并启动程序（EXE）",
-        "新建理赔案件，按险种生成材料清单模板",
+        "网页版：打开链接即用，案件建档/材料清单核对/进度节点跟踪",
+        "本地 EXE 版：本机安装启动，数据本地保存",
         "逐项勾选材料齐备情况，跟踪提交/审核/到账节点"
       ],
-      "note": "本地电脑软件；与 T04 保险管理、产品矩阵 08「理赔AI助手」路线互通。"
+      "note": "在线版 2026-11-05 上线；与 T04 保险管理、产品矩阵 08「理赔AI助手」路线互通。"
     },
     {
       "no": "T20",
@@ -944,6 +980,27 @@
         "使用视频计划页可标记录制状态（待录制/录制中/已完成），本机自动记忆"
       ],
       "note": "星霓暖赛博风与门户一致；数据为 2026-10-21 全量扫描快照；GitHub Pages 镜像可备用。"
+    },
+    {
+      "no": "T23",
+      "name": "秘密MM",
+      "en": "Secret MM",
+      "repo": "secret-mm",
+      "type": "网页应用（Node.js + SQLite，零依赖）",
+      "entry": "server.js",
+      "run": "node server.js（端口 8321）",
+      "port": 8321,
+      "url": "https://ecojia.cn/mm/",
+      "size_kb": null,
+      "updated": "2026-11-05",
+      "status": "已上线·HTTPS",
+      "desc": "秘密MM：温馨治愈系个人空间——句子库、匿名公共墙面、24h/7天自动消散的心事、梦境空间、暗号房间（私密群聊）、人生自检、日历计划vs落地总结、待办与利弊梳理；多用户+管理后台，数据云端 SQLite 存储。",
+      "steps": [
+        "打开链接注册账号进入主界面（管理员 18180309010 可见「后台」入口）",
+        "六大模块：写句子 / 公共墙面（匿名）/ 写心事（自动消散）/ 梦境空间 / 暗号房间 / 我的空间",
+        "日历计划 vs 落地自动总结，待办一键流转日历，支持数据备份导出"
+      ],
+      "note": "GitHub: lzp5133084/secret-mm；Node 零依赖单服务，全接口开放 CORS，预留标准 REST 接口便于其他程序调用。"
     },
     {
       "no": "T24",

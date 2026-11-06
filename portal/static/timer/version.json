@@ -1,0 +1,23 @@
+{
+  "_comment": "悬浮计时器三端版本检查配置 - 部署到 https://ecojia.cn/timer/version.json",
+  "android": {
+    "versionCode": 9,
+    "versionName": "1.0.8",
+    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.8.apk",
+    "updateLog": "1. 更换正式签名证书（告别安卓调试签名），修复华为等手机报毒/风险提示\n2. 重要提示：因签名变更，已安装的旧版无法直接覆盖升级，请先卸载旧版再安装本版（卸载会清空本地计时记录）\n3. 功能与 v1.0.7 完全一致：正计时/倒计时/番茄钟/秒表计次/重复上次，安卓5.0+手表可装",
+    "forceUpdate": false
+  },
+  "desktop": {
+    "versionCode": 5,
+    "versionName": "1.0.4",
+    "downloadUrl": "https://ecojia.cn/timer/悬浮计时器_v1.0.4.exe",
+    "updateLog": "1. 新增广告视频位（启动弹窗，可配置、可替换）\n2. 结束前语音提醒+音效增强+中文TTS播报（v1.0.3延续）",
+    "forceUpdate": false
+  },
+  "web": {
+    "versionCode": 5,
+    "versionName": "1.0.4",
+    "updateLog": "1. 新增广告视频位（弹窗，可配置、可替换）\n2. 结束前语音提醒+音效增强（v1.0.3延续）",
+    "forceUpdate": false
+  }
+}

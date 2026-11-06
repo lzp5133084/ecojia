@@ -1,0 +1,1382 @@
+{
+  "meta": {
+    "name": "数字生态家园",
+    "role": "生态积木底座",
+    "domain": "ecojia.cn",
+    "version": "V1.5",
+    "author": "军哥懂保",
+    "wechat": "xunijiayuan",
+    "positioning": "本网站是整个数字生态的底座：所有产品共用统一入口、统一账号、统一数据源；后续新工具以「积木」方式持续加入，加入后自动出现在门户与许愿墙。",
+    "data_file": "ecosystem.json",
+    "updated_at": "2026-10-23",
+    "security_note": "本文件为公开数据源，禁止写入任何密码、密钥、Token；服务器与第三方凭据一律存放在腾讯云站内信 / Windows凭据管理器，不落库不落文件。",
+    "usage": "其他程序或网页可直接读取本文件（或调用 /api/ecosystem/manifest）获取生态全部信息；新增/修改积木只需改本文件，服务自动热加载。",
+    "style": "2027星霓暖赛博风（用户选定，豆包 doubao-seed-2.1-turbo 生成方案）"
+  },
+  "products": [
+    {
+      "no": "01",
+      "name": "数字保险箱",
+      "en": "Digital Vault",
+      "scope": "个人 · 家庭",
+      "icon": "🔐",
+      "status": "已上线",
+      "main": true,
+      "url": "https://ecojia.cn/vault",
+      "repo": "digital-vault",
+      "desc": "家庭重要证件、保单、合同、房产资料的加密数字保管箱，一人保管全家共享。三端支持：Windows电脑端 + Android手机端 + 网页版。",
+      "pages_url": "https://lzp5133084.github.io/digital-vault/"
+    },
+    {
+      "no": "02",
+      "name": "语料收集器",
+      "en": "",
+      "scope": "个人 · 特定",
+      "icon": "📦",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "面向AI训练的语料收集与整理工具，让每个人的经验沉淀为可用数据。"
+    },
+    {
+      "no": "03",
+      "name": "资料百事通",
+      "en": "",
+      "scope": "个人 · 共创 · 大众",
+      "icon": "🗂️",
+      "status": "已上线",
+      "main": true,
+      "url": "http://118.24.173.246:8300",
+      "desc": "全民共创式资料共享与智能查询平台——查资料、传资料、赚积分，AI帮您找。",
+      "path": "e:\\Chat GPT6\\资料百事通",
+      "port": 8300,
+      "repo": "https://github.com/lzp5133084/ziliaobaishitong"
+    },
+    {
+      "no": "04",
+      "name": "AI资产管理",
+      "en": "",
+      "scope": "个人 · 家庭 · 公司",
+      "icon": "💎",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "个人与家庭资产的AI盘点与管理，看得清、管得住、传得下。"
+    },
+    {
+      "no": "05",
+      "name": "AI宝贝助手",
+      "en": "",
+      "scope": "个人 · 家庭 · 学校",
+      "icon": "🧒",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "孩子的成长记录、学习陪伴与安全教育，AI宝贝成长好伙伴。"
+    },
+    {
+      "no": "06",
+      "name": "共享租赁柜",
+      "en": "",
+      "scope": "未来硬件",
+      "icon": "🗄️",
+      "status": "敬请期待",
+      "main": false,
+      "url": "",
+      "desc": "社区共享智能租赁柜，让闲置物品流动起来。"
+    },
+    {
+      "no": "07",
+      "name": "残障AI助手",
+      "en": "",
+      "scope": "个人 · 特定机构",
+      "icon": "🤝",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "视障、听障、肢障朋友的AI生活助手，科技向善，人人平等。"
+    },
+    {
+      "no": "08",
+      "name": "理赔AI助手",
+      "en": "",
+      "scope": "个人 · 团体 · 公司",
+      "icon": "⚖️",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "保险理赔材料智能整理与进度跟踪，理赔不再跑断腿。"
+    },
+    {
+      "no": "09",
+      "name": "直播间工具",
+      "en": "",
+      "scope": "粉丝 · 主播",
+      "icon": "📡",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "直播间数据、话术、素材一站式工具箱，主播的好帮手。"
+    },
+    {
+      "no": "10",
+      "name": "大盒子",
+      "en": "BIGBOX",
+      "scope": "个人 · 家庭 · 企业",
+      "icon": "🗃️",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "承载数字资产的盒子产品，定位为工具平台——保单、合同、证件收进一个盒子，随身携带、随时取用。",
+      "origin": "用户梦境产品"
+    },
+    {
+      "no": "11",
+      "name": "鸽子AI",
+      "en": "geziAI",
+      "scope": "个人专属 · 私人助手",
+      "icon": "🕊️",
+      "status": "规划中",
+      "main": false,
+      "url": "",
+      "desc": "属于个人的私人AI助手，像信鸽一样替您传递、查找、记事，只服务主人一人。",
+      "origin": "用户梦境产品"
+    },
+    {
+      "no": "12",
+      "name": "火星平面",
+      "en": "huoxingPM",
+      "scope": "个人 · 一生历程",
+      "icon": "🪶",
+      "status": "开发中",
+      "main": false,
+      "url": "/huoxing",
+      "desc": "以羽毛为形象的历程记录器：每一根绒毛都是一段历程或一条记录，越长越丰盈，像一张会生长的身份证。",
+      "origin": "用户梦境产品",
+      "idea": "羽毛可视化：每根绒毛=一条记录，可点开查看"
+    },
+    {
+      "no": "13",
+      "name": "待添加",
+      "en": "",
+      "scope": "您的想法",
+      "icon": "✨",
+      "status": "虚位以待",
+      "main": false,
+      "url": "/wishes",
+      "desc": "这里预留给你——下一个改变生活的产品，由你的愿望开启。"
+    },
+    {
+      "no": "14",
+      "name": "悬浮计时器",
+      "en": "Float Timer",
+      "scope": "个人 · 团队 · 大众",
+      "icon": "⏱️",
+      "status": "已上线",
+      "main": true,
+      "url": "https://ecojia.cn/timer/",
+      "desc": "2027科技风悬浮计时器，三端同步：正计时、倒计时、番茄钟，悬浮球不打断工作，计时记录自动保存，内置推广有惊喜大使招募体系。"
+    }
+  ],
+  "hardware": [
+    {
+      "name": "无人机",
+      "icon": "🛸",
+      "desc": "低空采集与配送"
+    },
+    {
+      "name": "3D打印",
+      "icon": "🖨️",
+      "desc": "个性化制造"
+    },
+    {
+      "name": "AI眼镜",
+      "icon": "🕶️",
+      "desc": "第一视角智能"
+    },
+    {
+      "name": "高效喷码器",
+      "icon": "🔫",
+      "desc": "标识与溯源"
+    },
+    {
+      "name": "AI硬件",
+      "icon": "🧠",
+      "desc": "端侧智能设备"
+    },
+    {
+      "name": "手表平台",
+      "icon": "⌚",
+      "desc": "腕上生态入口"
+    }
+  ],
+  "subdomains": [
+    {
+      "host": "ecojia.cn",
+      "target": "数字生态家园（门户总站·底座）",
+      "status": "已上线(HTTPS)",
+      "note": "蜀ICP备2025124820号-2；https://ecojia.cn 与 www 均可访问，Let's Encrypt证书由Caddy自动签发与续期；有效期至2027-10-14"
+    },
+    {
+      "host": "ziliao.ecojia.cn",
+      "target": "资料百事通",
+      "status": "已上线(HTTPS)",
+      "note": "https://ziliao.ecojia.cn 可访问，Caddy反代至8300；备案号已挂页脚"
+    },
+    {
+      "host": "lipei.ecojia.cn",
+      "target": "理赔AI助手",
+      "status": "预留",
+      "note": ""
+    },
+    {
+      "host": "baoxian.ecojia.cn",
+      "target": "保险相关工具",
+      "status": "预留",
+      "note": ""
+    },
+    {
+      "host": "zhibo.ecojia.cn",
+      "target": "直播间工具",
+      "status": "预留",
+      "note": ""
+    },
+    {
+      "host": "bigbox.ecojia.cn",
+      "target": "大盒子 BIGBOX",
+      "status": "待确认",
+      "note": "用户尚未确认是否需要"
+    },
+    {
+      "host": "gezi.ecojia.cn",
+      "target": "鸽子AI geziAI",
+      "status": "待确认",
+      "note": "用户尚未确认是否需要"
+    },
+    {
+      "host": "huoxing.ecojia.cn",
+      "target": "火星平面 huoxingPM",
+      "status": "待确认",
+      "note": "用户尚未确认是否需要"
+    }
+  ],
+  "infrastructure": {
+    "domain_bought": {
+      "name": "ecojia.cn",
+      "price": "33元/首年",
+      "owner": "任军学",
+      "expire": "2027-10-14",
+      "registrar": "腾讯云"
+    },
+    "server": {
+      "provider": "腾讯云轻量应用服务器",
+      "spec": "2核2G",
+      "region": "成都",
+      "ip": "118.24.173.246",
+      "image": "宝塔面板镜像",
+      "price": "192元/1年",
+      "expire": "2027-10-14",
+      "status": "已部署：门户8400 / 资料百事通8300 / 静态工具8080（nginx），systemd 托管、开机自启",
+      "ssh_user": "ubuntu（Ubuntu 24.04.4 LTS，非宝塔镜像；sudo 免密）"
+    },
+    "tunnel": {
+      "tool": "cpolar",
+      "url": "https://72d51d79.r9.vip.cpolar.cn",
+      "maps_to": "本机8300端口（资料百事通）",
+      "config": "C:\\Users\\Administrator\\.cpolar\\cpolar.yml"
+    },
+    "plan": "【已完成】门户部署到服务器8400端口，资料百事通8300端口，域名解析 ecojia.cn → 门户，ziliao.ecojia.cn → 资料百事通，Caddy 80/443 反代并自动签发 HTTPS",
+    "access": {
+      "portal": "https://ecojia.cn（正式域名，HTTP自动跳HTTPS）",
+      "ziliao": "https://ziliao.ecojia.cn（正式域名）",
+      "portal_ip": "http://118.24.173.246:8400（备用IP直访）",
+      "ziliao_ip": "http://118.24.173.246:8300（备用IP直访）",
+      "tools": "http://118.24.173.246:8080",
+      "note": "已切换为正式域名 HTTPS 访问；IP:端口 通道保留作备用",
+      "firewall_opened": [
+        "80",
+        "443",
+        "8300",
+        "8400",
+        "8080"
+      ]
+    },
+    "deploy": {
+      "project_root": "/opt/ecojia",
+      "portal_dir": "/opt/ecojia/portal",
+      "ziliao_dir": "/opt/ecojia/ziliao",
+      "tools_dir": "/opt/ecojia/tools",
+      "venv": "/opt/ecojia/venv (Python 3.12.3, Flask 2.2.5, Werkzeug 2.2.3, Pillow)",
+      "services": [
+        "ecojia-portal.service (8400)",
+        "ecojia-ziliao.service (8300)",
+        "nginx (8080 静态工具)",
+        "caddy (80/443 域名分发+自动HTTPS)"
+      ],
+      "update_cmd": "cd /opt/ecojia/portal && git pull && sudo systemctl restart ecojia-portal",
+      "gateway": "Caddy 监听80/443，ecojia.cn+www→8400，ziliao.ecojia.cn→8300，自动申请并续期 Let's Encrypt 证书；配置备份 /etc/caddy/Caddyfile.bak.1019",
+      "note": "原镜像自带 caddy 仅占位根目录，已改为域名反向代理网关；宝塔镜像未实际使用"
+    }
+  },
+  "apis": [
+    {
+      "method": "GET",
+      "path": "/api/ecosystem/manifest",
+      "desc": "生态底座全量数据（其他程序读取入口）",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/ecosystem/status",
+      "desc": "生态总览（名称/域名/版本/统计）",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/ecosystem/search?q=关键词",
+      "desc": "在底座中查找产品/硬件/子域名/接口",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/products",
+      "desc": "产品矩阵（13位积木）",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/brands",
+      "desc": "生态品牌（带英文名的产品）",
+      "auth": "公开"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ecosystem/products",
+      "desc": "新增积木（自动编号，插在“待添加”之前）",
+      "auth": "管理员"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/ecosystem/products/<no>",
+      "desc": "修改积木（按编号）",
+      "auth": "管理员"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/ecosystem/products/<no>",
+      "desc": "移除积木（自动重排编号）",
+      "auth": "管理员"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/register",
+      "desc": "注册统一账号（首个用户自动成为管理员）",
+      "auth": "公开"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "desc": "登录统一账号",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/status",
+      "desc": "查询当前登录状态",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/bridge",
+      "desc": "统一账号互认（预留，V1.0打通资料百事通）",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/wishes",
+      "desc": "许愿列表（支持 kw / product 筛选）",
+      "auth": "公开"
+    },
+    {
+      "method": "POST",
+      "path": "/api/wishes",
+      "desc": "提交许愿（游客可提交，需留联系方式）",
+      "auth": "公开"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/wishes/<id>",
+      "desc": "修改许愿（本人改内容/管理员改状态）",
+      "auth": "登录"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/wishes/<id>",
+      "desc": "删除许愿（本人或管理员）",
+      "auth": "登录"
+    },
+    {
+      "method": "GET",
+      "path": "/api/my/wishes",
+      "desc": "我的许愿（操作记忆）",
+      "auth": "登录"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/overview",
+      "desc": "后台统计",
+      "auth": "管理员"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/logs",
+      "desc": "操作日志（最近100条）",
+      "auth": "管理员"
+    },
+    {
+      "method": "GET",
+      "path": "/api/tools",
+      "desc": "工具清单（GitHub全部可外部访问工具汇总）",
+      "auth": "公开"
+    },
+    {
+      "method": "GET",
+      "path": "/api/huoxing/records",
+      "desc": "火星平面羽毛记录（每根绒毛=一条记录，原型预留）",
+      "auth": "公开"
+    }
+  ],
+  "tools": [
+    {
+      "no": "T01",
+      "name": "数字生态家园（门户总站）",
+      "en": "EcoJia Portal",
+      "repo": "ecojia",
+      "type": "Flask 网页程序",
+      "entry": "app.py",
+      "run": "python app.py（端口 8400）",
+      "port": 8400,
+      "url": "https://ecojia.cn",
+      "size_kb": 0,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "整个数字生态的入口与积木底座：产品矩阵、许愿墙、工具清单、统一账号与管理后台、开放生态 API 一站集成。",
+      "steps": [
+        "打开站点即进入生态主页，顶部导航切换「生态主页 / 产品矩阵 / 工具清单 / 许愿墙」",
+        "点产品卡片可进入对应产品或跳转许愿催更",
+        "管理员登录后进入「管理后台 → 积木管理」，可增删改产品（改完即时生效）",
+        "开发者可调用开放接口（/api/ecosystem/manifest 等）接入自己的程序"
+      ],
+      "note": "本仓库即本站：python app.py（端口 8400）即可本地运行；数据源为 ecosystem.json 单一文件，一处更新全站生效。"
+    },
+    {
+      "no": "T02",
+      "name": "资料百事通",
+      "en": "",
+      "repo": "ziliaobaishitong",
+      "type": "Flask 网页程序",
+      "entry": "app.py",
+      "run": "python app.py（端口 8300）",
+      "port": 8300,
+      "url": "https://ziliao.ecojia.cn",
+      "size_kb": 143,
+      "updated": "2026-10-19",
+      "status": "已上线",
+      "desc": "全民共创式资料共享与智能查询平台：查资料、传资料、赚积分，AI 帮您找——出院记录、诊断证明、各类单据大家共享、大家受益。",
+      "steps": [
+        "注册/登录后进入首页，输入关键词搜索资料（支持 AI 智能搜索）",
+        "搜索不到时点「我要上传」贡献资料，审核通过后自动入库并获得积分",
+        "在「我的资料」查看上传记录、下载次数与积分明细",
+        "积分可升级贡献等级，享受 VIP 权益"
+      ],
+      "pages_url": "",
+      "note": "统一直达入口 ziliao.ecojia.cn；统一账号体系 V1.0 与门户打通。"
+    },
+    {
+      "no": "T03",
+      "name": "智慧客户管理 · 智汇管家",
+      "en": "",
+      "repo": "customer-management",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器直接打开 index.html",
+      "port": null,
+      "url": "https://tools.ecojia.cn/customer-management/",
+      "size_kb": 28,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "小区客户管理系统网页版：客户档案、跟进记录、标签分类与统计分析，打开即用。",
+      "steps": [
+        "打开网页即用（数据保存在本机浏览器，不上传）",
+        "左侧录入客户信息（姓名、电话、需求、标签），自动生成客户档案",
+        "右侧看板实时查看统计与跟进记录，支持标签筛选",
+        "重要客户可标记星标，跟进历史一键回溯"
+      ],
+      "pages_url": "https://lzp5133084.github.io/customer-management/",
+      "note": "纯本地存储，清除浏览器数据前请先导出备份。"
+    },
+    {
+      "no": "T04",
+      "name": "保险管理 · 保险资料助手",
+      "en": "",
+      "repo": "insurance-manager",
+      "type": "Taro 小程序/网页",
+      "entry": "index.html / src",
+      "run": "Taro 编译或直接打开 index.html",
+      "port": null,
+      "url": "https://tools.ecojia.cn/insurance-manager/",
+      "size_kb": 2158,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "保险资料管理（网页/小程序版）：客户保单、理赔材料整理与进度跟踪，保单到期自动提醒。",
+      "steps": [
+        "网页端：直接打开 Pages 链接使用；小程序端：用 Taro 编译对应平台后发布",
+        "新建客户 → 录入保单信息（公司、险种、保费、到期日）",
+        "理赔案件挂接到对应保单，按材料清单跟踪进度",
+        "支持按到期日排序提醒，导出保单台账"
+      ],
+      "pages_url": "https://lzp5133084.github.io/insurance-manager/",
+      "note": "与产品矩阵 08「理赔AI助手」同源演进，后续打通理赔材料智能整理。"
+    },
+    {
+      "no": "T05",
+      "name": "军哥懂保 · 个人门户",
+      "en": "",
+      "repo": "renjunxue-website",
+      "type": "静态网页（多页）",
+      "entry": "index.html",
+      "run": "浏览器打开或托管静态服务",
+      "port": null,
+      "url": "https://tools.ecojia.cn/renjunxue-website/",
+      "size_kb": 7558,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "军哥懂保个人展示门户：履历、荣誉、案例呈现与 AI 智慧问答，一页了解军哥懂保。",
+      "steps": [
+        "直接打开 Pages 链接浏览",
+        "顶部导航切换 首页 / 人生故事 / 荣誉相册 / 案例 等板块",
+        "右下角 AI 问答入口可咨询保险与理赔问题"
+      ],
+      "pages_url": "https://lzp5133084.github.io/renjunxue-website/",
+      "note": "静态托管，内容修改后重新部署即可更新。"
+    },
+    {
+      "no": "T06",
+      "name": "军哥懂保 · 全域保险专家",
+      "en": "",
+      "repo": "jungedongbao-website",
+      "type": "静态网页（多页）",
+      "entry": "index.html",
+      "run": "浏览器打开或托管静态服务",
+      "port": null,
+      "url": "https://tools.ecojia.cn/jungedongbao-website/",
+      "size_kb": 27,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "保险专家个人品牌站：故事、荣誉相册、服务案例，内置后台数据编辑，无需改代码即可更新内容。",
+      "steps": [
+        "直接打开 Pages 链接浏览",
+        "点右上角「管理」进入内置后台",
+        "在后台编辑文案、上传荣誉照片、维护案例（自动保存生效）"
+      ],
+      "pages_url": "https://lzp5133084.github.io/jungedongbao-website/",
+      "note": "数据与展示分离，适合非技术人员日常维护。"
+    },
+    {
+      "no": "T07",
+      "name": "泸州任氏宗亲网",
+      "en": "",
+      "repo": "renjunxue-cangku",
+      "type": "静态网页（单页）",
+      "entry": "index.html",
+      "run": "浏览器打开或托管静态服务",
+      "port": null,
+      "url": "https://tools.ecojia.cn/renjunxue-cangku/",
+      "size_kb": 2131,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "宗亲文化平台：字辈排行、通讯录、宗亲产业、宗亲地图四大模块，一网联宗亲。",
+      "steps": [
+        "打开网页，顶部菜单切换 字辈 / 通讯录 / 产业 / 地图 模块",
+        "字辈页按世代浏览排行；通讯录支持搜索姓名/房支",
+        "产业页展示宗亲企业名录；地图页标注宗亲聚居与产业分布"
+      ],
+      "pages_url": "https://lzp5133084.github.io/renjunxue-cangku/",
+      "note": "信息更新请联系管理员或提交至仓库 Issue。"
+    },
+    {
+      "no": "T08",
+      "name": "AI 资产速查 Hub",
+      "en": "AI Hub",
+      "repo": "ai-hub",
+      "type": "静态网页 + 定时脚本",
+      "entry": "index.html",
+      "run": "浏览器打开或托管静态服务",
+      "port": null,
+      "url": "https://tools.ecojia.cn/ai-hub/",
+      "size_kb": 87,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS·每日刷新",
+      "desc": "本地模型与 API 速查手册：模型参数、价格、能力对比一页速查，配置数据每日自动刷新。",
+      "steps": [
+        "直接打开 Pages 链接，顶部搜索框输入模型名或厂商关键词",
+        "表格列可排序，快速对比上下文长度、价格与能力标签",
+        "仓库内 daily-refresh.bat 可手动/定时刷新数据（默认每日自动）"
+      ],
+      "pages_url": "https://lzp5133084.github.io/ai-hub/",
+      "note": "数据源每日自动同步，无需人工维护。"
+    },
+    {
+      "no": "T09",
+      "name": "九页问卷客户管理系统",
+      "en": "",
+      "repo": "nine-page-survey",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器直接打开 index.html",
+      "port": null,
+      "url": "https://tools.ecojia.cn/nine-page-survey/",
+      "size_kb": 185,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "九页式客户问卷与管理系统：分页引导填写、后台统一管理，支持 Excel 导出与二维码分享。",
+      "steps": [
+        "把问卷二维码发给客户，客户手机分九页填写，逐页校验不漏项",
+        "客户提交后自动进入管理端列表",
+        "管理端查看 / 筛选 / 搜索问卷，支持导出 Excel 台账",
+        "生成新问卷二维码用于线下推广"
+      ],
+      "pages_url": "https://lzp5133084.github.io/nine-page-survey/",
+      "note": "数据本地保存，适合展会、门店等场景快速收集客户信息。"
+    },
+    {
+      "no": "T10",
+      "name": "黑金 QR 工坊",
+      "en": "HeiJinQR",
+      "repo": "heijin-qr-workshop",
+      "type": "网页工具 + 桌面程序（PyInstaller）",
+      "entry": "index.html / main.py",
+      "run": "网页直接打开；桌面端打包为 EXE",
+      "port": null,
+      "url": "https://tools.ecojia.cn/heijin-qr-workshop/",
+      "size_kb": 41,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "黑金高端风二维码生成工具：Logo 居中、前景/背景色与容错自定义，网页版即时生成，桌面版离线使用。",
+      "steps": [
+        "网页版：打开链接 → 输入网址或文本 → 上传 Logo（可选）→ 选配色样式",
+        "点「生成二维码」实时预览，扫一扫验证可识别",
+        "点「下载」导出 PNG 成品",
+        "桌面端为 PyInstaller 打包 EXE，可离线使用"
+      ],
+      "pages_url": "https://lzp5133084.github.io/heijin-qr-workshop/",
+      "note": "黑金 2027 视觉风格与生态 UI 统一，适合名片、海报、包装印刷。"
+    },
+    {
+      "no": "T11",
+      "name": "霓虹边框凸显工具",
+      "en": "",
+      "repo": "neon-border-tool",
+      "type": "网页工具 + 后端",
+      "entry": "index.html",
+      "run": "网页打开；后端见 backend/",
+      "port": null,
+      "url": "https://tools.ecojia.cn/neon-border-tool/",
+      "size_kb": 68,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "AI 智能图片特效处理：自动识别主体并添加霓虹边框/轮廓凸显效果，支持后端批量处理。",
+      "steps": [
+        "打开网页上传图片（或拖拽进窗口）",
+        "选择特效参数（颜色 / 宽度 / 强度）→ 点生成",
+        "预览满意后下载成品；后端见仓库 backend/ 可二次开发批量处理"
+      ],
+      "pages_url": "https://lzp5133084.github.io/neon-border-tool/",
+      "note": "主体分割在前端完成，原图不上传存储。"
+    },
+    {
+      "no": "T12",
+      "name": "霓虹轮廓描边工具",
+      "en": "",
+      "repo": "neon-outline-tool",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器直接打开 index.html",
+      "port": null,
+      "url": "https://tools.ecojia.cn/neon-outline-tool/",
+      "size_kb": 77,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "为图标/图片描边加发光轮廓的纯前端工具：颜色、粗细、光晕半径实时可调。",
+      "steps": [
+        "打开网页上传或拖入素材",
+        "调节描边颜色 / 宽度 / 光晕，实时预览",
+        "满意后点导出下载 PNG（透明底保留）"
+      ],
+      "pages_url": "https://lzp5133084.github.io/neon-outline-tool/",
+      "note": "适合 App 图标、UI 素材、公众号配图快速加光效。"
+    },
+    {
+      "no": "T13",
+      "name": "智能批量重命名系统",
+      "en": "",
+      "repo": "batch-rename-tool",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器直接打开 index.html",
+      "port": null,
+      "url": "https://tools.ecojia.cn/batch-rename-tool/",
+      "size_kb": 18,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "Sci-Fi 风批量重命名工具：规则组合（序号/日期/替换/前后缀）、实时预览、一键批量执行。",
+      "steps": [
+        "打开网页选择文件（支持多选）",
+        "组合重命名规则（前缀 + 序号 + 日期 + 替换等）",
+        "预览列对照原文件名与新文件名",
+        "确认无误点「执行重命名」批量完成"
+      ],
+      "pages_url": "https://lzp5133084.github.io/batch-rename-tool/",
+      "note": "全程本地处理，文件不上传；执行前务必核对预览列。"
+    },
+    {
+      "no": "T14",
+      "name": "直播嘉宾资源看板",
+      "en": "",
+      "repo": "live-guest-board",
+      "type": "静态网页（多页）",
+      "entry": "index.html / register.html / display.html / control.html",
+      "run": "浏览器打开或托管静态服务",
+      "port": null,
+      "url": "https://tools.ecojia.cn/live-guest-board/",
+      "size_kb": 64,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "直播嘉宾登记与看板系统：报名登记、大屏展示、后台控制三页联动。",
+      "steps": [
+        "register.html：嘉宾填写报名信息（姓名/头衔/头像/场次）",
+        "control.html：后台审核、排序、控制大屏显示内容",
+        "display.html：投屏展示嘉宾列表，实时刷新"
+      ],
+      "pages_url": "https://lzp5133084.github.io/live-guest-board/",
+      "note": "三页分工明确：登记 → 控制 → 展示，适合直播筹备现场。"
+    },
+    {
+      "no": "T15",
+      "name": "PK 直播灵魂拷问",
+      "en": "",
+      "repo": "pk-live-soul-question",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器直接打开 index.html",
+      "port": null,
+      "url": "https://tools.ecojia.cn/pk-live-soul-question/",
+      "size_kb": 21,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "主播 PK 互动神器：280+ 灵魂拷问题库、违禁词查询、MiniMax AI 问答，随机抽题秒出文案。",
+      "steps": [
+        "打开网页选择模式（PK 拷问 / 违禁词 / AI 问答）",
+        "选择题库分类后点「随机抽取」出题，可一键复制文案",
+        "违禁词查询：输入文案即时标红风险词",
+        "历史抽取记录自动保存，避免重复出题"
+      ],
+      "pages_url": "https://lzp5133084.github.io/pk-live-soul-question/",
+      "note": "题库持续扩充中，欢迎在许愿墙留言贡献题目方向。"
+    },
+    {
+      "no": "T16",
+      "name": "PK 直播互动工具（旧版）",
+      "en": "",
+      "repo": "pk-live-tool",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器直接打开 index.html",
+      "port": null,
+      "url": "https://tools.ecojia.cn/pk-live-tool/",
+      "size_kb": 4,
+      "updated": "2026-10-19",
+      "status": "已上线·HTTPS",
+      "desc": "PK 直播互动工具早期版本：题库抽取与文案复制（已被 T15 全面升级替代，保留备用）。",
+      "steps": [
+        "打开网页选择题库",
+        "点抽取按钮出题并复制文案"
+      ],
+      "pages_url": "https://lzp5133084.github.io/pk-live-tool/",
+      "note": "建议直接使用 T15「PK 直播灵魂拷问」，功能更全。"
+    },
+    {
+      "no": "T17",
+      "name": "分身旁观 · 个人语料记录",
+      "en": "",
+      "repo": "fenshenguanguan",
+      "type": "Python 桌面程序",
+      "entry": "main.py",
+      "run": "python main.py（含 GUI）",
+      "port": null,
+      "url": "",
+      "size_kb": 119,
+      "updated": "2026-07-19",
+      "status": "本地运行·未部署",
+      "desc": "个人语料记录系统：采集与沉淀个人日常语料，用于 AI 训练与个人知识库建设。",
+      "steps": [
+        "本地运行 python main.py 打开图形界面",
+        "按界面引导录入/粘贴语料，打标签分类",
+        "支持导出 JSONL 训练格式与按标签检索"
+      ],
+      "note": "对应产品矩阵 02「语料收集器」，网页版规划中。"
+    },
+    {
+      "no": "T18",
+      "name": "客资雷达",
+      "en": "",
+      "repo": "",
+      "type": "本地电脑软件（EXE）",
+      "entry": "本地程序",
+      "run": "本机运行（非网页）",
+      "port": null,
+      "url": "",
+      "size_kb": 0,
+      "updated": "—",
+      "status": "本地软件",
+      "desc": "客户资源雷达式管理软件：客户录入、跟进提醒、雷达视图展示客户分布与跟进优先级。",
+      "steps": [
+        "本机安装并启动程序（EXE）",
+        "录入客户信息并设置跟进周期",
+        "雷达视图按跟进紧急度排序，到点自动提醒"
+      ],
+      "note": "本地电脑软件（未托管 GitHub）；如需在线版可到许愿墙许愿催更网页版。"
+    },
+    {
+      "no": "T19",
+      "name": "理赔资料助手",
+      "en": "",
+      "repo": "",
+      "type": "本地电脑软件（EXE）",
+      "entry": "本地程序",
+      "run": "本机运行（非网页）",
+      "port": null,
+      "url": "",
+      "size_kb": 0,
+      "updated": "—",
+      "status": "本地软件",
+      "desc": "理赔材料整理与进度跟踪软件：案件建档、材料清单核对、进度节点跟踪，理赔不再跑断腿。",
+      "steps": [
+        "本机安装并启动程序（EXE）",
+        "新建理赔案件，按险种生成材料清单模板",
+        "逐项勾选材料齐备情况，跟踪提交/审核/到账节点"
+      ],
+      "note": "本地电脑软件；与 T04 保险管理、产品矩阵 08「理赔AI助手」路线互通。"
+    },
+    {
+      "no": "T20",
+      "name": "视频单帧提取工具",
+      "en": "Video Frame Extractor",
+      "repo": "video-frame-extractor",
+      "type": "网页工具（单页HTML）+ Python 桌面程序",
+      "entry": "index.html（网页版）",
+      "run": "浏览器打开网页版；桌面端双击 启动工具.bat（需 ffmpeg）",
+      "port": null,
+      "url": "https://tools.ecojia.cn/video-frame-extractor/",
+      "size_kb": 265,
+      "updated": "2026-10-21",
+      "status": "已上线·HTTPS",
+      "desc": "课程录屏/手机操作视频的静止画面清理工具：5档分析精度+阈值可调的块级帧差检测，自动提取每个变化画面的最清晰单帧，一键导出 16:9 PPT 或循环动态 GIF。",
+      "steps": [
+        "网页版：打开链接 → 点击或拖入视频 → 选分析精度（5档）与静止阈值 → 点「开始分析提取」",
+        "结果页逐帧预览（点击放大查看清晰度与时间点），支持逐张下载 / 生成 PPT / 生成 GIF",
+        "参数与历史自动记忆（本机保存），点历史记录即可一键复用上次参数；视频全程本地处理不上传，隐私安全",
+        "桌面增强版：克隆仓库后 pip install -r requirements.txt（需 ffmpeg/ffprobe），双击 启动工具.bat，支持 5 档 ffmpeg 压缩与多用户账号管理"
+      ],
+      "note": "阈值经验：提取太多调大（0.10）、漏页调小（0.03）、课程PPT录屏 0.05~0.10、手机操作演示 0.03~0.06；四角遮罩可过滤摄像头气泡与水印干扰。"
+    },
+    {
+      "no": "T21",
+      "name": "视频单帧提取工具 · VIP 高清原图版",
+      "en": "Video Frame Extractor VIP",
+      "repo": "video-frame-extractor",
+      "type": "网页工具（单页HTML）",
+      "entry": "web/vip.html",
+      "run": "浏览器直接打开",
+      "port": null,
+      "url": "https://tools.ecojia.cn/video-frame-extractor/vip.html",
+      "size_kb": 30,
+      "updated": "2026-10-23",
+      "status": "已上线·HTTPS",
+      "desc": "T20 的原画质迭代升级版：按视频原始分辨率无损抓帧（取消 1280px 压缩限制）、默认 PNG 无损导出、PPT 内图片等比铺满不变形、GIF 按画面停留时长合成，全程本地处理不上传。",
+      "steps": [
+        "打开链接 → 点击或拖入视频 → 选分析精度（5档）与静止阈值 → 点「开始分析提取」",
+        "导出画质三档可选：无损 PNG（推荐）/ 高清 JPG / 省空间 JPG",
+        "结果页逐帧预览（点击放大），支持逐张下载原帧 / 生成原画质 PPT / 生成预览 GIF",
+        "参数与历史自动记忆（本机保存），点历史记录一键复用上次参数"
+      ],
+      "pages_url": "",
+      "note": "与 T20 同仓库共存（web/vip.html）：T20 走轻量压缩适合快速粗筛，T21 走原画质无损适合正式 PPT 产出；每个参数旁有 ? 白话解释。4K 视频帧数多的时候建议选「省空间 JPG」避免内存压力。"
+    },
+    {
+      "no": "T22",
+      "name": "AI 开发程序目录",
+      "en": "AI Programs Catalogue",
+      "repo": "ai-programs-catalogue",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器打开即用",
+      "port": null,
+      "url": "https://tools.ecojia.cn/ai-programs-catalogue/",
+      "size_kb": 14822,
+      "updated": "2026-10-24",
+      "status": "已上线·HTTPS",
+      "desc": "全量 AI 开发档案速查：218 个项目/目录候选、1307 个程序入口、26786 条扫描记录统一检索；支持分类筛选、关键字搜索、详情弹窗与演示视频录制状态跟踪；附件含 Excel 总清单与完整文件索引。",
+      "steps": [
+        "打开链接 → 顶部统计卡速览总量 → 切换页签查看项目/程序入口/视频计划/问题修复/开发工具/全部文件",
+        "搜索框输入关键词或按分类筛选，点击「查看」弹出完整详情（路径可一键复制）",
+        "使用视频计划页可标记录制状态（待录制/录制中/已完成），本机自动记忆"
+      ],
+      "note": "星霓暖赛博风与门户一致；数据为 2026-10-21 全量扫描快照；GitHub Pages 镜像可备用。"
+    },
+    {
+      "no": "T24",
+      "name": "修复网络",
+      "en": "Network Fix",
+      "repo": "",
+      "type": "Windows 桌面程序",
+      "entry": "network-fix.exe",
+      "run": "双击运行",
+      "port": 0,
+      "url": "https://tools.ecojia.cn/network-fix-tool/",
+      "size_kb": 42942,
+      "updated": "2026-10-24",
+      "status": "已上线·HTTPS",
+      "desc": "专业网络诊断与修复工具：一键修复（DNS 刷新 / Winsock 重置 / TCP-IP 重置 / 路由优化）、网络诊断、手动单项修复、历史记录存档，支持国内直连与国外隧道的智能分流。",
+      "steps": [
+        "点击「立即打开」进入下载页",
+        "下载 network-fix.exe（约 42 MB）",
+        "双击运行，建议先执行「网络诊断」查看当前状态",
+        "使用「一键修复」后重启计算机使修复完全生效"
+      ],
+      "note": "绿色单文件无需安装；若遇 Windows SmartScreen 提示，点击「更多信息 → 仍要运行」。"
+    },
+    {
+      "no": "T25",
+      "name": "原画质视频帧提取 → PPT 工具",
+      "en": "",
+      "repo": "video2ppt-hd",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器打开即用",
+      "port": null,
+      "url": "https://tools.ecojia.cn/video2ppt-hd/",
+      "size_kb": 34,
+      "updated": "2026-10-24",
+      "status": "已上线·HTTPS",
+      "desc": "🎬 原画质 视频关键帧提取 → PPT 从课程录屏 / 操作演示视频中自动提取变化画面 · 按视频原始分辨率无损导出 ✓ 原画质 · 本地处理 ",
+      "steps": [
+        "打开链接即可使用"
+      ],
+      "note": "部署助手 V1.0 自动登记"
+    },
+    {
+      "no": "T26",
+      "name": "EcoJia.cn 生态家",
+      "en": "",
+      "repo": "renjunxue-gitee-io",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器打开即用",
+      "port": null,
+      "url": "https://tools.ecojia.cn/renjunxue-gitee-io/",
+      "size_kb": 144,
+      "updated": "2026-10-24",
+      "status": "已上线·HTTPS",
+      "desc": "平台服务费 5% · 健康险团体险 1000 元系列 把身边的小事， 变成 可接单的收入 EcoJia.cn 用「位置 + 金额 + 联系方式」",
+      "steps": [
+        "打开链接即可使用"
+      ],
+      "note": "部署助手 V1.0 自动登记"
+    },
+    {
+      "no": "T27",
+      "name": "泸州任氏宗亲网",
+      "en": "",
+      "repo": "luzhouren-clan",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器打开即用",
+      "port": null,
+      "url": "https://tools.ecojia.cn/luzhouren-clan/",
+      "size_kb": 354,
+      "updated": "2026-10-24",
+      "status": "已上线·HTTPS",
+      "desc": "传承宗族文化，凝聚血脉亲情。查询族谱、寻根寻亲、了解宗亲动态。",
+      "steps": [
+        "打开链接即可使用"
+      ],
+      "note": "部署助手 V1.0 自动登记"
+    },
+    {
+      "no": "T28",
+      "name": "数字生态",
+      "en": "",
+      "repo": "digital-ecosystem",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器打开即用",
+      "port": null,
+      "url": "https://tools.ecojia.cn/digital-ecosystem/",
+      "size_kb": 1268,
+      "updated": "2026-10-24",
+      "status": "已上线·HTTPS",
+      "desc": "Digital Ecosystem - AI App Navigation Site by JunGe",
+      "steps": [
+        "打开链接即可使用"
+      ],
+      "note": "部署助手 V1.0 自动登记"
+    },
+    {
+      "no": "T29",
+      "name": "灵犀互传",
+      "en": "",
+      "repo": "lan-share-hub",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器打开即用",
+      "port": null,
+      "url": "https://tools.ecojia.cn/lan-share-hub/",
+      "size_kb": 42,
+      "updated": "2026-10-24",
+      "status": "已上线·HTTPS",
+      "desc": "LAN share hub - file transfer, camera view, remote desktop",
+      "steps": [
+        "打开链接即可使用"
+      ],
+      "note": "部署助手 V1.0 自动登记"
+    },
+    {
+      "no": "T30",
+      "name": "理赔资料助手",
+      "en": "",
+      "repo": "claims-doc-assistant",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器打开即用",
+      "port": null,
+      "url": "https://tools.ecojia.cn/claims-doc-assistant/",
+      "size_kb": 48780,
+      "updated": "2026-10-25",
+      "status": "已上线·HTTPS",
+      "desc": "??????:?? OCR ??????????(Tesseract + PaddleOCR ???,????????)",
+      "steps": [
+        "打开链接即可使用"
+      ],
+      "note": "部署助手 V1.0 自动登记"
+    },
+    {
+      "no": "T31",
+      "name": "抖音素人娱播招募系统",
+      "en": "Douyin Live Recruit",
+      "repo": "",
+      "type": "Flask 网页程序",
+      "entry": "app.py",
+      "run": "flask run（端口 8503）",
+      "port": 8503,
+      "url": "https://tools.ecojia.cn/douyin-recruit/",
+      "size_kb": 152,
+      "updated": "2026-10-24",
+      "status": "已上线·HTTPS",
+      "desc": "抖音素人娱播招募在线报名与运营后台：前台展示招募信息、支持在线报名，后台管理报名数据、页面配置与操作日志。",
+      "steps": [
+        "打开链接进入招募前台，浏览岗位与基地信息",
+        "填写姓名、手机号、岗位与意向，提交在线报名",
+        "管理员进入 /douyin-recruit/admin 登录后台，查看并处理报名",
+        "后台「页面配置」可修改前台文案与联系方式，保存即生效"
+      ],
+      "note": "数据存储于服务器 SQLite（recruit.db）；后台账号与生态统一账号一致。"
+    },
+    {
+      "no": "T32",
+      "name": "灵犀互传 3.0 商用版",
+      "en": "LanShare Hub Pro 3.0",
+      "repo": "https://github.com/lzp5133084/lingxi-huchuan-3",
+      "type": "网页工具 + WebSocket 信令服务 + 文件缓存服务",
+      "entry": "index.html",
+      "run": "浏览器打开即用（信令 8770 /ws3，文件缓存 8771 /c3/）",
+      "port": null,
+      "url": "https://tools.ecojia.cn/lan-share-hub-pro/",
+      "size_kb": 225,
+      "updated": "2026-10-26",
+      "status": "已上线·HTTPS",
+      "desc": "同屏互看 · 主播模式 · 远程控制（含电脑端伴侣）· 摄像头+屏幕双路同看画中画 · 文件 10 分钟服务器缓存 · 消息导出 TXT · 设备类型自动识别 · 手机 APK v3.0.0",
+      "steps": [
+        "电脑/手机打开链接即可互见（同一房间码）",
+        "点「看TA屏幕」「看看TA」「视频通话」发起互看",
+        "主播模式：第一个进房的人是房主，可审批并设置主播；主播开播后其他人自动观看",
+        "手机安装 APK v3.0.0 可走原生通道共享屏幕并被远程控制",
+        "电脑安装「电脑端伴侣」后可被远程控制"
+      ],
+      "note": "GitHub Pages 镜像：https://lzp5133084.github.io/lingxi-huchuan-3/；APK 新签名，旧版需先卸载再装；保留 2.0 体验版 /lan-share-hub/ 不动。"
+    },
+    {
+      "no": "T33",
+      "name": "鼠标画笔 · ScreenPen",
+      "en": "ScreenPen Web",
+      "repo": null,
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器打开即用",
+      "port": null,
+      "url": "https://tools.ecojia.cn/screenpen/",
+      "size_kb": 142,
+      "updated": "2026-10-26",
+      "status": "已上线·HTTPS",
+      "desc": "屏幕标注画笔：画笔/荧光/直线/箭头/矩形/椭圆/文字/橡皮 8 种工具 · 撤销/重做/清空/导出/存档 · 数字键 1-8 快捷切换 · localStorage 本地保存 · 纯本地运行不上传",
+      "steps": [
+        "打开链接即可在网页上直接标注",
+        "数字键 1-8 快速切换 8 种标注工具",
+        "支持撤销/重做，标注可存档到本地并导出图片"
+      ],
+      "note": "v1.0.0 网页演示版；桌面版另有区域截图与 F2/F3 快捷功能。作者：军哥懂保（微信 xunijiayuan）"
+    },
+    {
+      "no": "T34",
+      "name": "我的数字保险箱",
+      "en": "Digital Vault V2.9",
+      "repo": "digital-vault",
+      "type": "网页工具 + Windows桌面EXE + Android APK",
+      "entry": "index.html / 官方下载页",
+      "run": "网页版浏览器打开；电脑端双击 EXE 安装；手机端安装 APK",
+      "port": null,
+      "url": "https://tools.ecojia.cn/digital-vault/",
+      "size_kb": 41977,
+      "updated": "2026-10-27",
+      "status": "已上线·HTTPS",
+      "desc": "🔐 家庭加密数字保管箱：AES-GCM 端到端加密 · 本地优先架构 · 家庭授权共享 · 长期未登录应急触发 · 三端支持（Windows 39MB + Android 2MB + 网页）",
+      "steps": [
+        "打开「立即打开」进入官方下载页，选择对应平台版本",
+        "电脑端下载 EXE 安装，手机端下载 APK 安装",
+        "首次启动设置主密码（至少 6 位，务必牢记）",
+        "录入证件/保单/合同/密码等数字资产，系统自动加密保管",
+        "在「长期未登录触发」里配置应急交付规则和家人联系方式"
+      ],
+      "pages_url": "https://lzp5133084.github.io/digital-vault/",
+      "note": "GitHub Pages 镜像下载页；二进制文件托管在 GitHub Releases（exe 约 39MB / apk 约 2MB）；对应产品矩阵 01「数字保险箱」。"
+    },
+    {
+      "no": "T35",
+      "name": "悬浮计时器",
+      "en": "Float Timer",
+      "type": "网页工具 + Windows桌面EXE + Android APK",
+      "entry": "index.html / 网页端 · 电脑端 · 手机端三端",
+      "run": "网页端浏览器直接打开；电脑端双击 EXE；手机端安装 APK 后开启悬浮球",
+      "port": null,
+      "url": "https://ecojia.cn/timer/",
+      "size_kb": 210,
+      "updated": "2026-10-29",
+      "status": "已上线·HTTPS",
+      "desc": "⏱️ 2027科技风悬浮计时器：正计时 / 倒计时 / 番茄钟三模式，悬浮球不遮挡其他程序，计时结束可命名自动保存记录，支持到时提醒、重复计时、三端自动检查更新，并内置「推广有惊喜 · 大使招募」分享体系。",
+      "steps": [
+        "打开「立即打开」进入网页端，或下载电脑端 EXE / 手机端 APK",
+        "选择模式（正计时 / 倒计时 / 番茄钟），设定时间或选用 1 / 5 / 10 / 25 分钟预设",
+        "点「开始」计时，悬浮球会常驻桌面或屏幕边缘，双击开始/停止，长按或右键打开菜单",
+        "计时结束按需命名保存，未开启命名弹窗时自动以当前时间命名，记录可随时改名",
+        "点「🎁 推广有惊喜」查看大使阶梯奖励，复制邀请码分享给好友开盲盒"
+      ],
+      "note": "三端共用 www.ecojia.cn/timer/version.json 做版本检查；作者军哥懂保，微信 xunijiayuan；推广达 1 / 5 / 10 / 20 人分别解锁推广大使、精英级大使、骨灰级大使、项目合伙人，盲盒福利后期公布。",
+      "pages_url": "https://ecojia.cn/timer/"
+    }
+  ],
+  "stages": [
+    {
+      "version": "V0.1",
+      "name": "门户总站·底座",
+      "status": "已完成",
+      "content": "生态主页+产品矩阵(13位)+许愿墙+统一账号+管理后台+开放API, 46项测试通过"
+    },
+    {
+      "version": "V1.0",
+      "name": "统一账号打通",
+      "status": "待开发",
+      "content": "与资料百事通用户库token互认，一个账号畅游全生态"
+    },
+    {
+      "version": "V1.1",
+      "name": "服务器部署上线",
+      "status": "待开发",
+      "content": "部署至118.24.173.246，域名解析，HTTPS，备案完成后启用ecojia.cn"
+    },
+    {
+      "version": "V1.2",
+      "name": "专业后台",
+      "status": "已完成",
+      "content": "门户可视化后台「积木管理」（增删查改即时生效）+ 工具清单页 + 火星平面羽毛原型"
+    },
+    {
+      "version": "V2.0",
+      "name": "子站接入",
+      "status": "待开发",
+      "content": "各工具以积木方式接入底座，统一分发与导航"
+    }
+  ],
+  "conventions": [
+    "所有终端共用统一后端、统一数据库、统一用户体系、统一数据源",
+    "新增产品/工具优先通过 ecosystem.json 配置加入，不在代码里硬编码",
+    "所有权限校验必须在服务端实现，不依赖前端按钮隐藏",
+    "界面风格：2027黑金科技风（深色底+金色渐变+玻璃拟态），全中文，三端响应式",
+    "页脚必须显示：版本 / 程序大小 / 最后保存时间 / 作者军哥懂保 / 微信xunijiayuan",
+    "密钥与密码不入代码库、不入 ecosystem.json，使用环境变量或凭据管理器",
+    "接口需预留，便于其他程序调用；参数一律支持环境变量覆盖，避免硬编码",
+    "不同程序使用不同端口，互不冲突（门户8400 / 资料百事通8300）"
+  ],
+  "history": [
+    {
+      "date": "2026-10-14",
+      "event": "确定数字生态四层架构（入口/分发/应用/数据），规划12个候选域名"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "采购域名 ecojia.cn（33元，审核中）与腾讯云成都服务器（192元/年）"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "开发门户总站V0.1：生态主页/产品矩阵/许愿墙/统一账号/管理后台，46项测试通过"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "用户提出梦境三产品：BIGBOX（工具平台/数字资产盒子）、geziAI（私人AI助手）、huoxingPM（羽毛形象历程记录）"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "梦境三品牌编号进矩阵：10/11/12，原“待添加”移到13，矩阵扩为13位"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "建立 ecosystem.json 作为生态底座单一数据源，开放 manifest/search/CRUD 接口"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "盘点 GitHub 全部可外部访问内容（19仓库），整理为 17 个工具写入底座 tools 章节"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "V1.2 门户可视化后台：积木管理增删查改；新增 /tools 工具清单与使用说明页"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "火星平面（huoxingPM）羽毛可视化原型上线 /huoxing，每根绒毛=一条记录，预留 /api/huoxing/records"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "全量部署到腾讯云 118.24.173.246：门户8400 + 资料百事通8300(systemd) + 14个网页工具(nginx 8080)，全部改用 IP:端口 访问"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "V1.4 全站换装「星霓暖赛博风」：豆包生成 3 套风格方案供选，seedream 生成星云/羽毛/横幅 3 张素材，CSS 全变量换色 + 霓光流动边缘 + 星尘粒子特效"
+    },
+    {
+      "date": "2026-10-14",
+      "event": "V1.5 全站 emoji 卡通图标升级为商业级线性 SVG 图标系统：62 枚 Lucide 风格 1.8 描边图标 + 粉紫金霓虹渐变，品牌专属六边形生态 LOGO；覆盖顶栏/首屏/主打卡/产品矩阵/硬件区/工具页/火星页/许愿墙/登录页/管理后台；后台积木图标改为下拉选择器"
+    },
+    {
+      "date": "2026-10-15",
+      "event": "ICP备案正式提交：发现主体已有蜀ICP备2025124820号（原备案在其他服务商），本次走「新增服务」流程；完成主体信息+网站信息（军哥的个人主页/ecojia.cn/118.24.173.246）+身份证材料上传+短信核验，订单30179204126826173状态变更为「审核中」"
+    },
+    {
+      "date": "2026-10-19",
+      "event": "ICP备案通过（仅4天）：网站备案号 蜀ICP备2025124820号-2；DNSPod 添加3条A记录(@/www/ziliao→118.24.173.246)；门户站+资料百事通页脚挂备案号；开始域名分发与HTTPS配置"
+    },
+    {
+      "date": "2026-10-19",
+      "event": "域名正式上线：腾讯云防火墙补放行80/443（此前只开了8300/8400/8080，导致证书签发超时）；Caddy 改配为域名网关，ecojia.cn+www→8400、ziliao.ecojia.cn→8300，Let's Encrypt 三张证书全部签发成功；验证 https://ecojia.cn、https://www.ecojia.cn、https://ziliao.ecojia.cn 均200且证书链受信任，HTTP自动308跳HTTPS"
+    },
+    {
+      "date": "2026-10-23",
+      "event": "T21 视频单帧提取工具·VIP高清原图版上线：原始分辨率无损抓帧+PNG无损导出+PPT等比不变形，修复 T20 网页版 1280px 分辨率限制与 JPEG88% 画质损失；与 T20 同仓库共存（web/vip.html），工具清单新增入口"
+    }
+  ],
+  "todos": [
+    "统一账号 token 互认（V1.0）",
+    "公安联网备案（30日内，数据码已生成，有效期至2026-11-18）",
+    "确认三个梦境品牌是否配置子域名",
+    "V1.0 统一账号 token 互认"
+  ],
+  "styles": {
+    "current": "星霓暖赛博风",
+    "generator": "豆包大模型 doubao-seed-2.1-turbo（方案）+ doubao-seedream（首屏/羽毛/横幅三张素材图）",
+    "palette": {
+      "bg": "#1a1025",
+      "bg_soft": "#221536",
+      "accent": "#f472b6 → #c084fc → #fbbf24",
+      "text": "#f3edfa",
+      "muted": "#a99bc0"
+    },
+    "assets": [
+      "static/img/hero-nebula.jpg",
+      "static/img/feather-neon.jpg",
+      "static/img/tools-banner.jpg"
+    ],
+    "all_options": [
+      {
+        "style_name": "柔雾暖晶风",
+        "concept": "融合晨间柔雾氛围感与晶质科技质感的暖调数字生态门户风格",
+        "mood": "柔暖通透、轻量未来、治愈科技",
+        "bg": "#1A1722",
+        "bg_soft": "#252230",
+        "card": "#2A273880",
+        "card_hi": "#35314599",
+        "border": "#3D3A4D40",
+        "border_hi": "#F5C68B60",
+        "gold": "#F5C68B",
+        "gold_hi": "#FFE4C4",
+        "gold_grad": "linear-gradient(135deg, #F5C68B 0%, #E8A0BF 50%, #C9A7EB 100%)",
+        "text": "#F0EDE8",
+        "muted": "#A9A3B3",
+        "ok": "#9CCC65",
+        "danger": "#FF8A65",
+        "font": "鸿蒙黑体柔版 中文",
+        "effect": "全局采用低饱和度暖调玻璃拟态，卡片边缘带极细的晶质高光描边，背景搭配若隐若现的暖金色漂浮粒子。交互动效以缓动弹性过渡为主，按钮悬停时泛起柔雾状金粉色光晕，无生硬跳变。",
+        "hero_idea": "首屏中央悬浮半透明生态晶球，球内动态生长对应个人数字资产的微光植物，周围环绕柔雾状功能入口气泡。"
+      },
+      {
+        "style_name": "森氧数息风",
+        "concept": "以森林氧吧为灵感，融合生物科技感的清新治愈系数字生态门户风格",
+        "mood": "清新治愈、鲜活科技、自然松弛",
+        "bg": "#121E1B",
+        "bg_soft": "#1A2D29",
+        "card": "#22383380",
+        "card_hi": "#2D4A4499",
+        "border": "#3A5F5640",
+        "border_hi": "#6EE7B760",
+        "gold": "#6EE7B7",
+        "gold_hi": "#A7F3D0",
+        "gold_grad": "linear-gradient(135deg, #6EE7B7 0%, #FDE68A 100%)",
+        "text": "#ECFDF5",
+        "muted": "#86A8A0",
+        "ok": "#4ADE80",
+        "danger": "#FB923C",
+        "font": "鸿蒙黑体圆体版 中文",
+        "effect": "全局采用磨砂毛玻璃与生物脉络纹理结合的质感，卡片底部带微弱绿光呼吸投影，背景有极淡的叶绿体状粒子缓慢游动。交互动效采用自然生长式过渡，点击元素时泛起水波纹状绿色涟漪，悬停时边缘长出细碎微光叶脉。",
+        "hero_idea": "首屏呈现动态数字森林场景，每个功能模块对应一棵发光智能树，用户头像为悬浮核心光球，树木随用户操作动态生长。"
+      },
+      {
+        "style_name": "星霓暖赛博风",
+        "concept": "以霓虹星轨为灵感，融合暖调粉彩的潮酷未来感数字生态门户风格",
+        "mood": "梦幻潮酷、暖感赛博、灵动未来",
+        "bg": "#1A1025",
+        "bg_soft": "#2A1A3A",
+        "card": "#35204580",
+        "card_hi": "#452A5A99",
+        "border": "#5B3A7540",
+        "border_hi": "#F472B660",
+        "gold": "#F472B6",
+        "gold_hi": "#F9A8D4",
+        "gold_grad": "linear-gradient(135deg, #F472B6 0%, #C084FC 50%, #FBBF24 100%)",
+        "text": "#FAF5FF",
+        "muted": "#A78BBA",
+        "ok": "#34D399",
+        "danger": "#F43F5E",
+        "font": "阿里妈妈数黑体柔化版 中文",
+        "effect": "全局采用霓光玻璃拟态质感，卡片边缘带有流动的粉紫渐变光晕，背景有缓慢漂移的暖调星尘粒子与光带。交互动效采用星轨式弹性过渡，悬停元素时拖出淡粉紫色彗星光尾，点击时炸开细碎暖调星芒。",
+        "hero_idea": "首屏中央是环绕星轨的个人数字核心星球，每个功能入口为沿轨道运行的彩色小行星，拖动星球可切换不同生态模块。"
+      }
+    ]
+  }
+}
