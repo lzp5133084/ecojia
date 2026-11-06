@@ -1215,7 +1215,7 @@
       "entry": "index.html",
       "run": "浏览器直接打开 index.html",
       "port": null,
-      "url": "https://tools.ecojia.cn/policy-organizer/",
+      "url": "https://tools.ecojia.cn/baodanzhengli/",
       "size_kb": 28,
       "updated": "2026-11-07",
       "status": "代码就绪·待部署",
@@ -1226,7 +1226,7 @@
         "系统生成保单全景清单与缴费日历，到期前 90 天提醒需备齐的证件",
         "需要专业报告时点「💳 立即付费」，由军哥出具受益人确权确认书与规划建议"
       ],
-      "note": "作者军哥懂保，微信 xunijiayuan；上线方式：把 保单整理/ 目录整体放到 tools.ecojia.cn 静态根目录的 policy-organizer/ 下即可访问，四站共用同一套 共享资源/。",
+      "note": "作者军哥懂保，微信 xunijiayuan；上线方式：把 保单整理/ 目录整体放到 tools.ecojia.cn 静态根目录的 baodanzhengli/ 下即可访问，四站共用同一套 共享资源/。",
       "pages_url": ""
     },
     {
@@ -1237,7 +1237,7 @@
       "entry": "index.html",
       "run": "浏览器直接打开 index.html",
       "port": null,
-      "url": "https://tools.ecojia.cn/coverage-review/",
+      "url": "https://tools.ecojia.cn/baozhangjianshi/",
       "size_kb": 28,
       "updated": "2026-11-07",
       "status": "代码就绪·待部署",
@@ -1248,7 +1248,7 @@
         "查看叠加 / 重复 / 缺口量化评分与错配、可缩减、可退保清单",
         "按「推荐配置 / 建议补齐 / 增额调整 / 去除建议」四类建议逐条处理"
       ],
-      "note": "检视结论仅作规划参考，不构成投保建议；作者军哥懂保，微信 xunijiayuan。上线目录名 coverage-review/。",
+      "note": "检视结论仅作规划参考，不构成投保建议；作者军哥懂保，微信 xunijiayuan。上线目录名 baozhangjianshi/。",
       "pages_url": ""
     },
     {
@@ -1259,7 +1259,7 @@
       "entry": "index.html",
       "run": "浏览器直接打开 index.html",
       "port": null,
-      "url": "https://tools.ecojia.cn/claim-assist/",
+      "url": "https://tools.ecojia.cn/lipeixiezhu/",
       "size_kb": 30,
       "updated": "2026-11-07",
       "status": "代码就绪·待部署",
@@ -1270,7 +1270,7 @@
         "参照理赔全流程图跟进：报案 → 交件 → 审核 → 补件 → 结案",
         "需要深度协助时点「💳 立即付费」，由专属顾问全程对接保险公司"
       ],
-      "note": "按件计费，8% 浮动费率；先看「常见问题 TOP5」再决定是否付费；上线目录名 claim-assist/。",
+      "note": "按件计费，8% 浮动费率；先看「常见问题 TOP5」再决定是否付费；上线目录名 lipeixiezhu/。",
       "pages_url": ""
     },
     {
@@ -1281,7 +1281,7 @@
       "entry": "index.html",
       "run": "浏览器直接打开 index.html",
       "port": null,
-      "url": "https://tools.ecojia.cn/case-analysis/",
+      "url": "https://tools.ecojia.cn/anjianfenxi/",
       "size_kb": 31,
       "updated": "2026-11-07",
       "status": "代码就绪·待部署",
@@ -1292,7 +1292,7 @@
         "查看证据链评估报告与维权路径优先级（协商 → 监管投诉 → 诉讼）",
         "需要出具正式诊断意见时点「💳 立即付费」，按 15% 浮动费率结算"
       ],
-      "note": "诊断结论为专业分析意见，不替代司法鉴定；作者军哥懂保，微信 xunijiayuan；上线目录名 case-analysis/。",
+      "note": "诊断结论为专业分析意见，不替代司法鉴定；作者军哥懂保，微信 xunijiayuan；上线目录名 anjianfenxi/。",
       "pages_url": ""
     }
   ],
