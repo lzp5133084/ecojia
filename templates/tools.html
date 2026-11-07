@@ -1,7 +1,19 @@
 {% extends "base.html" %}
 {% from "icon_macro.html" import icon %}
 {% block title %}工具清单{% endblock %}
-{% block description %}数字生态家园工具清单：35 款自研工具的使用说明、运行方式、端口与源码入口，含数字保险箱、悬浮计时器、鼠标画笔、多码集、局域网快传、理赔资料助手等，可按编号速查并直接跳转下载。{% endblock %}
+{% block description %}数字生态家园工具清单：{{ total }} 款自研工具的使用说明、运行方式、端口与源码入口，含数字保险箱、悬浮计时器、鼠标画笔、多码集、局域网快传、理赔资料助手等，可按编号速查并直接跳转下载。{% endblock %}
+{% block head_extra %}
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[
+{"@type":"CollectionPage","name":"工具清单","url":"https://ecojia.cn/tools","inLanguage":"zh-CN","description":"{{ total }} 款自研工具的使用说明、运行方式与入口，按「开始使用」点击热度排序。"},
+{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"数字生态家园","item":"https://ecojia.cn/"},{"@type":"ListItem","position":2,"name":"工具清单","item":"https://ecojia.cn/tools"}]},
+{"@type":"ItemList","numberOfItems":{{ tools|length }},"itemListElement":[
+{% for t in tools %}{"@type":"ListItem","position":{{ loop.index }},"name":{{ t.name|tojson }},"url":{{ (t.url or ('https://ecojia.cn/tools#tool-' ~ t.no))|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"工具清单按什么排序？","acceptedAnswer":{"@type":"Answer","text":"按「开始使用」按钮的点击热度降序；同一 IP 或同一会话对同一工具 1 小时内只计 1 次，统计不含页面访问，也不采集个人身份信息。"}},
+{"@type":"Question","name":"这些工具需要安装吗？","acceptedAnswer":{"@type":"Answer","text":"绝大多数是网页版，点「开始使用」即可在浏览器打开，无需安装；部分工具另外提供电脑端或手机端。"}},
+{"@type":"Question","name":"没有点击数据的新工具会排在最后吗？","acceptedAnswer":{"@type":"Answer","text":"不会。没有点击数据时按人工权重与现有顺序兜底，新工具可以正常获得展示位置。"}}]}
+]}</script>
+{% endblock %}
 {% block content %}
 
 <!-- 左侧工具速查栏（可拉出/收起） -->

@@ -16,6 +16,13 @@
 <meta property="og:description" content="{{ self.description() }}">
 <meta property="og:url" content="https://ecojia.cn{{ request.path }}">
 <meta property="og:image" content="https://ecojia.cn/static/img/hero-nebula-opt.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ self.title() }} · ecojia.cn">
+<meta name="twitter:description" content="{{ self.description() }}">
+<meta name="twitter:image" content="https://ecojia.cn/static/img/hero-nebula-opt.jpg">
+<link rel="alternate" type="text/markdown" href="https://ecojia.cn/llms.txt" title="AI 可读站点摘要">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"数字生态家园","alternateName":"ecojia.cn","url":"https://ecojia.cn/","inLanguage":"zh-CN","description":"军哥懂保打造的数字生活门户：一个账号连接全部产品、工具与开放 API，覆盖网页、安卓与电脑三端。","publisher":{"@type":"Organization","name":"军哥懂保","url":"https://ecojia.cn/"}},{"@type":"Organization","name":"军哥懂保","alternateName":"数字生态家园","url":"https://ecojia.cn/","email":"100469004@qq.com","founder":{"@type":"Person","name":"军哥懂保"}}]}</script>
+{% block head_extra %}{% endblock %}
 <meta name="theme-color" content="#1a1025">
 <meta name="csp-nonce" content="{{ csp_nonce }}">
 <script>

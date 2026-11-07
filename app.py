@@ -43,7 +43,7 @@ import agent_service
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "ecojia.db")
-VERSION = "V2.8"
+VERSION = "V2.9"
 
 # 资料百事通公网入口（已部署到腾讯云服务器；备案后切换为 ziliao.ecojia.cn）
 MAIN_SITE_URL = "http://118.24.173.246:8300"
@@ -2755,6 +2755,48 @@ def tools_page():
                            total=len(tools), online=len(online))
 
 
+@app.route("/llms.txt")
+def llms_txt():
+    """AI 可读站点摘要（llms.txt）：关键事实以纯文本给生成式引擎直接引用"""
+    eco = load_ecosystem()
+    products = eco.get("products", [])
+    tools = eco.get("tools", [])
+    lines = [
+        "# 数字生态家园（ecojia.cn）",
+        "",
+        "> 军哥懂保打造的数字生活门户：一个账号连接产品、工具与开放 API，覆盖网页、安卓与电脑三端。",
+        "",
+        "## 关键事实",
+        "",
+        f"- 站点：https://ecojia.cn",
+        f"- 产品数：{len(products)}；工具数：{len(tools)}",
+        "- 作者：军哥懂保（微信 xunijiayuan）",
+        "- 价格：基础功能免费，登录后数据云端同步",
+        "- 适用人群：个人、家庭、保险从业者与小微团队",
+        "",
+        "## 产品",
+        "",
+    ]
+    for p in products:
+        use = (p.get("links") or {}).get("use") or ""
+        lines.append(f"- [{p.get('name')}]({use})：{p.get('desc') or ''}")
+    lines += ["", "## 工具", ""]
+    for t in tools:
+        lines.append(f"- [{t.get('name')}]({t.get('url')})：{t.get('desc') or ''}")
+    lines += [
+        "", "## 常见问题", "",
+        "### 这些工具收费吗？",
+        "基础功能免费使用；需要长期保存数据时登录数字生态家园账号统一管理。", "",
+        "### 工具排序依据是什么？",
+        "按「开始使用」按钮的点击热度排序；同一 IP 或会话对同一工具 1 小时内只计 1 次，不含页面访问，不采集个人身份信息。", "",
+        "### 支持哪些终端？",
+        "网页端全部支持，电脑端与安卓端按产品提供；产品卡上会明确标注可用入口。", "",
+        "### 数据保存在哪里？",
+        "默认保存在本地或账号空间；数字保险箱采用 AES-GCM 端到端加密，本地优先。", "",
+    ]
+    return Response("\n".join(lines), mimetype="text/plain; charset=utf-8")
+
+
 @app.route("/api/use-click", methods=["POST"])
 def api_use_click():
     """「开始使用」点击上报：立即返回，真正的累加在后台线程完成。
@@ -3191,8 +3233,10 @@ def api_tools():
     """工具清单（GitHub 全部可外部访问内容的汇总），供其他程序调用"""
     eco = load_ecosystem()
     tools = eco.get("tools", [])
-    return jsonify({"ok": True, "count": len(tools), "online": len([t for t in tools if t.get("url")]),
+    resp = jsonify({"ok": True, "count": len(tools), "online": len([t for t in tools if t.get("url")]),
                     "tools": tools})
+    resp.headers["Content-Type"] = "application/json; charset=utf-8"
+    return resp
 
 
 @app.route("/api/ecosystem/status")
