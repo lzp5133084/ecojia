@@ -31,7 +31,7 @@
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/static/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107g">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107h">
 </head>
 <body>
 <a class="skip-link" href="#main">跳到主要内容</a>
@@ -181,6 +181,25 @@ if(window.visualViewport){
     else if(mq.addListener) mq.addListener(onchg);
   }
 })();
+/* 产品卡 / 工具卡：产品介绍展开、缺端按钮提示 */
+window.pcIntro = function(){
+  var btn = this;
+  var card = btn.closest ? btn.closest('.pcard, .tool-card') : null;
+  if(!card) return;
+  var more = card.querySelector('.pcard-more');
+  if(!more) return;
+  var open = more.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if(open) btn.classList.add('is-on'); else btn.classList.remove('is-on');
+};
+window.pcNoEnd = function(kind){
+  var msg = kind === 'pc'
+    ? '该产品暂无电脑端，用电脑浏览器打开网页版即可使用'
+    : kind === 'app'
+      ? '该产品暂无手机端，用手机浏览器打开网页版即可使用'
+      : '该产品尚未上线，暂无可用入口，可以先到许愿墙留言催更';
+  toast(msg, true);
+};
 /* CSRF：统一拦在 fetch 层，写请求自动带一次性 token（用后服务端轮换，403 时自动重领重试一次） */
 (function(){
   var of = window.fetch, tok = '';

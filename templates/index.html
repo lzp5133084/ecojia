@@ -28,94 +28,80 @@
   <div id="qsResult" class="qs-result" hidden></div>
 </section>
 
-<!-- ═══ 当前主打区（支持多主打） ═══ -->
+<!-- ═══ 当前主打区（统一产品卡：简介 / 应用环境 / 作用 + 2×2 四按钮） ═══ -->
 <section class="main-product" id="main-product">
   {% for mp in main_products %}
-  <div class="mp-card">
-    <div class="mp-head">
-      <span class="mp-badge">主打产品{{ loop.index }} · {{ mp.status }}</span>
-      <span class="mp-icon">{{ icon(picon(mp.icon), "ic-neon") }}</span>
+  {% set L = mp.links or {} %}
+  <article class="pcard" id="p-{{ mp.no }}">
+    <div class="pcard-head">
+      <span class="pcard-badge">主打产品{{ loop.index }} · {{ mp.status }}</span>
+      <span class="pcard-icon">{{ icon(picon(mp.icon), "ic-neon") }}</span>
     </div>
-    <h2 class="mp-name">{{ mp.name }}</h2>
-    {% if mp.name == "鼠标画笔" %}
-    <p class="mp-scope">教学 · 直播 · 办公必备的三端屏幕标注神器</p>
-    <p class="mp-desc">画笔 / 荧光 / 箭头 / 文字 8 种标注工具，悬浮球随手调用。<br>
-    区域截图 · 无损录屏 · 动作帧一键生成 PPT · 穿透模式边标注边操作。</p>
-    <div class="mp-feats">
-      <span>{{ icon("package") }} 三端同步</span><span>{{ icon("scan") }} 区域截图</span><span>{{ icon("eye") }} 无损录屏</span><span>{{ icon("filetext") }} 动作帧PPT</span>
+    <h2 class="pcard-name">{{ mp.name }}{% if mp.en %}<em>{{ mp.en }}</em>{% endif %}</h2>
+
+    <dl class="pcard-info">
+      <div><dt>简介</dt><dd>{{ mp.desc }}</dd></div>
+      <div><dt>应用环境</dt><dd>{{ mp.scope }}</dd></div>
+      <div><dt>作用</dt><dd>{{ mp.use or '—' }}</dd></div>
+    </dl>
+
+    <div class="pcard-acts">
+      {% if L.use %}
+      <a class="pbtn pbtn-main" href="{{ L.use }}" target="_blank" rel="noopener">开始使用 {{ icon("arrowright") }}</a>
+      {% else %}
+      <button class="pbtn pbtn-main pbtn-off" type="button" data-act="pcNoEnd" data-arg='["soon"]'>开始使用<em>暂无</em></button>
+      {% endif %}
+
+      <button class="pbtn" type="button" data-act="pcIntro" aria-expanded="false" aria-controls="more-{{ mp.no }}">产品介绍</button>
+
+      {% if L.pc %}
+      <a class="pbtn" href="{{ L.pc }}" target="_blank" rel="noopener">电脑端</a>
+      {% else %}
+      <button class="pbtn pbtn-off" type="button" data-act="pcNoEnd" data-arg='["pc"]'>电脑端<em>暂无</em></button>
+      {% endif %}
+
+      {% if L.app %}
+      <a class="pbtn" href="{{ L.app }}" target="_blank" rel="noopener">手机端</a>
+      {% else %}
+      <button class="pbtn pbtn-off" type="button" data-act="pcNoEnd" data-arg='["app"]'>手机端<em>暂无</em></button>
+      {% endif %}
     </div>
-    <div class="mp-btnrow">
-      <a class="btn btn-gold btn-lg mp-btn" href="https://tools.ecojia.cn/screenpen/" target="_blank">网页版即用 {{ icon("arrowright") }}</a>
-      <a class="btn btn-ghost btn-lg" href="https://tools.ecojia.cn/screenpen/download/screenpen.apk" target="_blank">安卓APP</a>
-      <a class="btn btn-ghost btn-lg" href="https://tools.ecojia.cn/screenpen/download/ScreenPen-Windows-latest.exe" target="_blank">电脑端</a>
+
+    <div class="pcard-more" id="more-{{ mp.no }}">
+      <div class="pmore-sec">
+        <span class="pmore-k">三端支持</span>
+        <div class="pmore-ends">
+          {% if L.use %}<a href="{{ L.use }}" target="_blank" rel="noopener">网页版 · 可用</a>{% else %}<span class="poff">网页版 · 暂无</span>{% endif %}
+          {% if L.pc %}<a href="{{ L.pc }}" target="_blank" rel="noopener">电脑端 · 可下载</a>{% else %}<span class="poff">电脑端 · 暂无</span>{% endif %}
+          {% if L.app %}<a href="{{ L.app }}" target="_blank" rel="noopener">手机端 · 可下载</a>{% else %}<span class="poff">手机端 · 暂无</span>{% endif %}
+        </div>
+      </div>
+      <div class="pmore-sec">
+        <span class="pmore-k">适用场景</span>
+        <p>{{ mp.scope }}{% if mp.use %}；{{ mp.use }}{% endif %}。</p>
+      </div>
+      {% if L.intro %}<a class="pmore-link" href="{{ L.intro }}">查看完整产品介绍 {{ icon("arrowright") }}</a>{% endif %}
     </div>
-    {% elif mp.name == "数字保险箱" %}
-    <p class="mp-scope">家庭重要资料的加密数字保管箱 · 一人保管全家共享</p>
-    <p class="mp-desc">证件 · 保单 · 合同 · 密码账号 统一加密保管。<br>
-    AES-GCM 端到端加密，长期未登录自动触发应急交付，三端同步。</p>
-    <div class="mp-feats">
-      <span>{{ icon("shieldlock") }} AES-GCM加密</span><span>{{ icon("users") }} 家庭授权</span><span>{{ icon("clock") }} 应急触发</span><span>{{ icon("package") }} 三端同步</span>
-    </div>
-    <div class="mp-btnrow">
-      <a class="btn btn-gold btn-lg mp-btn" href="https://tools.ecojia.cn/digital-vault/vault.html" target="_blank">开始使用 {{ icon("arrowright") }}</a>
-      <a class="btn btn-ghost btn-lg" href="https://tools.ecojia.cn/digital-vault/digital-vault-android-v2.9.1.apk" target="_blank">安卓APP</a>
-      <a class="btn btn-ghost btn-lg" href="https://github.com/lzp5133084/digital-vault/releases/download/v2.9/digital-vault-win-v2.9.exe" target="_blank">电脑端</a>
-      <a class="btn btn-ghost btn-lg" href="/vault">产品介绍</a>
-    </div>
-    {% elif mp.name == "悬浮计时器" %}
-    <p class="mp-scope">2027科技风悬浮计时 · 三端同步不打断工作</p>
-    <p class="mp-desc">正计时 / 倒计时 / 番茄钟，悬浮球随手召之即来。<br>
-    计时记录自动保存，内置「推广有惊喜」大使招募体系。</p>
-    <div class="mp-feats">
-      <span>{{ icon("clock") }} 三种计时</span><span>{{ icon("package") }} 三端同步</span><span>{{ icon("save") }} 记录保存</span><span>{{ icon("gem") }} 推广大使</span>
-    </div>
-    <div class="mp-btnrow">
-      <a class="btn btn-gold btn-lg mp-btn" href="https://ecojia.cn/timer/" target="_blank">立即使用 {{ icon("arrowright") }}</a>
-      <a class="btn btn-ghost btn-lg" href="https://ecojia.cn/timer/悬浮计时器_v1.0.7.apk" target="_blank">安卓APP</a>
-      <a class="btn btn-ghost btn-lg" href="https://ecojia.cn/timer/悬浮计时器_v1.0.4.exe" target="_blank">电脑端</a>
-    </div>
-    {% elif mp.name == "资料百事通" %}
-    <p class="mp-scope">全民共创资料库 · AI 帮您找资料</p>
-    <p class="mp-desc">查资料 · 传资料 · 赚积分，出院记录、诊断证明、各类单据……<br>
-    大家上传、大家共享、大家受益。</p>
-    <div class="mp-feats">
-      <span>{{ icon("search") }} AI智能搜索</span><span>{{ icon("users") }} 社区共创</span><span>{{ icon("trophy") }} 贡献等级</span><span>{{ icon("gem") }} VIP权益</span>
-    </div>
-    <a class="btn btn-gold btn-lg mp-btn" href="{{ mp.url }}" target="_blank">立即进入 {{ icon("arrowright") }}</a>
-    {% else %}
-    <p class="mp-scope">{{ mp.scope }}</p>
-    <p class="mp-desc">{{ mp.desc }}</p>
-    <a class="btn btn-gold btn-lg mp-btn" href="{{ mp.url or main_url }}" target="_blank">立即进入 {{ icon("arrowright") }}</a>
-    {% endif %}
-  </div>
+  </article>
   {% endfor %}
 </section>
-<style>
-#main-product{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px}
-#main-product .mp-btnrow{display:flex;gap:12px;flex-wrap:wrap}
-</style>
 
-<!-- ═══ 产品矩阵 ═══ -->
+<!-- ═══ 全部产品入口条（原「产品矩阵」大卡网格，与上方主打卡重复，已精简为入口条） ═══ -->
 <section class="section" id="products">
   <div class="sec-head">
-    <h2>产品矩阵</h2>
-    <p>{{ products|length }}位数字成员，覆盖生活的每个角落（点击卡片可许愿催更）</p>
+    <h2>全部产品</h2>
+    <p>{{ products|length }} 位数字成员 · 已上线的直接进入，未上线的点进去可许愿催更</p>
   </div>
-  <div class="product-grid">
+  <div class="p-strip">
     {% for p in products %}
-    <a class="p-card {{ 'p-main' if p.main else '' }}" href="{{ p.url or '/wishes?product=' ~ p.name }}"
-       {% if p.url %}target="_blank"{% endif %}>
-      <div class="p-top">
-        <span class="p-no">{{ p.no }}</span>
-        <span class="p-status s-{{ {'已上线':'live','规划中':'plan','敬请期待':'soon','虚位以待':'open'}[p.status] }}">{{ p.status }}</span>
-      </div>
-      <div class="p-icon">{{ icon(picon(p.icon), "ic-neon") }}</div>
-      <h3 class="p-name">{{ p.name }}</h3>
-      {% if p.en %}<div class="p-en">{{ p.en }}</div>{% endif %}
-      <p class="p-scope">{{ p.scope }}</p>
-      <p class="p-desc">{{ p.desc }}</p>
-      <span class="p-go">{{ p.url and '进入' or '许愿催更' }} {{ icon("chevronright") }}</span>
-    </a>
+    {% set st = {'已上线':'live','规划中':'plan','敬请期待':'soon','虚位以待':'open'}[p.status] %}
+    {% if p.main and p.url %}
+    <a class="p-chip {{ st }}" href="#p-{{ p.no }}"><span class="pc-no">{{ p.no }}</span><span class="pc-name">{{ p.name }}</span><span class="pc-st">{{ p.status }}</span></a>
+    {% elif p.url %}
+    <a class="p-chip {{ st }}" href="{{ p.url }}"><span class="pc-no">{{ p.no }}</span><span class="pc-name">{{ p.name }}</span><span class="pc-st">{{ p.status }}</span></a>
+    {% else %}
+    <a class="p-chip {{ st }}" href="/wishes?product={{ p.name }}"><span class="pc-no">{{ p.no }}</span><span class="pc-name">{{ p.name }}</span><span class="pc-st">{{ p.status }}</span></a>
+    {% endif %}
     {% endfor %}
   </div>
 </section>

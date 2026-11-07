@@ -54,25 +54,51 @@
       <span class="p-status s-{{ cls }}">{{ t.status }}</span>
     </div>
     <h3 class="tool-name">{{ t.name }}{% if t.en %}<em class="tool-en">{{ t.en }}</em>{% endif %}</h3>
-    <div class="tool-meta">
-      <span class="tm">{{ icon("package") }} {{ t.type }}</span>
-      <span class="tm">{{ icon("clock") }} {{ t.updated }}</span>
-      <span class="tm">{{ icon("disk") }} {{ t.size_kb }} KB</span>
-      {% if t.port %}<span class="tm">{{ icon("plug") }} 端口 {{ t.port }}</span>{% endif %}
+
+    <dl class="pcard-info tinfo">
+      <div><dt>简介</dt><dd>{{ t.desc }}</dd></div>
+      <div><dt>适用环境</dt><dd>{{ t.type }}{% if t.run %} · {{ t.run }}{% endif %}</dd></div>
+      <div><dt>作用</dt><dd>{{ t.use or '—' }}</dd></div>
+    </dl>
+
+    <div class="pcard-acts">
+      {% if t.url %}
+      <a class="pbtn pbtn-main" href="{{ t.url }}" target="_blank" rel="noopener">开始使用 {{ icon("arrowright") }}</a>
+      {% else %}
+      <button class="pbtn pbtn-main pbtn-off" type="button" data-act="pcNoEnd" data-arg='["soon"]'>开始使用<em>暂无</em></button>
+      {% endif %}
+      <button class="pbtn" type="button" data-act="pcIntro" aria-expanded="false" aria-controls="tmore-{{ t.no }}">产品介绍</button>
+      {% if t.links and t.links.pc %}
+      <a class="pbtn" href="{{ t.links.pc }}" target="_blank" rel="noopener">电脑端</a>
+      {% else %}
+      <button class="pbtn pbtn-off" type="button" data-act="pcNoEnd" data-arg='["pc"]'>电脑端<em>暂无</em></button>
+      {% endif %}
+      {% if t.links and t.links.app %}
+      <a class="pbtn" href="{{ t.links.app }}" target="_blank" rel="noopener">手机端</a>
+      {% else %}
+      <button class="pbtn pbtn-off" type="button" data-act="pcNoEnd" data-arg='["app"]'>手机端<em>暂无</em></button>
+      {% endif %}
     </div>
-    <p class="tool-desc">{{ t.desc }}</p>
 
-    <details class="tool-steps">
-      <summary><b>使用说明</b><span class="ts-hint">点击展开</span></summary>
-      <ol>{% for s in t.steps %}<li>{{ s }}</li>{% endfor %}</ol>
-    </details>
-
-    {% if t.note %}<p class="tool-note">{{ icon("alert") }} {{ t.note }}</p>{% endif %}
-
-    <div class="tool-foot">
-      {% if t.url %}<a class="btn btn-gold btn-sm" href="{{ t.url }}" target="_blank">立即打开 {{ icon("arrowright") }}</a>{% endif %}
-      {% if t.repo %}<a class="btn btn-ghost btn-sm" href="https://github.com/lzp5133084/{{ t.repo }}" target="_blank">源码</a>{% endif %}
-      <span class="tool-run">{{ icon("zap") }} {{ t.run }}</span>
+    <div class="pcard-more" id="tmore-{{ t.no }}">
+      <details class="tool-steps">
+        <summary><b>使用说明</b><span class="ts-hint">点击展开</span></summary>
+        <ol>{% for s in t.steps %}<li>{{ s }}</li>{% endfor %}</ol>
+      </details>
+      <div class="pmore-sec">
+        <span class="pmore-k">技术信息</span>
+        <div class="pmore-meta">
+          <span>{{ icon("package") }} {{ t.type }}</span>
+          <span>{{ icon("clock") }} {{ t.updated }}</span>
+          <span>{{ icon("disk") }} {{ t.size_kb }} KB</span>
+          {% if t.port %}<span>{{ icon("plug") }} 端口 {{ t.port }}</span>{% endif %}
+        </div>
+      </div>
+      {% if t.note %}<p class="tool-note">{{ icon("alert") }} {{ t.note }}</p>{% endif %}
+      <div class="pmore-ends">
+        {% if t.repo %}<a href="https://github.com/lzp5133084/{{ t.repo }}" target="_blank" rel="noopener">源码仓库</a>{% endif %}
+        {% if t.url %}<a href="{{ t.url }}" target="_blank" rel="noopener">打开工具</a>{% endif %}
+      </div>
     </div>
   </div>
   {% endfor %}

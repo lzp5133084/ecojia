@@ -41,7 +41,7 @@ import agent_service
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "ecojia.db")
-VERSION = "V2.4"
+VERSION = "V2.5"
 
 # 资料百事通公网入口（已部署到腾讯云服务器；备案后切换为 ziliao.ecojia.cn）
 MAIN_SITE_URL = "http://118.24.173.246:8300"
@@ -2933,6 +2933,7 @@ def api_ecosystem_add_product():
         "main": False,
         "url": (d.get("url") or "").strip(),
         "desc": (d.get("desc") or "").strip(),
+        "use": (d.get("use") or "").strip(),
     }
     idx = next((i for i, p in enumerate(products) if p.get("name") == "待添加"), len(products))
     products.insert(idx, item)
@@ -2955,7 +2956,7 @@ def api_ecosystem_update_product(no):
         return jsonify({"ok": False, "msg": f"未找到编号 {no} 的积木"}), 404
     if target.get("name") == "待添加":
         return jsonify({"ok": False, "msg": "「待添加」占位不可修改"}), 400
-    for k in ("name", "en", "scope", "icon", "url", "desc"):
+    for k in ("name", "en", "scope", "icon", "url", "desc", "use"):
         if str(d.get(k, "")).strip():
             target[k] = str(d[k]).strip()
     if d.get("status") in PRODUCT_STATUS:
