@@ -1902,6 +1902,39 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
    ═══════════════════════════════════════════ */
 #main-product,.pcard-grid{display:grid;gap:20px;align-items:start;
   grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+
+/* ---- 产品图标轮播（/products） ---- */
+.p-rail-wrap{margin:4px 0 24px}
+.p-rail-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:8px}
+.prh-title{font-size:14px;color:var(--gold-hi);letter-spacing:1px;display:inline-flex;align-items:center;gap:6px}
+.prh-hint{font-size:12px;color:var(--muted)}
+.p-rail{display:flex;gap:14px;overflow-x:auto;overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding:4px 2px 12px;scrollbar-width:none}
+.p-rail::-webkit-scrollbar{display:none}
+.rail-item{flex:0 0 calc((100% - 56px) / 5);min-width:0;
+  display:flex;flex-direction:column;align-items:center;gap:6px;min-height:112px;
+  padding:12px 6px 10px;border-radius:16px;border:1px solid var(--border);background:var(--card);
+  transition:transform .2s ease,border-color .2s ease,background .2s ease}
+.rail-item:hover,.rail-item:focus-visible{transform:translateY(-3px);border-color:var(--border-hi);background:var(--card-hi)}
+.rail-ic{width:54px;height:54px;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;
+  font-size:26px;border:1px solid var(--border);
+  background:radial-gradient(120% 120% at 30% 10%,rgba(244,114,182,.18),rgba(30,18,46,.7));
+  box-shadow:inset 0 0 18px rgba(192,132,252,.18)}
+.rail-name{font-size:12.5px;color:var(--text);text-align:center;line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rail-st{font-size:10.5px;padding:1px 8px;border-radius:10px;border:1px solid var(--border)}
+.rail-st.on{color:#2a1035;background:var(--gold-grad);border-color:transparent;font-weight:700}
+.rail-st.off{color:var(--muted)}
+.pcard-hit{border-color:var(--border-hi) !important;
+  box-shadow:0 0 0 2px rgba(244,114,182,.45),0 12px 34px rgba(0,0,0,.45)}
+@media (max-width:900px){.rail-item{flex:0 0 calc((100% - 36px) / 4)}}
+@media (max-width:640px){
+  .p-rail{gap:12px}
+  .rail-item{flex:0 0 96px;min-height:104px}
+  .rail-ic{width:48px;height:48px;font-size:23px}
+  .prh-hint{display:none}
+}
 .pcard{
   position:relative;display:flex;flex-direction:column;gap:14px;
   padding:22px;border:1px solid var(--border);border-radius:var(--radius);
