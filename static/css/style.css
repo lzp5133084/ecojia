@@ -386,9 +386,6 @@ button{font-family:inherit;cursor:pointer}
   .agree-row input[type=checkbox]{width:22px;height:22px;min-width:22px}
   .agree-row label{font-size:12.5px;line-height:1.7}
   .form-tip{font-size:11.5px;margin-top:10px}
-  /* 键盘弹起时 iOS 会把 fixed 元素压在键盘下，base.html 用视觉视口修正 toast 位置 */
-  .toast{left:12px;right:12px;transform:translateY(16px);padding:11px 16px;font-size:13px}
-  .toast.show{transform:translateY(0)}
   /* 登录页右下角给 AI 小鸽子留出空白，避免浮球压住输入框与按钮 */
   .auth-page .auth-wrap{padding-bottom:76px}
   .auth-page .eb-ball{
@@ -669,6 +666,12 @@ button{font-family:inherit;cursor:pointer}
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.err{border-color:rgba(251,113,133,.5);color:var(--danger)}
+/* 必须写在基础规则之后，否则同特异性下会被上面的 left:50% 覆盖 */
+@media (max-width:640px){
+  .toast{left:12px;right:12px;padding:11px 16px;font-size:13px;
+    transform:translateX(0) translateY(16px)}
+  .toast.show{transform:translateX(0) translateY(0)}
+}
 
 /* ---- 页脚 ---- */
 .footer{border-top:1px solid var(--border);background:rgba(26,16,37,.85);margin-top:auto}
@@ -690,7 +693,7 @@ button{font-family:inherit;cursor:pointer}
 .foot-beian a:hover{color:#fbbf24}
 
 /* ---- 响应式（三端自适应：手机/平板/电脑） ---- */
-@media (max-width:960px){
+@media (max-width:1080px){
   .wish-layout{grid-template-columns:1fr}
   .admin-grid{grid-template-columns:1fr}
   .fx-layout{grid-template-columns:1fr}
@@ -698,7 +701,7 @@ button{font-family:inherit;cursor:pointer}
   .nav{order:3;width:100%;flex:0 0 100%}
   .user-area{margin-left:auto}
 }
-@media (max-width:600px){
+@media (max-width:640px){
   .brand-name{font-size:16px}
   .brand-domain{display:none}
   .hero{padding:36px 0 30px}
@@ -1379,7 +1382,7 @@ body.hx-lock{overflow:hidden}
   #feather{max-height:520px}
   .hx-own-actions .btn{flex:1 1 calc(33.33% - 6px)}
 }
-@media (max-width:720px){
+@media (max-width:768px){
   .hx-head h1{font-size:30px}
   .hx-idcard{padding:18px 16px 15px;border-radius:20px}
   .hx-id-main{gap:13px}
@@ -1416,7 +1419,7 @@ body.hx-lock{overflow:hidden}
   .hx-id-foot{flex-wrap:wrap}
   .hx-id-foot-text{align-items:flex-start;text-align:left}
 }
-@media (max-width:430px){
+@media (max-width:640px){
   .hx-id-main{flex-direction:column;align-items:flex-start;gap:11px}
   .hx-avatar{width:70px;height:70px}
   .hx-id-name{font-size:21px}
@@ -1721,7 +1724,7 @@ body.hx-lock{overflow:hidden}
 .hx-res-claim-acts .btn{font-size:11.5px;padding:6px 12px}
 .hx-res-detail-acts{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end;margin-top:4px}
 .hx-res-detail-acts .btn{min-width:110px;justify-content:center}
-@media(max-width:720px){
+@media(max-width:768px){
   .hx-res{padding:14px 13px 12px}
   .hx-res .hx-guide-head h3{font-size:16px;white-space:nowrap}
   .hx-res .hx-guide-head span{display:none}
@@ -1805,13 +1808,13 @@ body.hx-lock{overflow:hidden}
 .hxv-note{margin:12px 0 0;font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.8}
 .hxv-terms{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 
-@media (max-width:900px){
+@media (max-width:768px){
   .hx-annual-hero{grid-template-columns:1fr}
   .hx-annual-cats{grid-template-columns:repeat(4,1fr)}
   .hxv-terms{grid-template-columns:1fr}
   .hxv-grid{grid-template-columns:1fr}
 }
-@media (max-width:560px){
+@media (max-width:640px){
   .hx-annual-cats{grid-template-columns:repeat(2,1fr)}
   .hx-annual-year{font-size:40px}
   .hx-wit-item{flex-direction:column;align-items:stretch}
@@ -1846,7 +1849,7 @@ body.hx-lock{overflow:hidden}
 .kc-fp{display:inline-block;font-size:12px;color:#c8b06a;background:rgba(255,214,130,.08);border:1px dashed rgba(255,214,130,.25);border-radius:8px;padding:2px 8px;margin-bottom:8px}
 .kc-detail{margin:0;font-size:13px;line-height:1.6;color:#b7add2;word-break:break-all}
 .kc-ms{position:absolute;top:16px;right:18px;font-size:11px;color:#6f6688}
-@media(max-width:560px){.kc-grid{grid-template-columns:1fr}.kc-ms{position:static;margin-top:8px}}
+@media(max-width:640px){.kc-grid{grid-template-columns:1fr}.kc-ms{position:static;margin-top:8px}}
 
 /* ---- 可访问性与触控（P1：键盘焦点可见 + 44px 触控目标） ---- */
 :focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px;border-radius:8px}
@@ -1855,7 +1858,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .skip-link{position:absolute;left:-9999px;top:0;z-index:1200;padding:10px 18px;border-radius:0 0 12px 0;
   background:var(--gold-grad);color:#2a1035;font-size:14px;font-weight:700}
 .skip-link:focus{left:0}
-@media (max-width:767px){
+/* 触控目标放大只给手机，平板保持原顶栏高度 */
+@media (max-width:640px){
   .nav a{min-height:44px;display:inline-flex;align-items:center;padding:10px 14px}
   .btn-sm{min-height:44px;padding:10px 16px}
   .foot-links a{min-height:40px;display:inline-flex;align-items:center;padding:6px 2px}
@@ -1889,7 +1893,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .qs-desc{flex:1;min-width:0;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qs-empty{padding:14px 10px;font-size:13px;color:var(--muted);text-align:center}
 .qs-empty a{color:var(--gold-hi);text-decoration:underline}
-@media (max-width:560px){
+@media (max-width:640px){
   .qs-form{flex-wrap:wrap}
   .qs-input{flex:1 1 100%;padding:8px 4px}
   .qs-btn{flex:1 1 100%}
