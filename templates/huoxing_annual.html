@@ -54,9 +54,9 @@
 <section class="hx-annual-actions">
   <a class="btn btn-ghost btn-sm" href="/huoxing">{{ icon("feather") }} 返回火星平面</a>
   {% if public_url %}
-  <button class="btn btn-gold btn-sm" type="button" onclick="hxCopyUrl('{{ public_url }}')">{{ icon("link") }} 复制公开年报链接</button>
+  <button class="btn btn-gold btn-sm" type="button" data-act="hxCopyUrl" data-arg='["{{ public_url }}"]'>{{ icon("link") }} 复制公开年报链接</button>
   {% endif %}
-  <button class="btn btn-ghost btn-sm" type="button" onclick="window.print()">{{ icon("save") }} 打印 / 存为海报</button>
+  <button class="btn btn-ghost btn-sm" type="button" data-act="ecjPrint">{{ icon("save") }} 打印 / 存为海报</button>
 </section>
 {% endif %}
 

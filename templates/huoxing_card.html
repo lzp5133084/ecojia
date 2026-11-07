@@ -33,7 +33,7 @@
     <div class="hx-did-row">
       <span class="hx-did-label">身份标识</span>
       <code>{{ identity.did }}</code>
-      <button class="hx-mini-btn" type="button" onclick="navigator.clipboard&&navigator.clipboard.writeText('{{ identity.did }}').then(function(){toast('已复制身份标识')})">复制</button>
+      <button class="hx-mini-btn" type="button" data-act="hxCopyDid" data-arg='["{{ identity.did }}"]'>复制</button>
     </div>
     <div class="hx-id-stats">
       <div class="hx-id-stat"><b>{{ stats.total if stats else 0 }}</b><span>公开历程</span></div>

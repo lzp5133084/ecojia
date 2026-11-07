@@ -32,7 +32,7 @@
 <section class="admin-card brick-card">
   <div class="brick-head">
     <h3>{{ icon("puzzle") }} 积木管理 <small>（产品矩阵增删查改 · 改完立即生效，无需改文件）</small></h3>
-    <button class="btn btn-gold btn-sm" onclick="openBrickForm()">{{ icon("pluscircle") }} 新增积木</button>
+    <button class="btn btn-gold btn-sm" data-act="openBrickForm">{{ icon("pluscircle") }} 新增积木</button>
   </div>
   <p class="admin-tip">新增的积木自动编号并插在「待添加」之前；「待添加」占位不可修改/删除。新增后即时出现在首页产品矩阵与许愿墙下拉框。</p>
 
@@ -49,8 +49,8 @@
     </div>
     <label>一句话简介<textarea id="bf-desc" rows="2" maxlength="120" placeholder="20字内说清它是干什么的"></textarea></label>
     <div class="bf-ops">
-      <button class="btn btn-gold btn-sm" onclick="saveBrick()">{{ icon("save") }} 保存</button>
-      <button class="btn btn-ghost btn-sm" onclick="closeBrickForm()">取消</button>
+      <button class="btn btn-gold btn-sm" data-act="saveBrick">{{ icon("save") }} 保存</button>
+      <button class="btn btn-ghost btn-sm" data-act="closeBrickForm">取消</button>
     </div>
   </div>
 
@@ -66,13 +66,13 @@
       <div style="font-weight:700;margin-bottom:8px">推广微信群二维码</div>
       <img id="qr-group-preview" src="" alt="未设置" style="width:150px;height:150px;object-fit:contain;background:#fff;border-radius:8px;margin-bottom:8px">
       <div><input type="file" id="qr-group-file" accept="image/*" style="font-size:12px"></div>
-      <button class="btn btn-gold btn-sm" style="margin-top:8px" onclick="uploadQr('group')">上传微信群二维码</button>
+      <button class="btn btn-gold btn-sm" style="margin-top:8px" data-act="uploadQr" data-arg='["group"]'>上传微信群二维码</button>
     </div>
     <div style="flex:1;min-width:220px;text-align:center;border:1px dashed rgba(251,191,36,.4);border-radius:12px;padding:14px">
       <div style="font-weight:700;margin-bottom:8px">合伙人 ¥999 支付二维码</div>
       <img id="qr-pay-preview" src="" alt="未设置" style="width:150px;height:150px;object-fit:contain;background:#fff;border-radius:8px;margin-bottom:8px">
       <div><input type="file" id="qr-pay-file" accept="image/*" style="font-size:12px"></div>
-      <button class="btn btn-gold btn-sm" style="margin-top:8px" onclick="uploadQr('pay')">上传支付二维码</button>
+      <button class="btn btn-gold btn-sm" style="margin-top:8px" data-act="uploadQr" data-arg='["pay"]'>上传支付二维码</button>
     </div>
   </div>
   <h4 style="margin:14px 0 8px">👥 推广关系（谁推广了谁）</h4>
@@ -89,8 +89,8 @@
     <label style="font-size:12px;color:#bbb">等级<br><select id="gr-level" style="margin-top:4px"></select></label>
     <label style="font-size:12px;color:#bbb">天数<br><input id="gr-days" type="number" value="30" min="1" style="width:80px;margin-top:4px"></label>
     <label style="font-size:12px;color:#bbb">备注<br><input id="gr-note" placeholder="盲盒 / 活动 / 手动" style="width:130px;margin-top:4px"></label>
-    <button class="btn btn-gold btn-sm" onclick="saveGrant()">开通 / 续期</button>
-    <button class="btn btn-ghost btn-sm" onclick="loadGrants()">刷新列表</button>
+    <button class="btn btn-gold btn-sm" data-act="saveGrant">开通 / 续期</button>
+    <button class="btn btn-ghost btn-sm" data-act="loadGrants">刷新列表</button>
   </div>
   <div id="grant-list" style="font-size:12.5px;overflow-x:auto">加载中…</div>
 </section>
@@ -101,11 +101,11 @@
   <p class="admin-tip">视频已在服务器上时直接填外链最省事；也可以上传 mp4 覆盖本站文件。保存后各项目客户端会立即读取这段视频作为"看视频解锁"内容。</p>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0 8px">
     <input id="video-url" placeholder="https://ecojia.cn/static/uploads/xxx.mp4" style="flex:1;min-width:260px">
-    <button class="btn btn-gold btn-sm" onclick="saveVideoUrl()">保存外链</button>
+    <button class="btn btn-gold btn-sm" data-act="saveVideoUrl">保存外链</button>
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
     <input type="file" id="video-file" accept="video/mp4,video/webm" style="font-size:12px">
-    <button class="btn btn-ghost btn-sm" onclick="uploadVideo()">上传视频文件</button>
+    <button class="btn btn-ghost btn-sm" data-act="uploadVideo">上传视频文件</button>
     <span id="video-now" style="font-size:12px;color:#999">读取中…</span>
   </div>
 </section>
@@ -155,16 +155,16 @@ async function loadAll(){
     wbox.innerHTML = wl.wishes.map(w => `
       <div class="aw-item">
         <div class="aw-top">
-          <span class="wi-product">${w.product}</span>
-          <span class="wi-meta">#${w.id} · ${w.nickname||'匿名'} · ${w.created_at.slice(0,10)}</span>
+          <span class="wi-product">${escapeHtml(w.product)}</span>
+          <span class="wi-meta">#${w.id} · ${escapeHtml(w.nickname||'匿名')} · ${w.created_at.slice(0,10)}</span>
         </div>
         <p class="wi-content">${escapeHtml(w.content)}</p>
         <div class="aw-bottom">
-          <select onchange="setStatus(${w.id}, this.value)">
+          <select data-act-change="setStatus" data-arg="[${w.id}]" data-arg-this="value">
             ${STATUS.map(s=>`<option ${s===w.status?'selected':''}>${s}</option>`).join('')}
           </select>
           <span class="wi-contact">${icn('phone')} ${escapeHtml(w.contact)}</span>
-          <a href="javascript:void(0)" class="danger" onclick="delWish(${w.id})">${icn('trash')} 删除</a>
+          <a href="#" class="danger" data-act="delWish" data-arg="[${w.id}]">${icn('trash')} 删除</a>
         </div>
       </div>`).join('');
   } else {
@@ -175,7 +175,7 @@ async function loadAll(){
     lbox.innerHTML = lg.logs.map(l => `
       <div class="log-item">
         <span class="log-time">${l.created_at}</span>
-        <span class="log-user">${l.nickname||'游客'}</span>
+        <span class="log-user">${escapeHtml(l.nickname||'游客')}</span>
         <span class="log-action">${l.action}</span>
         <span class="log-detail">${escapeHtml(l.detail||'')}</span>
       </div>`).join('');
@@ -205,8 +205,8 @@ function renderBricks(){
       </div>
       <div class="brick-ops">
         ${fixed?'<span class="brick-lock">共创占位</span>':`
-        <a href="javascript:void(0)" onclick="editBrick('${p.no}')">${icn('pencil')} 修改</a>
-        <a href="javascript:void(0)" class="danger" onclick="delBrick('${p.no}')">${icn('trash')} 删除</a>`}
+        <a href="#" data-act="editBrick" data-arg='["${p.no}"]'>${icn('pencil')} 修改</a>
+        <a href="#" class="danger" data-act="delBrick" data-arg='["${p.no}"]'>${icn('trash')} 删除</a>`}
       </div>
     </div>`;
   }).join('');
@@ -357,7 +357,7 @@ function renderGrants(list){
       + '<td style="font-family:monospace">' + grEsc(g.expire_at) + '</td>'
       + '<td>' + (g.active ? '<b style="color:#34d399">有效</b>' : '<span style="color:#888">已过期</span>') + '</td>'
       + '<td>' + grEsc(g.note || '—') + '</td>'
-      + '<td><a href="javascript:void(0)" class="danger" onclick="revokeGrant(\'' + grEsc(g.username) + '\',\'' + grEsc(g.app_key) + '\')">撤销</a></td></tr>';
+      + '<td><a href="#" class="danger" data-act="revokeGrant" data-arg="' + grEsc(JSON.stringify([g.username, g.app_key])) + '">撤销</a></td></tr>';
   });
   box.innerHTML = html + '</table>';
 }

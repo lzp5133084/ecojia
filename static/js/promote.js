@@ -240,7 +240,7 @@
     host.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483600;';
     document.body.appendChild(host);
     var root = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
-    var style = document.createElement('style');
+    var style = window.ecjStyle ? window.ecjStyle() : document.createElement('style');
     style.textContent = CSS;
     root.appendChild(style);
 

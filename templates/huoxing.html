@@ -676,7 +676,7 @@
       <div class="hx-did-row">
         <span class="hx-did-label">身份标识</span>
         <code>${esc(idt.did)}</code>
-        <button class="hx-mini-btn" type="button" onclick="window.hxCopy('${esc(idt.did)}')">复制</button>
+        <button class="hx-mini-btn" type="button" data-act="hxCopy" data-arg='[${JSON.stringify(idt.did)}]'>复制</button>
       </div>
       <div class="hx-id-stats">
         <div class="hx-id-stat"><b>${s.total}</b><span>段历程</span></div>
@@ -943,9 +943,9 @@
       </div>
       ${witHtml}
       ${editable ? `<div class="hx-d-ops">
-        ${canInvite ? `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxOpenWitness('${esc(r.id)}')">{{ icon("users") }} 邀请见证人</button>` : ""}
-        <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxEditRecord('${esc(r.id)}')">{{ icon("pencil") }} 修改</button>
-        <button class="btn btn-ghost btn-sm hx-danger" type="button" onclick="window.hxDeleteRecord('${esc(r.id)}')">{{ icon("trash") }} 删除</button>
+        ${canInvite ? `<button class="btn btn-gold btn-sm" type="button" data-act="hxOpenWitness" data-arg='[${JSON.stringify(r.id)}]'>{{ icon("users") }} 邀请见证人</button>` : ""}
+        <button class="btn btn-ghost btn-sm" type="button" data-act="hxEditRecord" data-arg='[${JSON.stringify(r.id)}]'>{{ icon("pencil") }} 修改</button>
+        <button class="btn btn-ghost btn-sm hx-danger" type="button" data-act="hxDeleteRecord" data-arg='[${JSON.stringify(r.id)}]'>{{ icon("trash") }} 删除</button>
       </div>` : `<div class="hx-d-demo">${DATA.demo ? "示例历程 · 登录后即可建自己的档案" : ""}</div>`}`;
   }
 
@@ -1004,8 +1004,8 @@
           ${w.statement ? `<em>「${esc(w.statement)}」</em>` : ""}
         </div>
         <div class="hx-wit-ops">
-          <button class="btn btn-gold btn-sm" type="button" onclick="window.hxSignWitness(${w.id})">签名见证</button>
-          <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxDeclineWitness(${w.id})">婉拒</button>
+          <button class="btn btn-gold btn-sm" type="button" data-act="hxSignWitness" data-arg="[${w.id}]">签名见证</button>
+          <button class="btn btn-ghost btn-sm" type="button" data-act="hxDeclineWitness" data-arg="[${w.id}]">婉拒</button>
         </div>
       </div>`).join("");
   }
@@ -1076,8 +1076,8 @@
           ${confirmed && o.public_card ? `<a class="hx-family-link" href="/hx/card/${esc(o.did)}" target="_blank" rel="noopener">查看 TA 的公开身份证（${f.other_public_count||0} 条公开历程）</a>` : ""}
         </div>
         <div class="hx-family-ops">
-          ${!confirmed && f.direction==="in" ? `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxAcceptFamily(${f.id})">确认关联</button>` : ""}
-          <button class="btn btn-ghost btn-sm hx-danger" type="button" onclick="window.hxRemoveFamily(${f.id})">解除</button>
+          ${!confirmed && f.direction==="in" ? `<button class="btn btn-gold btn-sm" type="button" data-act="hxAcceptFamily" data-arg="[${f.id}]">确认关联</button>` : ""}
+          <button class="btn btn-ghost btn-sm hx-danger" type="button" data-act="hxRemoveFamily" data-arg="[${f.id}]">解除</button>
         </div>
       </div>`;
     }).join("");
@@ -1531,10 +1531,10 @@
     }
     if(!RES.items.length){
       const tip = RES.tab === "mine"
-        ? ["还没有发布过共享资源", "把你用不完的会员、优惠券、行业名额放上来，让闲置权益流动起来。", `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResAdd()">发布第一份资源</button>`]
+        ? ["还没有发布过共享资源", "把你用不完的会员、优惠券、行业名额放上来，让闲置权益流动起来。", `<button class="btn btn-gold btn-sm" type="button" data-act="hxResAdd">发布第一份资源</button>`]
         : RES.tab === "claims"
         ? ["还没有领取记录", "去资源广场看看，遇到需要的资源可以申请领取。", ""]
-        : ["这一栏还很安静", "换个类型或关键词试试，也可以成为第一个分享的人。", `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResAdd()">发布共享资源</button>`];
+        : ["这一栏还很安静", "换个类型或关键词试试，也可以成为第一个分享的人。", `<button class="btn btn-gold btn-sm" type="button" data-act="hxResAdd">发布共享资源</button>`];
       box.innerHTML = resEmpty(tip[0], tip[1], tip[2]);
       return;
     }
@@ -1548,28 +1548,28 @@
     const topBadge = claimState
       ? `<span class="hx-res-state ${claimState==="approved"?"ok":(claimState==="pending"?"warn":"dead")}">${esc(d.claim.status_label)}</span>`
       : `<span class="hx-res-state ${resStateClass(st)}">${esc(st)}</span>`;
-    let acts = `<button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResOpen(${d.id})">详情</button>`;
+    let acts = `<button class="btn btn-ghost btn-sm" type="button" data-act="hxResOpen" data-arg="[${d.id}]">详情</button>`;
     const expTag = d.expired
       ? `<span class="hx-res-exp-tag bad">已过期</span>`
       : (d.expiring ? `<span class="hx-res-exp-tag warn">剩${d.days_left}天</span>` : "");
     if(RES.tab === "mine"){
-      acts += `<button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResEdit(${d.id})">编辑</button>`;
-      acts += `<button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResToggle(${d.id},'${d.status==="active"?"off":"active"}')">${d.status==="active"?"下架":"上架"}</button>`;
-      if(d.expiring) acts += `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResRenew(${d.id})">续期30天</button>`;
-      acts += `<button class="btn btn-ghost btn-sm hx-res-del" type="button" onclick="window.hxResDelete(${d.id})">删除</button>`;
+      acts += `<button class="btn btn-ghost btn-sm" type="button" data-act="hxResEdit" data-arg="[${d.id}]">编辑</button>`;
+      acts += `<button class="btn btn-ghost btn-sm" type="button" data-act="hxResToggle" data-arg='[${d.id},${JSON.stringify(d.status==="active"?"off":"active")}]'>${d.status==="active"?"下架":"上架"}</button>`;
+      if(d.expiring) acts += `<button class="btn btn-gold btn-sm" type="button" data-act="hxResRenew" data-arg="[${d.id}]">续期30天</button>`;
+      acts += `<button class="btn btn-ghost btn-sm hx-res-del" type="button" data-act="hxResDelete" data-arg="[${d.id}]">删除</button>`;
     }else if(RES.tab === "claims"){
       if(claimState === "pending")
-        acts += `<button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResCancel(${d.id},${d.claim.id})">取消申请</button>`;
+        acts += `<button class="btn btn-ghost btn-sm" type="button" data-act="hxResCancel" data-arg="[${d.id},${d.claim.id}]">取消申请</button>`;
       if(claimState === "approved")
-        acts += `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResOpen(${d.id})">查看内容</button>`;
+        acts += `<button class="btn btn-gold btn-sm" type="button" data-act="hxResOpen" data-arg="[${d.id}]">查看内容</button>`;
     }else if(d.mine){
-      acts += `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResEdit(${d.id})">管理</button>`;
+      acts += `<button class="btn btn-gold btn-sm" type="button" data-act="hxResEdit" data-arg="[${d.id}]">管理</button>`;
     }else if(d.claim_status === "approved"){
-      acts += `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResOpen(${d.id})">查看内容</button>`;
+      acts += `<button class="btn btn-gold btn-sm" type="button" data-act="hxResOpen" data-arg="[${d.id}]">查看内容</button>`;
     }else if(d.claim_status === "pending"){
       acts += `<button class="btn btn-ghost btn-sm" type="button" disabled>等待确认</button>`;
     }else{
-      acts += `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResOpen(${d.id})" ${d.left<=0?"disabled":""}>${d.left<=0?"已领完":"领取"}</button>`;
+      acts += `<button class="btn btn-gold btn-sm" type="button" data-act="hxResOpen" data-arg="[${d.id}]" ${d.left<=0?"disabled":""}>${d.left<=0?"已领完":"领取"}</button>`;
     }
     const extra = RES.tab === "mine"
       ? `<span class="hx-res-badge ${d.pending_count?"pending":""}">${iconHtml("users")}${d.claims_count||0} 人申请${d.pending_count?` · ${d.pending_count} 待审`:""}</span>${d.reports_count?`<span class="hx-res-badge pending">${iconHtml("shieldlock")}被举报 ${d.reports_count}</span>`:""}`
@@ -1681,14 +1681,14 @@
     if(d.visible){
       html += `<div class="hx-res-secret">
         <div class="hx-res-secret-label">${iconHtml("key")}资源内容（仅你与领取者可见）
-          ${d.secret ? `<button class="hx-res-copy" type="button" onclick="window.hxResCopySecret()">复制</button>` : ""}
+          ${d.secret ? `<button class="hx-res-copy" type="button" data-act="hxResCopySecret">复制</button>` : ""}
         </div>
         <pre class="hx-res-secret-val">${esc(d.secret) || "发布者没有填写文字内容，请通过下方联系方式获取"}</pre>
       </div>`;
       if(d.contact){
         html += `<div class="hx-res-secret">
           <div class="hx-res-secret-label">${iconHtml("link")}发布者联系方式
-            <button class="hx-res-copy" type="button" onclick="window.hxResCopyContact()">复制</button>
+            <button class="hx-res-copy" type="button" data-act="hxResCopyContact">复制</button>
           </div>
           <pre class="hx-res-secret-val">${esc(d.contact)}</pre>
         </div>`;
@@ -1713,17 +1713,17 @@
             ${c.message ? `<div class="hx-res-claim-msg">留言：${esc(c.message)}</div>` : ""}
             ${c.contact ? `<div class="hx-res-claim-msg">联系方式：${esc(c.contact)}</div>` : ""}
             ${c.status==="pending" ? `<div class="hx-res-claim-acts">
-              <button class="btn btn-gold btn-sm" type="button" onclick="window.hxResDecide(${d.id},${c.id},'approve')">通过并发放</button>
-              <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResDecide(${d.id},${c.id},'reject')">拒绝</button>
+              <button class="btn btn-gold btn-sm" type="button" data-act="hxResDecide" data-arg='[${d.id},${c.id},"approve"]'>通过并发放</button>
+              <button class="btn btn-ghost btn-sm" type="button" data-act="hxResDecide" data-arg='[${d.id},${c.id},"reject"]'>拒绝</button>
             </div>` : ""}
           </div>`).join("")}
         </div>`;
       }
       html += `<div class="hx-res-detail-acts">
-        ${d.expire_at ? `<button class="btn btn-gold btn-sm" type="button" onclick="window.hxResRenew(${d.id})">续期30天</button>` : ""}
-        <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResEdit(${d.id})">编辑资源</button>
-        <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResToggle(${d.id},'${d.status==="active"?"off":"active"}')">${d.status==="active"?"下架资源":"重新上架"}</button>
-        <button class="btn btn-ghost btn-sm hx-res-del" type="button" onclick="window.hxResDelete(${d.id})">删除资源</button>
+        ${d.expire_at ? `<button class="btn btn-gold btn-sm" type="button" data-act="hxResRenew" data-arg="[${d.id}]">续期30天</button>` : ""}
+        <button class="btn btn-ghost btn-sm" type="button" data-act="hxResEdit" data-arg="[${d.id}]">编辑资源</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-act="hxResToggle" data-arg='[${d.id},${JSON.stringify(d.status==="active"?"off":"active")}]'>${d.status==="active"?"下架资源":"重新上架"}</button>
+        <button class="btn btn-ghost btn-sm hx-res-del" type="button" data-act="hxResDelete" data-arg="[${d.id}]">删除资源</button>
       </div>
       ${d.reports_count ? `<div class="hx-res-report-note">${iconHtml("shieldlock")}这份资源有 <b>${d.reports_count}</b> 条待处理举报，请自查内容合规性，管理员核实后会下架违规资源。</div>` : ""}`;
     }else if(d.claimable){
@@ -1734,19 +1734,19 @@
         <div class="hx-res-claim-tip">${d.mode==="free"
           ? "点击后立即领取并显示资源内容，先到先得，请珍惜他人的分享。"
           : "提交后需要发布者确认；通过后你就能在这里看到资源内容与联系方式。"}</div>
-        <button class="btn btn-gold btn-sm" type="button" id="resClaimBtn" onclick="window.hxResClaim(${d.id})">${d.mode==="free"?"立即领取":"提交领取申请"}</button>
+        <button class="btn btn-gold btn-sm" type="button" id="resClaimBtn" data-act="hxResClaim" data-arg="[${d.id}]">${d.mode==="free"?"立即领取":"提交领取申请"}</button>
       </div>`;
     }else if(!d.mine && d.claim && d.claim.status === "pending"){
       html += `<div class="hx-res-claimbox"><b style="font-size:13px;color:#ffd9ef">申请已提交</b>
         <div class="hx-res-claim-tip">等待发布者确认。通过后资源内容会在这里显示，可在「我的领取」里随时查看。</div>
-        <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResCancel(${d.id},${d.claim.id})">取消申请</button></div>`;
+        <button class="btn btn-ghost btn-sm" type="button" data-act="hxResCancel" data-arg="[${d.id},${d.claim.id}]">取消申请</button></div>`;
     }else if(!d.mine && d.left <= 0){
       html += `<div class="hx-res-claimbox"><b style="font-size:13px;color:rgba(255,255,255,.7)">这份资源已经被领完了</b>
         <div class="hx-res-claim-tip">可以去资源广场看看其他居民的分享。</div></div>`;
     }
     if(!d.mine){
       html += `<div class="hx-res-detail-acts hx-res-detail-acts-left">
-        <button class="btn btn-ghost btn-sm hx-res-report-btn" type="button" onclick="window.hxResReportToggle(${d.id})">${iconHtml("shieldlock")} 举报此资源</button>
+        <button class="btn btn-ghost btn-sm hx-res-report-btn" type="button" data-act="hxResReportToggle" data-arg="[${d.id}]">${iconHtml("shieldlock")} 举报此资源</button>
       </div>
       <div id="hxResReportBox" hidden></div>`;
     }
@@ -1767,7 +1767,7 @@
       </div>
       <textarea id="resReportDetail" rows="2" maxlength="300" placeholder="补充说明问题（选填，最多 300 字）"></textarea>
       <div class="hx-res-claim-tip">举报会匿名转交给管理员核实；恶意举报会被记录。请勿重复提交。</div>
-      <button class="btn btn-gold btn-sm" type="button" id="resReportBtn" onclick="window.hxResReportSubmit(${rid})">提交举报</button>
+      <button class="btn btn-gold btn-sm" type="button" id="resReportBtn" data-act="hxResReportSubmit" data-arg="[${rid}]">提交举报</button>
     </div>`;
     box.hidden = false;
     box.querySelectorAll("#hxReasonPick .hx-res-cat-chip").forEach(b=>{
@@ -1843,10 +1843,10 @@
       ${r.handle_note ? `<div class="hx-res-claim-msg">处置备注：${esc(r.handle_note)}</div>` : ""}
       <div class="hx-res-claim-acts">
         ${r.res_deleted ? `<button class="btn btn-ghost btn-sm" type="button" disabled>资源已删除</button>` :
-        `<button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResOpen(${r.resource_id})">查看资源</button>`}
+        `<button class="btn btn-ghost btn-sm" type="button" data-act="hxResOpen" data-arg="[${r.resource_id}]">查看资源</button>`}
         ${r.status === "pending" ? `
-          <button class="btn btn-ghost btn-sm" type="button" onclick="window.hxResReportHandle(${r.id},${r.resource_id},'dismiss')">驳回举报</button>
-          <button class="btn btn-gold btn-sm hx-res-del" type="button" onclick="window.hxResReportHandle(${r.id},${r.resource_id},'takedown')">下架资源</button>` : ""}
+          <button class="btn btn-ghost btn-sm" type="button" data-act="hxResReportHandle" data-arg='[${r.id},${r.resource_id},"dismiss"]'>驳回举报</button>
+          <button class="btn btn-gold btn-sm hx-res-del" type="button" data-act="hxResReportHandle" data-arg='[${r.id},${r.resource_id},"takedown"]'>下架资源</button>` : ""}
       </div>
     </div>`).join("");
   }

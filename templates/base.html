@@ -17,6 +17,7 @@
 <meta property="og:url" content="https://ecojia.cn{{ request.path }}">
 <meta property="og:image" content="https://ecojia.cn/static/img/hero-nebula-opt.jpg">
 <meta name="theme-color" content="#1a1025">
+<meta name="csp-nonce" content="{{ csp_nonce }}">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/static/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
@@ -50,7 +51,7 @@
     <div class="user-area">
       {% if user %}
         <span class="user-chip">{{ icon("user", "uc-ic") }}{{ user.nickname }}{% if user.role=='admin' %}<em class="role-badge">管理员</em>{% endif %}</span>
-        <button class="btn btn-ghost btn-sm" onclick="logout()">{{ icon("logout") }} 退出</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-act="logout">{{ icon("logout") }} 退出</button>
       {% else %}
         <a class="btn btn-gold btn-sm" href="/login">登录 / 注册</a>
       {% endif %}
@@ -122,6 +123,8 @@ async function logout(){
 }
 </script>
 {% block scripts %}{% endblock %}
+<!-- CSP 事件委托绑定器：内联事件属性在 CSP 下会被拦截，统一走 data-act -->
+<script src="{{ url_for("static", filename="js/csp-bind.js") }}?v=20261107e" defer></script>
 <!-- 生态栏：返回首页+登录状态+AI小鸽子 -->
 <script src="{{ url_for("static", filename="js/eco-bar.min.js") }}?v=20261107d" defer></script>
 <script src="{{ url_for("static", filename="js/promote.min.js") }}?v=20261107d" defer></script>

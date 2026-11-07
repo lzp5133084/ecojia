@@ -174,7 +174,7 @@
 #ecoBarWrap.eb-light .eb-dict p b{color:#8a6d1f}
 #ecoBarWrap.eb-light .eb-typing i{background:#c9a227}
 `;
-  var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+  var st = window.ecjStyle ? window.ecjStyle() : document.createElement("style"); st.textContent = css; document.head.appendChild(st);
 
   /* ---------- DOM ---------- */
   var wrap = document.createElement("div"); wrap.id = "ecoBarWrap";

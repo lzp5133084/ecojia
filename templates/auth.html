@@ -13,15 +13,16 @@
     </div>
 
     <div class="auth-tabs" role="tablist" aria-label="账号入口">
-      <button id="tab-login" class="auth-tab active" type="button" onclick="switchTab('login')">登录</button>
-      <button id="tab-reg" class="auth-tab" type="button" onclick="switchTab('reg')">注册</button>
-      <button id="tab-reset" class="auth-tab" type="button" onclick="switchTab('reset')">找回密码</button>
+      <button id="tab-login" class="auth-tab active" type="button" data-act="switchTab" data-arg='["login"]'>登录</button>
+      <button id="tab-reg" class="auth-tab" type="button" data-act="switchTab" data-arg='["reg"]'>注册</button>
+      <button id="tab-reset" class="auth-tab" type="button" data-act="switchTab" data-arg='["reset"]'>找回密码</button>
     </div>
 
     {% if deny %}<div class="deny-tip">{{ icon("shieldalert") }} {{ deny }}</div>{% endif %}
+    {% if relogin_note %}<div class="deny-tip">{{ icon("shieldalert") }} 登录状态已更新，请重新登录</div>{% endif %}
 
     <!-- 登录 -->
-    <form id="form-login" onsubmit="return doLogin(event)" novalidate>
+    <form id="form-login" data-act-submit="doLogin" novalidate>
       <label for="l-username">用户名</label>
       <input id="l-username" type="text" autocomplete="username" autocapitalize="off"
              autocorrect="off" spellcheck="false" enterkeyhint="next"
@@ -32,13 +33,13 @@
       <div id="login-err" class="auth-err" role="alert" hidden></div>
       <button class="btn btn-gold btn-block" type="submit">进入生态 {{ icon("arrowright") }}</button>
       <p class="form-tip">
-        忘记密码？<a class="auth-link" href="#" onclick="switchTab('reset');return false;">提交找回申请</a>
+        忘记密码？<a class="auth-link" href="#" data-act="switchTab" data-arg='["reset"]'>提交找回申请</a>
         <br>一个账号畅游全生态：资料百事通等子站后续统一打通
       </p>
     </form>
 
     <!-- 注册 -->
-    <form id="form-reg" style="display:none" onsubmit="return doReg(event)" novalidate>
+    <form id="form-reg" style="display:none" data-act-submit="doReg" novalidate>
       <label for="r-username">用户名 <small>（3-20字符）</small></label>
       <input id="r-username" type="text" autocomplete="username" autocapitalize="off"
              autocorrect="off" spellcheck="false" enterkeyhint="next"
@@ -66,7 +67,7 @@
     </form>
 
     <!-- 找回密码 -->
-    <form id="form-reset" style="display:none" onsubmit="return doReset(event)" novalidate>
+    <form id="form-reset" style="display:none" data-act-submit="doReset" novalidate>
       <p class="auth-note">本站账号由管理员人工核验后重置。提交下方信息，管理员会在 24 小时内通过你留下的联系方式核对身份，核实后为你重置密码。</p>
       <label for="s-username">用户名</label>
       <input id="s-username" type="text" autocomplete="username" autocapitalize="off"

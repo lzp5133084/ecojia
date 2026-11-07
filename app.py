@@ -17,7 +17,8 @@
  统一账号V0.1说明：
  - 本站 users 表为统一账号体系的本地最小实现
  - 已预留 /api/auth/bridge 接口占位，后续与资料百事通用户库打通
- - 首个注册用户自动成为管理员（role=admin）
+ - 首个注册用户仅在 ECJ_BOOTSTRAP_ADMIN=1 时成为管理员，默认一律普通用户（role=user）
+ - 注册策略只有一份实现（_register_user），网页端与三端接口共用
 ════════════════════════════════════════════════════════════
 """
 import base64
@@ -26,6 +27,7 @@ import hmac
 import re
 import json
 import os
+import secrets
 import sqlite3
 import time
 from datetime import datetime, timedelta
@@ -38,7 +40,7 @@ import agent_service
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "ecojia.db")
-VERSION = "V1.9"
+VERSION = "V2.1"
 
 # 资料百事通公网入口（已部署到腾讯云服务器；备案后切换为 ziliao.ecojia.cn）
 MAIN_SITE_URL = "http://118.24.173.246:8300"
@@ -52,6 +54,10 @@ if _cookie_domain:
     app.config["SESSION_COOKIE_DOMAIN"] = _cookie_domain
     app.config["SESSION_COOKIE_SAMESITE"] = "None"
     app.config["SESSION_COOKIE_SECURE"] = True
+
+# ---- 会话 Cookie 属性（服务端会话配合，登出即可失效） ----
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
 
 # ---- 生态智能体：允许工具子站跨域调用 /api/（携带登录态） ----
 AGENT_ORIGINS = {
@@ -71,17 +77,110 @@ def agent_cors(resp):
     return resp
 
 
+# ══════════════════ 安全响应头 · 内容安全策略（CSP） ══════════════════
+# 方案（2026-11-07 补）：
+# 1) 每个 HTML 响应生成一次性 nonce，服务端直出的 <script>/<style> 自动带上；
+#    客户端动态创建的 <style> 走 window.ecjStyle()（见 static/js/csp-bind.js）。
+# 2) 模板里的内联事件属性（onclick/onsubmit…）与 javascript: 已全部改为
+#    data-act + 事件委托，因此 script-src 不需要 'unsafe-inline' / 'unsafe-hashes'。
+# 3) style="…" 属性无法携带 nonce，只能靠 style-src-attr 'unsafe-inline' 放行；
+#    这是保留现有 112 处内联样式属性的取舍，只影响样式注入、不影响脚本执行。
+# 4) 默认只发 Report-Only，观察无拦截后把环境变量 ECJ_CSP_ENFORCE 设为 1 转强制。
+CSP_ENFORCE = os.environ.get("ECJ_CSP_ENFORCE", "0") == "1"
+
+_CSP_TEMPLATE = (
+    "default-src 'self'; "
+    "script-src 'self' 'nonce-{nonce}'; "
+    "style-src 'self' 'nonce-{nonce}'; "
+    "style-src-attr 'unsafe-inline'; "
+    "img-src 'self' data: blob:; "
+    "font-src 'self' data:; "
+    "media-src 'self' blob:; "
+    "connect-src 'self'; "
+    "object-src 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'; "
+    "frame-ancestors 'self'; "
+    "worker-src 'self' blob:"
+)
+
+_tag_nonce = re.compile(r"<(script|style)(?![^>]*\bnonce=)([^>]*)>", re.I)
+
+
+@app.before_request
+def _csp_nonce():
+    g.csp_nonce = base64.b64encode(os.urandom(16)).decode("ascii")
+    return None
+
+
+@app.context_processor
+def _inject_csp_nonce():
+    return {"csp_nonce": getattr(g, "csp_nonce", "")}
+
+
+@app.after_request
+def _csp_headers(resp):
+    """给 HTML 响应的内联 script/style 打 nonce，并下发 CSP（默认 Report-Only）"""
+    if resp.mimetype != "text/html" or resp.direct_passthrough:
+        return resp
+    nonce = getattr(g, "csp_nonce", "")
+    if not nonce:
+        return resp
+    html = resp.get_data(as_text=True)
+    if "<script" in html or "<style" in html:
+        html = _tag_nonce.sub(
+            lambda m: '<%s nonce="%s"%s>' % (m.group(1), nonce, m.group(2)), html)
+        resp.set_data(html)
+    policy = _CSP_TEMPLATE.format(nonce=nonce)
+    if CSP_ENFORCE:
+        resp.headers["Content-Security-Policy"] = policy
+    else:
+        resp.headers["Content-Security-Policy-Report-Only"] = policy
+    return resp
+
+
 # ---- API 轻量限流：同一 IP 每分钟最多 90 次（防刷与误用爬虫） ----
 _API_HITS = {}
 _API_LIMIT = 90
 _API_WINDOW = 60
 
 
+def json_obj():
+    """请求体必须是 JSON 对象。
+
+    数组 / 字符串 / 坏 JSON 一律当作空对象处理，避免 `d.get` 抛
+    AttributeError 造成 500（渗透实测：POST 一个数组给登录接口返回 500）。
+    """
+    d = request.get_json(silent=True)
+    return d if isinstance(d, dict) else {}
+
+
+def client_ip():
+    """真实客户端 IP。
+
+    信任链：Caddy 反代用 `header_up X-Real-IP {remote_host}` **覆盖**该头，
+    客户端自带的同名头会被丢弃，因此 X-Real-IP 不可伪造，优先采用。
+
+    退路（未经 Caddy 的直连场景）：X-Forwarded-For。Caddy 会把真实来源追加到
+    末尾，客户端伪造值停留在最前面；取第一个元素等于允许用 XFF 绕过限流与
+    登录锁定（渗透实测：伪造 XFF 连打 95 次全部 200），所以取最后一个元素。
+    """
+    real = (request.headers.get("X-Real-IP") or "").strip()
+    if real:
+        return real
+    xff = request.headers.get("X-Forwarded-For", "")
+    if xff:
+        parts = [p.strip() for p in xff.split(",") if p.strip()]
+        if parts:
+            return parts[-1]
+    return request.remote_addr or ""
+
+
 @app.before_request
 def _api_rate_limit():
     if not request.path.startswith("/api/"):
         return None
-    ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
+    ip = client_ip()
     now_ts = time.time()
     if len(_API_HITS) > 5000:
         for k, v in list(_API_HITS.items()):
@@ -781,6 +880,28 @@ def init_db():
         except sqlite3.Error:
             pass  # 列已存在
     db.execute("CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT)")
+    # —— 登录失败锁定：必须落库共享，否则多 worker（gunicorn -w 2）各自计数，
+    #    5 次阈值被拆散，暴力破解防护形同失效（渗透实测 6 次失败后仍可正常登录） ——
+    db.execute("""CREATE TABLE IF NOT EXISTS login_guard (
+        key        TEXT PRIMARY KEY,
+        fails      INTEGER NOT NULL DEFAULT 0,
+        first_ts   REAL    NOT NULL DEFAULT 0,
+        lock_until REAL    NOT NULL DEFAULT 0
+    )""")
+    # —— 服务端会话：登出即可真正失效 ——
+    # 早先只靠 Flask 签名 Cookie，logout 只清浏览器端，旧 Cookie 仍可读个人数据
+    # （渗透确认的中危）。改为服务端持有会话记录，Cookie 里只放随机 sid。
+    db.execute("""CREATE TABLE IF NOT EXISTS sessions (
+        sid        TEXT PRIMARY KEY,
+        uid        INTEGER NOT NULL,
+        created_at REAL    NOT NULL,
+        last_seen  REAL    NOT NULL,
+        expire_at  REAL    NOT NULL,
+        ip         TEXT    DEFAULT '',
+        ua         TEXT    DEFAULT '',
+        revoked    INTEGER NOT NULL DEFAULT 0
+    )""")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sess_uid ON sessions(uid)")
     # —— V2 统一权益：任意账号 × 任意项目 的 VIP 授权 ——
     db.execute("""CREATE TABLE IF NOT EXISTS app_grants (
         id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -811,18 +932,78 @@ def log_op(action, detail="", user_id=None):
     db.commit()
 
 
+# ══════════════════ 服务端会话（可登出即失效） ══════════════════
+# 设计：Cookie 只存随机 sid，账号信息一律以 sessions 表为准。
+# 1) 登录成功 → 作废旧 sid（防会话固定）+ 新签发 sid 落库，7 天过期；
+# 2) 活跃访问每 5 分钟滑动续期，避免用户在用却被踢；
+# 3) 登出 → revoked=1，旧 Cookie 立即失效；
+# 4) 无 sid 的历史签名 Cookie 一律视为未登录（本轮改造的既定目标）。
+SESSION_TTL = 7 * 24 * 3600
+_SESSION_TOUCH = 300
+
+
+def _session_start(uid):
+    """登录成功后建立服务端会话，返回新 sid（会话固定防护：每次登录都换 sid）"""
+    db = get_db()
+    old = session.get("sid")
+    if old:
+        db.execute("UPDATE sessions SET revoked=1 WHERE sid=?", (old,))
+    now_ts = time.time()
+    db.execute("DELETE FROM sessions WHERE expire_at < ?", (now_ts - 86400,))
+    sid = secrets.token_urlsafe(32)
+    db.execute(
+        "INSERT INTO sessions(sid,uid,created_at,last_seen,expire_at,ip,ua) "
+        "VALUES(?,?,?,?,?,?,?)",
+        (sid, uid, now_ts, now_ts, now_ts + SESSION_TTL, client_ip(),
+         (request.headers.get("User-Agent") or "")[:200]))
+    db.commit()
+    session.clear()
+    session["sid"] = sid
+    session.permanent = True
+    return sid
+
+
+def _session_end():
+    """登出：服务端记录置为失效，再清空客户端 Cookie"""
+    sid = session.get("sid")
+    if sid:
+        db = get_db()
+        db.execute("UPDATE sessions SET revoked=1 WHERE sid=?", (sid,))
+        db.commit()
+    session.clear()
+
+
 def current_user():
-    uid = session.get("uid")
-    if not uid:
+    sid = session.get("sid")
+    if not sid:
+        # 旧版签名 Cookie 里只有 uid 没有 sid，一律不认，并顺手清掉
+        if session:
+            session.clear()
         return None
-    row = get_db().execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
-    return dict(row) if row else None
+    db = get_db()
+    row = db.execute("SELECT * FROM sessions WHERE sid=?", (sid,)).fetchone()
+    now_ts = time.time()
+    if not row or row["revoked"] or row["expire_at"] <= now_ts:
+        session.clear()
+        return None
+    if now_ts - row["last_seen"] > _SESSION_TOUCH:
+        db.execute("UPDATE sessions SET last_seen=?, expire_at=? WHERE sid=?",
+                   (now_ts, now_ts + SESSION_TTL, sid))
+        db.commit()
+    u = db.execute("SELECT * FROM users WHERE id=?", (row["uid"],)).fetchone()
+    return dict(u) if u else None
+
+
+def _uid():
+    """当前登录用户 id（未登录返回 None），供日志等只关心 id 的场景使用"""
+    u = current_user()
+    return u["id"] if u else None
 
 
 def login_required(fn):
     @wraps(fn)
     def wrapper(*a, **kw):
-        if not session.get("uid"):
+        if not current_user():
             return jsonify({"ok": False, "msg": "请先登录"}), 401
         return fn(*a, **kw)
     return wrapper
@@ -1070,7 +1251,7 @@ def hx_record_form(d, base=None):
 def api_hx_record_create():
     """新增一段历程：写入数据库的同时追加一个区块"""
     u = current_user()
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     rec = hx_record_form(d)
     err = hx_validate_record(rec)
     if err:
@@ -1110,7 +1291,7 @@ def api_hx_record_update(rid):
         return jsonify({"ok": False, "msg": "历程不存在"}), 404
     if row["user_id"] != u["id"]:
         return jsonify({"ok": False, "msg": "只能修改自己的历程"}), 403
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     rec = hx_record_form(d, dict(row))
     err = hx_validate_record(rec)
     if err:
@@ -1159,7 +1340,7 @@ def api_hx_identity_update():
     """编辑身份资料：改名、签名、头像种子、公开身份证开关"""
     u = current_user()
     ident = hx_identity_for(u)
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     mars_name = (d.get("mars_name") or ident["mars_name"]).strip()
     bio = (d.get("bio") if d.get("bio") is not None else ident["bio"]).strip()
     seed = (d.get("avatar_seed") or ident["avatar_seed"]).strip()
@@ -1285,7 +1466,7 @@ def api_hx_witness_invite(rid):
         return jsonify({"ok": False, "msg": "历程不存在或不属于你"}), 404
     if row["category"] not in HX_WITNESS_CATS:
         return jsonify({"ok": False, "msg": "只有「荣耀 / 重要」类历程可以邀请见证人"}), 400
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     wuid = hx_find_user_by_did(d.get("did"))
     if not wuid:
         return jsonify({"ok": False, "msg": "没有找到这枚身份标识，请核对对方的 DID"}), 404
@@ -1320,7 +1501,7 @@ def api_hx_witness_sign(wid):
                      (w["record_id"],)).fetchone()
     if not rec:
         return jsonify({"ok": False, "msg": "原历程已被删除"}), 404
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     statement = (d.get("statement") or w["statement"] or "").strip()[:200]
     wident = hx_identity_for(u)  # 确保见证人已铸造身份
     oident = hx_identity_brief(w["owner_uid"]) or {}
@@ -1392,7 +1573,7 @@ def hx_ai_fallback(text):
 @login_required
 def api_hx_ai_draft():
     """AI 记录助手：口述一句话 → 分类/标题/摘要/详情草稿，人工确认后入链"""
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     text = (d.get("text") or "").strip()
     if not (4 <= len(text) <= 500):
         return jsonify({"ok": False, "msg": "先说 4-500 个字的一段话"}), 400
@@ -1415,7 +1596,7 @@ def api_hx_ai_draft():
     draft["title"] = (draft.get("title") or "")[:60]
     draft["summary"] = (draft.get("summary") or "")[:160]
     draft["detail"] = (draft.get("detail") or "")[:2000]
-    log_op("火星身份证·AI草稿", f"来源:{via}", session.get("uid"))
+    log_op("火星身份证·AI草稿", f"来源:{via}", _uid())
     return jsonify({"ok": True, "draft": draft, "via": via,
                     "msg": "草稿已生成，请核对后保存入链" if via == "ark"
                            else "云端大模型未配置，已用本地智能整理；可在管理后台配置 ARK 提升效果"})
@@ -1427,7 +1608,7 @@ def api_hx_ai_draft():
 def api_hx_family_invite():
     """关联家人：输入对方 DID，对方确认后双向入链"""
     u = current_user()
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     fuid = hx_find_user_by_did(d.get("did"))
     if not fuid:
         return jsonify({"ok": False, "msg": "没有找到这枚身份标识，请核对家人的 DID"}), 404
@@ -1492,7 +1673,7 @@ def api_hx_family_remove(fid):
 def api_hx_legacy_set():
     """设置数字遗产约定：指定继承人 DID；账号多年不活跃时，「纪念」类按约定移交"""
     u = current_user()
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     heir_did = (d.get("heir_did") or "").strip()
     heir_name = (d.get("heir_name") or "").strip()[:20]
     note = (d.get("note") or "").strip()[:200]
@@ -1810,7 +1991,7 @@ def api_hx_res_list():
 def api_hx_res_create():
     """发布一份共享资源：写入数据库，同时把公开字段写入身份链"""
     u = current_user()
-    f = hx_res_form(request.get_json(silent=True) or {})
+    f = hx_res_form(json_obj())
     err = hx_res_validate(f)
     if err:
         return jsonify({"ok": False, "msg": err}), 400
@@ -1843,7 +2024,7 @@ def api_hx_res_update(rid):
         return jsonify({"ok": False, "msg": "资源不存在或已删除"}), 404
     if row["user_id"] != u["id"]:
         return jsonify({"ok": False, "msg": "只能修改自己发布的资源"}), 403
-    f = hx_res_form(request.get_json(silent=True) or {})
+    f = hx_res_form(json_obj())
     err = hx_res_validate(f, row["claimed"])
     if err:
         return jsonify({"ok": False, "msg": err}), 400
@@ -1886,7 +2067,7 @@ def api_hx_res_delete(rid):
 def api_hx_res_status(rid):
     """上架 / 下架自己的资源"""
     u = current_user()
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     status = (d.get("status") or "").strip()
     if status not in ("active", "off"):
         return jsonify({"ok": False, "msg": "状态不正确"}), 400
@@ -1907,7 +2088,7 @@ def api_hx_res_status(rid):
 def api_hx_res_claim(rid):
     """领取资源：直接领取自动通过；申请领取等发布者确认"""
     u = current_user()
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     db = get_db()
     row = db.execute("SELECT * FROM hx_resources WHERE id=? AND deleted=0", (rid,)).fetchone()
     if not row:
@@ -1983,7 +2164,7 @@ def api_hx_res_claims(rid):
 def api_hx_res_decide(rid, cid):
     """发布者审核领取申请：approve 通过 / reject 拒绝"""
     u = current_user()
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     action = (d.get("action") or "").strip()
     if action not in ("approve", "reject"):
         return jsonify({"ok": False, "msg": "审核动作不正确"}), 400
@@ -2095,7 +2276,7 @@ def api_hx_res_report(rid):
                      "AND status='pending'", (rid, u["id"])).fetchone()
     if dup:
         return jsonify({"ok": False, "msg": "你已举报过这份资源，管理员会尽快处理"}), 400
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     reason = (d.get("reason") or "").strip()
     if reason not in HX_RES_REPORT_REASONS:
         return jsonify({"ok": False, "msg": "请选择举报原因"}), 400
@@ -2146,7 +2327,7 @@ def api_hx_res_report_list():
 def api_hx_res_report_handle(repid):
     """管理员处置举报：dismiss 驳回 / takedown 下架资源"""
     u = current_user()
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     action = (d.get("action") or "").strip()
     if action not in ("dismiss", "takedown"):
         return jsonify({"ok": False, "msg": "处置动作不正确"}), 400
@@ -2192,7 +2373,7 @@ def api_hx_res_renew(rid):
         return jsonify({"ok": False, "msg": "资源不存在或已删除"}), 404
     if row["user_id"] != u["id"]:
         return jsonify({"ok": False, "msg": "只能续期自己发布的资源"}), 403
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     try:
         days = int(d.get("days") or 30)
     except (TypeError, ValueError):
@@ -2228,7 +2409,7 @@ def huoxing_verify_page():
 @app.route("/api/huoxing/passport_verify", methods=["POST"])
 def api_hx_passport_verify():
     """服务端护照验真（前端 JS 验真的备用通道）：重算区块链 + 记录指纹"""
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     p = d.get("passport")
     if not isinstance(p, dict) or "blocks" not in p:
         return jsonify({"ok": False, "msg": "护照文件不完整"}), 400
@@ -2328,9 +2509,11 @@ def tools_page():
 
 @app.route("/login")
 def login_page():
-    if session.get("uid"):
+    if _uid():
         return redirect(url_for("index"))
-    return render_template("auth.html")
+    # 服务端会话改造后，历史登录态一律失效：带 next 跳转过来时给一句正常提示，
+    # 避免用户以为自己被"踢下线"或页面出错（不使用循环跳转）。
+    return render_template("auth.html", relogin_note=bool(request.args.get("next")))
 
 
 @app.route("/admin")
@@ -2339,7 +2522,7 @@ def admin_page():
     if not u:
         return redirect(url_for("login_page"))
     if u["role"] != "admin":
-        return render_template("auth.html", deny="该页面需要管理员权限")
+        return render_template("auth.html", deny="该页面需要管理员权限"), 403
     return render_template("admin.html", wish_status=WISH_STATUS,
                            product_status=PRODUCT_STATUS)
 
@@ -2347,7 +2530,7 @@ def admin_page():
 @app.route("/profile")
 def profile_page():
     """个人中心：与桌面端鼠标画笔个人中心100%对齐（旗舰模板，后续项目复用）"""
-    if not session.get("uid"):
+    if not _uid():
         return redirect(url_for("login_page") + "?next=/profile")
     u = current_user()
     # 服务端直接组装权益+物料，前端无需再调带 token 的接口
@@ -2372,47 +2555,71 @@ def canvas_page():
 
 
 # ══════════════════ 统一账号 API（V0.1本地实现，预留打通） ══════════════════
-@app.route("/api/auth/register", methods=["POST"])
-def api_register():
-    d = request.get_json(silent=True) or {}
+# 注册策略：唯一实现。网页端 /api/auth/register 与三端 /api/account/register 共用同一份
+# 校验与落库逻辑，避免两条链路各自演进（历史上曾出现一个 8 位、一个 6 位的不一致）。
+_PW_MIN = 8
+_PW_RULE = "密码至少8位，且需同时包含字母和数字"
+
+
+def _password_ok(pw):
+    return (len(pw) >= _PW_MIN
+            and re.search(r"[A-Za-z]", pw) is not None
+            and re.search(r"\d", pw) is not None)
+
+
+def _register_user(d, source="web"):
+    """注册唯一实现。成功返回 (info, None)，失败返回 (None, (payload, status))。"""
     username = (d.get("username") or "").strip()
     password = d.get("password") or ""
     nickname = (d.get("nickname") or "").strip() or username
     ref = (d.get("ref") or "").strip().upper()
     if not (3 <= len(username) <= 20):
-        return jsonify({"ok": False, "msg": "用户名需3-20个字符"}), 400
-    if len(password) < 8 or not re.search(r"[A-Za-z]", password) or not re.search(r"\d", password):
-        return jsonify({"ok": False, "msg": "密码至少8位，且需同时包含字母和数字"}), 400
+        return None, ({"ok": False, "msg": "用户名需3-20个字符"}, 400)
+    if not _password_ok(password):
+        return None, ({"ok": False, "msg": _PW_RULE}, 400)
     db = get_db()
     if db.execute("SELECT 1 FROM users WHERE username=?", (username,)).fetchone():
-        return jsonify({"ok": False, "msg": "用户名已存在"}), 400
-    inviter_id, inviter_name, ref_msg = None, None, ""
+        return None, ({"ok": False, "msg": "用户名已存在"}, 400)
+    inviter_id, ref_msg = None, ""
     if ref:
         row = db.execute("SELECT id, nickname FROM users WHERE invite_code=?", (ref,)).fetchone()
         if row:
-            inviter_id, inviter_name = row["id"], row["nickname"]
-            ref_msg = "\uff0c已关联邀请人「%s」" % inviter_name
+            inviter_id = row["id"]
+            ref_msg = "\uff0c已关联邀请人「%s」" % row["nickname"]
         else:
             ref_msg = "\uff0c邀请码无效，已按自然流量登记"
-    # 首个注册用户仅在显式开启引导开关时成为管理员（避免陌生人抢占管理权）
+    # 首个注册用户只有在显式开启 ECJ_BOOTSTRAP_ADMIN=1 时才成为管理员（默认关闭）
     is_first = db.execute("SELECT COUNT(*) c FROM users").fetchone()["c"] == 0
-    role = "admin" if (is_first and os.environ.get("ECJ_BOOTSTRAP_ADMIN") == "1") else "user"
+    bootstrap = os.environ.get("ECJ_BOOTSTRAP_ADMIN") == "1"
+    role = "admin" if (is_first and bootstrap) else "user"
     cur = db.execute(
-        "INSERT INTO users(username, password_hash, nickname, role, inviter_id, created_at) VALUES(?,?,?,?,?,?)",
+        "INSERT INTO users(username, password_hash, nickname, role, inviter_id, created_at) "
+        "VALUES(?,?,?,?,?,?)",
         (username, generate_password_hash(password), nickname, role, inviter_id, now()))
     uid = cur.lastrowid
     invite_code = "ECJ%d" % (10000 + uid)
     db.execute("UPDATE users SET invite_code=? WHERE id=?", (invite_code, uid))
     db.commit()
-    session["uid"] = uid
-    log_op("注册账号", f"用户名:{username} 角色:{role} 邀请人:{inviter_id}", uid)
-    return jsonify({"ok": True, "msg": "注册成功" + ref_msg, "role": role,
-                    "invite_code": invite_code,
-                    "nickname": nickname, "redirect": url_for("index")})
+    user = dict(db.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone())
+    log_op("注册账号", "用户名:%s 来源:%s 角色:%s 邀请人:%s" % (username, source, role, inviter_id), uid)
+    return {"uid": uid, "username": username, "nickname": nickname, "role": role,
+            "invite_code": invite_code, "ref_msg": ref_msg, "user": user}, None
 
 
-# ── 登录失败锁定（进程内计数，10 分钟内失败 5 次锁 15 分钟） ──
-_LOGIN_FAIL = {}
+@app.route("/api/auth/register", methods=["POST"])
+def api_register():
+    info, err = _register_user(json_obj(), "web")
+    if err:
+        return jsonify(err[0]), err[1]
+    _session_start(info["uid"])
+    return jsonify({"ok": True, "msg": "注册成功" + info["ref_msg"], "role": info["role"],
+                    "invite_code": info["invite_code"],
+                    "nickname": info["nickname"], "redirect": url_for("index")})
+
+
+# ── 登录失败锁定（落库共享，10 分钟内失败 5 次锁 15 分钟） ──
+# 早先版本用进程内字典，gunicorn -w 2 时两个 worker 各记各的，
+# 5 次阈值被拆散成 10 次，暴力破解防护实测失效，因此改为 SQLite 共享计数。
 _LOGIN_MAX_FAIL = 5
 _LOGIN_WINDOW = 600
 _LOGIN_LOCK = 900
@@ -2420,34 +2627,47 @@ _LOGIN_LOCK = 900
 
 def _login_guard(key):
     """返回剩余锁定秒数，0 表示可继续尝试"""
-    rec = _LOGIN_FAIL.get(key)
-    if not rec:
+    row = get_db().execute(
+        "SELECT fails, first_ts, lock_until FROM login_guard WHERE key=?", (key,)).fetchone()
+    if not row:
         return 0
     now_ts = time.time()
-    if rec[2] > now_ts:
-        return int(rec[2] - now_ts)
-    if now_ts - rec[1] > _LOGIN_WINDOW:
-        _LOGIN_FAIL.pop(key, None)
+    if row["lock_until"] and row["lock_until"] > now_ts:
+        return int(row["lock_until"] - now_ts)
+    if now_ts - row["first_ts"] > _LOGIN_WINDOW:
+        db = get_db()
+        db.execute("DELETE FROM login_guard WHERE key=?", (key,))
+        db.commit()
     return 0
 
 
 def _login_fail(key):
     now_ts = time.time()
-    rec = _LOGIN_FAIL.get(key)
-    if not rec or now_ts - rec[1] > _LOGIN_WINDOW:
-        _LOGIN_FAIL[key] = [1, now_ts, 0]
-        return
-    rec[0] += 1
-    if rec[0] >= _LOGIN_MAX_FAIL:
-        rec[2] = now_ts + _LOGIN_LOCK
+    db = get_db()
+    row = db.execute("SELECT fails, first_ts FROM login_guard WHERE key=?", (key,)).fetchone()
+    if not row or now_ts - row["first_ts"] > _LOGIN_WINDOW:
+        db.execute("INSERT OR REPLACE INTO login_guard(key,fails,first_ts,lock_until) "
+                   "VALUES(?,?,?,0)", (key, 1, now_ts))
+    else:
+        fails = row["fails"] + 1
+        lock = now_ts + _LOGIN_LOCK if fails >= _LOGIN_MAX_FAIL else 0
+        db.execute("UPDATE login_guard SET fails=?, lock_until=? WHERE key=?",
+                   (fails, lock, key))
+    db.commit()
+
+
+def _login_ok(key):
+    db = get_db()
+    db.execute("DELETE FROM login_guard WHERE key=?", (key,))
+    db.commit()
 
 
 @app.route("/api/auth/login", methods=["POST"])
 def api_login():
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     username = (d.get("username") or "").strip()
     password = d.get("password") or ""
-    ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
+    ip = client_ip()
     guard_key = ip + "|" + username
     wait = _login_guard(guard_key)
     if wait:
@@ -2458,8 +2678,8 @@ def api_login():
         return jsonify({"ok": False, "msg": "用户名或密码错误"}), 400
     if row["role"] == "disabled":
         return jsonify({"ok": False, "msg": "账号已被禁用"}), 403
-    _LOGIN_FAIL.pop(guard_key, None)
-    session["uid"] = row["id"]
+    _login_ok(guard_key)
+    _session_start(row["id"])
     log_op("登录", f"用户名:{username}", row["id"])
     return jsonify({"ok": True, "msg": f"欢迎回来，{row['nickname']}",
                     "role": row["role"], "nickname": row["nickname"],
@@ -2468,7 +2688,7 @@ def api_login():
 
 @app.route("/api/auth/logout", methods=["POST"])
 def api_logout():
-    session.clear()
+    _session_end()
     return jsonify({"ok": True, "redirect": url_for("index")})
 
 
@@ -2498,7 +2718,7 @@ _RESET_LAST = {}
 
 @app.route("/api/auth/reset-request", methods=["POST"])
 def api_reset_request():
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     username = (d.get("username") or "").strip()
     contact = (d.get("contact") or "").strip()[:80]
     note = (d.get("note") or "").strip()[:300]
@@ -2569,7 +2789,7 @@ def api_ecosystem_search():
 @admin_required
 def api_ecosystem_add_product():
     """新增积木：自动编号，始终插在「待添加」之前"""
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     name = (d.get("name") or "").strip()
     if not name:
         return jsonify({"ok": False, "msg": "请填写积木名称"}), 400
@@ -2592,7 +2812,7 @@ def api_ecosystem_add_product():
     renumber(products)
     eco["products"] = products
     save_ecosystem(eco)
-    log_op("新增积木", name, session.get("uid"))
+    log_op("新增积木", name, _uid())
     return jsonify({"ok": True, "msg": f"积木「{name}」已加入矩阵", "item": item})
 
 
@@ -2600,7 +2820,7 @@ def api_ecosystem_add_product():
 @admin_required
 def api_ecosystem_update_product(no):
     """修改积木（按编号）"""
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     eco = load_ecosystem()
     products = eco.get("products", [])
     target = next((p for p in products if p.get("no") == no), None)
@@ -2614,7 +2834,7 @@ def api_ecosystem_update_product(no):
     if d.get("status") in PRODUCT_STATUS:
         target["status"] = d["status"]
     save_ecosystem(eco)
-    log_op("修改积木", f"{no} {target.get('name')}", session.get("uid"))
+    log_op("修改积木", f"{no} {target.get('name')}", _uid())
     return jsonify({"ok": True, "msg": "已更新", "item": target})
 
 
@@ -2633,7 +2853,7 @@ def api_ecosystem_delete_product(no):
     renumber(products)
     eco["products"] = products
     save_ecosystem(eco)
-    log_op("移除积木", f"{no} {target.get('name')}", session.get("uid"))
+    log_op("移除积木", f"{no} {target.get('name')}", _uid())
     return jsonify({"ok": True, "msg": f"积木「{target.get('name')}」已移除"})
 
 
@@ -2703,18 +2923,23 @@ def _agent_cfg():
 
 
 def _agent_sid(d):
-    """会话标识：前端传入，缺失则按游客指纹生成"""
-    sid = (d.get("session_id") or "").strip()
+    """会话标识：由服务端生成并绑定到当前会话 Cookie。
+
+    历史版本直接采信前端传入的 session_id（缺失时用 User-Agent 兜底），
+    导致任何人拿到/猜到 sid 就能读别人的 AI 对话记录（渗透实测可复现）。
+    """
+    sid = session.get("agent_sid")
     if not sid:
-        sid = "guest-" + (request.headers.get("User-Agent", "")[-24:] or "anon")
-    return sid[:64]
+        sid = "s" + os.urandom(10).hex()
+        session["agent_sid"] = sid
+    return sid
 
 
 def _agent_log(sid, role, content, page_url="", intent=""):
     db = get_db()
     db.execute("INSERT INTO agent_chat(session_id,user_id,role,content,page_url,intent,created_at) "
                "VALUES(?,?,?,?,?,?,?)",
-               (sid, session.get("uid"), role, content[:4000], page_url[:300], intent, now()))
+               (sid, _uid(), role, content[:4000], page_url[:300], intent, now()))
     db.commit()
 
 
@@ -2736,7 +2961,7 @@ def _tool_health_check(tool):
 @app.route("/api/agent/chat", methods=["POST"])
 def api_agent_chat():
     """智能体对话：知识库引擎优先 → 大模型兜底（配置后启用）"""
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     message = (d.get("message") or "").strip()
     page_url = (d.get("page_url") or "").strip()
     if not (1 <= len(message) <= 500):
@@ -2751,7 +2976,7 @@ def api_agent_chat():
         # 故障确认异常 → 写运维日志 + 给管理员提个醒（许愿墙机制复用op_log）
         if intent == "health_bad" and health:
             log_op("智能体发现故障",
-                   f"{health.get('url')} -> {health.get('error')}", session.get("uid"))
+                   f"{health.get('url')} -> {health.get('error')}", _uid())
     else:
         # 大模型兜底：火山方舟(已配置) → 本地Ollama → 友好话术
         cfg = _agent_cfg()
@@ -2776,8 +3001,8 @@ def api_agent_chat():
 
 @app.route("/api/agent/history")
 def api_agent_history():
-    """对话记忆：按会话取最近30条（前端打开浮窗时回填）"""
-    sid = (request.args.get("session_id") or "").strip()[:64]
+    """对话记忆：按当前会话取最近30条（不接受外部传入的 session_id）"""
+    sid = session.get("agent_sid")
     if not sid:
         return jsonify({"ok": True, "messages": []})
     rows = get_db().execute(
@@ -2788,11 +3013,10 @@ def api_agent_history():
 
 @app.route("/api/agent/history", methods=["DELETE"])
 def api_agent_history_clear():
-    """清空本会话对话记录（增删查改的删）"""
-    d = request.get_json(silent=True) or {}
-    sid = (d.get("session_id") or "").strip()[:64]
+    """清空本会话对话记录（只清当前会话，防止清掉别人的）"""
+    sid = session.get("agent_sid")
     if not sid:
-        return jsonify({"ok": False, "msg": "缺少会话标识"}), 400
+        return jsonify({"ok": False, "msg": "当前会话没有对话记录"}), 400
     db = get_db()
     db.execute("DELETE FROM agent_chat WHERE session_id=?", (sid,))
     db.commit()
@@ -2805,7 +3029,7 @@ def api_agent_config():
     """大模型配置（仅管理员）：填入火山方舟接入点即启用大模型增强"""
     db = get_db()
     if request.method == "POST":
-        d = request.get_json(silent=True) or {}
+        d = json_obj()
         for k in ("ark_api_key", "ark_model", "ollama_url", "ollama_model"):
             v = (d.get(k) or "").strip()
             if v:
@@ -2813,7 +3037,7 @@ def api_agent_config():
                            "ON CONFLICT(key) DO UPDATE SET value=excluded.value, "
                            "updated_at=excluded.updated_at", (k, v, now()))
         db.commit()
-        log_op("更新智能体配置", "ark_model=" + (d.get("ark_model") or ""), session.get("uid"))
+        log_op("更新智能体配置", "ark_model=" + (d.get("ark_model") or ""), _uid())
         return jsonify({"ok": True, "msg": "已保存"})
     cfg = _agent_cfg()
     return jsonify({"ok": True,
@@ -2864,10 +3088,12 @@ def api_wishes_list():
     sql += " ORDER BY w.id DESC LIMIT 200"
     rows = get_db().execute(sql, args).fetchall()
     wishes = []
+    _me = current_user() or {}
+    _me_id = _me.get("id")
     for r in rows:
         w = dict(r)
-        w["mine"] = bool(session.get("uid") and w["user_id"] == session["uid"])
-        w["can_manage"] = w["mine"] or (current_user() or {}).get("role") == "admin"
+        w["mine"] = bool(_me_id and w["user_id"] == _me_id)
+        w["can_manage"] = w["mine"] or _me.get("role") == "admin"
         # 隐私：联系方式仅本人和管理员可见，游客/他人看不到
         if not w["can_manage"]:
             w.pop("contact", None)
@@ -2878,17 +3104,21 @@ def api_wishes_list():
 
 @app.route("/api/wishes", methods=["POST"])
 def api_wishes_create():
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     product = (d.get("product") or "").strip()
     contact = (d.get("contact") or "").strip()
     content = (d.get("content") or "").strip()
     if not product:
         return jsonify({"ok": False, "msg": "请选择许愿产品"}), 400
+    # 产品必须来自底座清单（防自由文本落库后被前端渲染成 XSS）
+    allowed = {p.get("name") for p in get_products()} | {"其他"}
+    if product not in allowed:
+        return jsonify({"ok": False, "msg": "许愿产品不在可选范围内"}), 400
     if not (5 <= len(contact) <= 100):
         return jsonify({"ok": False, "msg": "联系方式需5-100个字符"}), 400
     if not (5 <= len(content) <= 300):
         return jsonify({"ok": False, "msg": "愿望内容需5-300个字"}), 400
-    uid = session.get("uid")
+    uid = _uid()
     db = get_db()
     db.execute("INSERT INTO wishes(user_id, product, contact, content, status, created_at, updated_at) "
                "VALUES(?,?,?,?,?,?,?)",
@@ -2906,7 +3136,7 @@ def api_wishes_update(wid):
     row = get_db().execute("SELECT * FROM wishes WHERE id=?", (wid,)).fetchone()
     if not row:
         return jsonify({"ok": False, "msg": "许愿不存在"}), 404
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     new_content = (d.get("content") or "").strip()
     new_status = (d.get("status") or "").strip()
     is_admin = u["role"] == "admin"
@@ -2946,8 +3176,11 @@ def api_wishes_delete(wid):
 @login_required
 def api_my_wishes():
     """操作记忆：快速调取自己之前提交的许愿记录"""
+    uid = _uid()
+    if not uid:
+        return jsonify({"ok": False, "msg": "请先登录"}), 401
     rows = get_db().execute(
-        "SELECT * FROM wishes WHERE user_id=? ORDER BY id DESC", (session["uid"],)).fetchall()
+        "SELECT * FROM wishes WHERE user_id=? ORDER BY id DESC", (uid,)).fetchall()
     return jsonify({"ok": True, "wishes": [dict(r) for r in rows]})
 
 
@@ -3042,7 +3275,7 @@ def console_page():
     if not u:
         return redirect(url_for("login_page"))
     if u["role"] != "admin":
-        return render_template("auth.html", deny="该页面需要管理员权限")
+        return render_template("auth.html", deny="该页面需要管理员权限"), 403
     return render_template("console.html")
 
 
@@ -3069,7 +3302,7 @@ def api_admin_hub():
 @app.route("/api/admin/hub/register", methods=["POST"])
 @admin_required
 def api_admin_hub_register():
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     cid = (d.get("id") or "").strip()
     name = (d.get("name") or "").strip()
     if not cid or not name:
@@ -3093,7 +3326,7 @@ def api_admin_hub_register():
     else:
         centers.append(item)
     save_hub_centers(centers)
-    log_op("登记统一后台", f"{cid} {name}", session.get("uid"))
+    log_op("登记统一后台", f"{cid} {name}", _uid())
     return jsonify({"ok": True, "msg": f"已登记「{name}」", "item": item})
 
 
@@ -3106,7 +3339,7 @@ def api_admin_hub_delete(cid):
         return jsonify({"ok": False, "msg": "未找到该后台"}), 404
     centers.remove(target)
     save_hub_centers(centers)
-    log_op("移除统一后台", cid, session.get("uid"))
+    log_op("移除统一后台", cid, _uid())
     return jsonify({"ok": True, "msg": "已移除"})
 
 
@@ -3121,7 +3354,7 @@ def keys_page():
     if not u:
         return redirect(url_for("login_page"))
     if u["role"] != "admin":
-        return render_template("auth.html", deny="该页面需要管理员权限")
+        return render_template("auth.html", deny="该页面需要管理员权限"), 403
     return render_template("keys.html")
 
 
@@ -3184,14 +3417,16 @@ def api_promo_me():
 @login_required
 def api_promo_realname():
     """实名认证（姓名+身份证号），认证后即可参与推广"""
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     name = (d.get("real_name") or "").strip()
     idcard = (d.get("real_idcard") or "").strip().upper()
     if not (2 <= len(name) <= 8):
         return jsonify({"ok": False, "msg": "请输入真实姓名（2-8字）"}), 400
     if not re.fullmatch(r"\d{15}|\d{17}[\dX]", idcard):
         return jsonify({"ok": False, "msg": "身份证号格式不正确（15位或18位）"}), 400
-    uid = session["uid"]
+    uid = _uid()
+    if not uid:
+        return jsonify({"ok": False, "msg": "请先登录"}), 401
     db = get_db()
     db.execute("UPDATE users SET real_name=?, real_idcard=?, realname_at=? WHERE id=?",
                (name, idcard, now(), uid))
@@ -3200,11 +3435,24 @@ def api_promo_realname():
     return jsonify({"ok": True, "msg": "实名认证成功，专属邀请码已激活"})
 
 
+def _magic_ok(ext, raw):
+    """校验文件魔数：仅看 data:image/xxx 前缀不够，攻击者可把任意内容伪装成
+    PNG 落盘（渗透检查项「上传内容伪装」）。扩展名固定、nosniff 已在，
+    这里再按真实文件头收口。"""
+    if ext == "webp":
+        return len(raw) > 12 and raw[:4] == b"RIFF" and raw[8:12] == b"WEBP"
+    if ext == "png":
+        return raw.startswith(b"\x89PNG\r\n\x1a\n")
+    if ext == "jpg":
+        return raw.startswith(b"\xff\xd8\xff")
+    return False
+
+
 @app.route("/api/admin/promo/qr", methods=["POST"])
 @admin_required
 def api_admin_promo_qr():
     """后台设置二维码：kind=group(推广微信群) / pay(合伙人999元支付)"""
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     kind = d.get("kind")
     data_url = d.get("data_url") or ""
     if kind not in ("group", "pay"):
@@ -3216,6 +3464,8 @@ def api_admin_promo_qr():
     raw = base64.b64decode(m.group(2))
     if len(raw) > 2 * 1024 * 1024:
         return jsonify({"ok": False, "msg": "图片不能超过 2MB"}), 400
+    if not _magic_ok(ext, raw):
+        return jsonify({"ok": False, "msg": "文件内容与图片格式不符"}), 400
     updir = os.path.join(app.root_path, "static", "uploads")
     os.makedirs(updir, exist_ok=True)
     fname = "promo_%s.%s" % (kind, ext)
@@ -3227,7 +3477,7 @@ def api_admin_promo_qr():
                "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                ("promo_%s_qr" % kind, url))
     db.commit()
-    log_op("设置推广二维码", "类型:%s" % kind, session.get("uid"))
+    log_op("设置推广二维码", "类型:%s" % kind, _uid())
     return jsonify({"ok": True, "msg": "二维码已更新", "url": url})
 
 
@@ -3304,7 +3554,7 @@ def _token_user():
     token = (request.headers.get("X-Auth-Token") or request.args.get("token") or "").strip()
     uid = _read_token(token) if token else None
     if not uid:
-        uid = session.get("uid")
+        uid = _uid()
     if not uid:
         return None
     row = get_db().execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
@@ -3338,49 +3588,33 @@ def _account_payload(u):
 
 @app.route("/api/account/register", methods=["POST"])
 def api_account_register():
-    """统一注册：网页/桌面/手机共用，注册的即数字生态家园账号"""
-    d = request.get_json(silent=True) or {}
-    username = (d.get("username") or "").strip()
-    password = d.get("password") or ""
-    nickname = (d.get("nickname") or "").strip() or username
-    ref = (d.get("ref") or "").strip().upper()
-    if not (3 <= len(username) <= 20):
-        return jsonify({"ok": False, "msg": "用户名需 3-20 个字符"}), 400
-    if len(password) < 6:
-        return jsonify({"ok": False, "msg": "密码至少 6 位"}), 400
-    db = get_db()
-    if db.execute("SELECT 1 FROM users WHERE username=?", (username,)).fetchone():
-        return jsonify({"ok": False, "msg": "用户名已存在，请直接登录"}), 400
-    inviter_id = None
-    if ref:
-        row = db.execute("SELECT id FROM users WHERE invite_code=?", (ref,)).fetchone()
-        inviter_id = row["id"] if row else None
-    is_first = db.execute("SELECT COUNT(*) c FROM users").fetchone()["c"] == 0
-    role = "admin" if is_first else "user"
-    cur = db.execute(
-        "INSERT INTO users(username, password_hash, nickname, role, inviter_id, created_at) "
-        "VALUES(?,?,?,?,?,?)",
-        (username, generate_password_hash(password), nickname, role, inviter_id, now()))
-    uid = cur.lastrowid
-    invite_code = "ECJ%d" % (10000 + uid)
-    db.execute("UPDATE users SET invite_code=? WHERE id=?", (invite_code, uid))
-    db.commit()
-    log_op("统一注册", "用户名:%s 来源:%s" % (username, d.get("app") or "web"), uid)
-    u = dict(db.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone())
-    return jsonify({"ok": True, "msg": "注册成功，该账号可登录 ecojia.cn 及全部子工具",
-                    "token": _sign_token(uid), "account": _account_payload(u)})
+    """统一注册：网页/桌面/手机共用，注册的即数字生态家园账号（与 /api/auth/register 同一实现）"""
+    d = json_obj()
+    info, err = _register_user(d, d.get("app") or "unified")
+    if err:
+        return jsonify(err[0]), err[1]
+    return jsonify({"ok": True, "msg": "注册成功，该账号可登录 ecojia.cn 及全部子工具" + info["ref_msg"],
+                    "token": _sign_token(info["uid"]), "account": _account_payload(info["user"])})
 
 
 @app.route("/api/account/login", methods=["POST"])
 def api_account_login():
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     username = (d.get("username") or "").strip()
     password = d.get("password") or ""
+    # 与 /api/auth/login 共用同一份锁定计数：漏掉这层等于给暴力破解留后门，
+    # 攻击者换到 /api/account/login 就能无限试密码（渗透检查发现）。
+    guard_key = client_ip() + "|" + username
+    wait = _login_guard(guard_key)
+    if wait:
+        return jsonify({"ok": False, "msg": f"登录失败次数过多，请 {wait // 60 + 1} 分钟后再试"}), 429
     row = get_db().execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
     if not row or not check_password_hash(row["password_hash"], password):
+        _login_fail(guard_key)
         return jsonify({"ok": False, "msg": "用户名或密码错误"}), 400
     if row["role"] == "disabled":
         return jsonify({"ok": False, "msg": "账号已被禁用"}), 403
+    _login_ok(guard_key)
     log_op("统一登录", "用户名:%s 来源:%s" % (username, d.get("app") or "web"), row["id"])
     return jsonify({"ok": True, "msg": "登录成功", "token": _sign_token(row["id"]),
                     "account": _account_payload(dict(row))})
@@ -3450,7 +3684,7 @@ def api_admin_grants():
             rows_out.append(item)
         return jsonify({"ok": True, "apps": APP_KEYS, "levels": APP_LEVELS, "grants": rows_out})
 
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     username = (d.get("username") or "").strip()
     app_key = (d.get("app_key") or "").strip()
     u = db.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
@@ -3489,7 +3723,7 @@ def api_admin_promo_video():
                         "group_qr": _get_setting("promo_group_qr"),
                         "pay_qr": _get_setting("promo_pay_qr"),
                         "pay_price": _get_setting("promo_pay_price", "999")})
-    d = request.get_json(silent=True) or {}
+    d = json_obj()
     url = (d.get("url") or "").strip()
     if url:
         if not re.match(r"^(https?://|/static/)", url):
@@ -3503,6 +3737,12 @@ def api_admin_promo_video():
     raw = base64.b64decode(m.group(2))
     if len(raw) > 80 * 1024 * 1024:
         return jsonify({"ok": False, "msg": "视频不能超过 80MB"}), 400
+    if m.group(1) == "mp4":
+        ok = len(raw) > 12 and raw[4:8] == b"ftyp"
+    else:
+        ok = raw[:4] == b"\x1a\x45\xdf\xa3"
+    if not ok:
+        return jsonify({"ok": False, "msg": "文件内容与视频格式不符"}), 400
     updir = os.path.join(app.root_path, "static", "uploads")
     os.makedirs(updir, exist_ok=True)
     fname = "promo_video." + m.group(1)

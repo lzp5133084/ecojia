@@ -125,7 +125,7 @@
     </div>
     <p class="tip">该账号即数字生态家园（ecojia.cn）账号，可在网站登录，后台已开通的任意项目 VIP 权益全站通用；邀请码同样全站通用。</p>
     <div style="margin-top:8px;">
-      <button class="btn btn-ghost" onclick="if(confirm('确认退出登录？'))logout()">退出登录</button>
+      <button class="btn btn-ghost" data-act="logout" data-confirm="确认退出登录？">退出登录</button>
     </div>
   </div>
 
@@ -188,7 +188,7 @@
         <div class="qh">进交流群</div>
         {% if promo.group_qr %}
           <img class="qr-img" src="{{ promo.group_qr }}" alt="进群二维码"
-               onerror="this.outerHTML='<div class=&quot;qr-empty&quot;>后台暂未上传</div>'">
+               data-fallback="后台暂未上传" data-fallback-class="qr-empty">
         {% else %}
           <div class="qr-empty">后台暂未上传</div>
         {% endif %}
@@ -198,7 +198,7 @@
         <div class="qh">收款码</div>
         {% if promo.pay_qr %}
           <img class="qr-img" src="{{ promo.pay_qr }}" alt="收款码"
-               onerror="this.outerHTML='<div class=&quot;qr-empty&quot;>后台暂未上传</div>'">
+               data-fallback="后台暂未上传" data-fallback-class="qr-empty">
         {% else %}
           <div class="qr-empty">后台暂未上传</div>
         {% endif %}
@@ -214,31 +214,31 @@
       <span style="display:flex;align-items:center;gap:8px;">
         <span class="ref-code">{{ account.invite_code }}</span>
         <button class="btn btn-outline-gold" style="padding:5px 10px;"
-                onclick="copyText('{{ promo.invite_base }}{{ account.invite_code }}','推广链接已复制')">📋 复制</button>
+                data-act="copyText" data-arg='["{{ promo.invite_base }}{{ account.invite_code }}","推广链接已复制"]'>📋 复制</button>
       </span>
     </div>
     <p class="tip">已邀请 0 人 · 满 20 人可扫码 ¥{{ promo.pay_price }} 升级合伙人</p>
 
     <div style="color:var(--gold-l);font-size:12px;font-weight:700;margin-top:10px;">📥 三端下载</div>
     <div class="dl-grid">
-      <button class="dl-btn dl-web" onclick="openLink('https://tools.ecojia.cn/screenpen/')">🌐 网页版</button>
-      <button class="dl-btn dl-apk" onclick="openLink('https://tools.ecojia.cn/screenpen/download/screenpen.apk')">📱 安卓 APK</button>
-      <button class="dl-btn dl-exe" onclick="openLink('https://tools.ecojia.cn/screenpen/download/')">💻 桌面客户端</button>
+      <button class="dl-btn dl-web" data-act="openLink" data-arg='["https://tools.ecojia.cn/screenpen/"]'>🌐 网页版</button>
+      <button class="dl-btn dl-apk" data-act="openLink" data-arg='["https://tools.ecojia.cn/screenpen/download/screenpen.apk"]'>📱 安卓 APK</button>
+      <button class="dl-btn dl-exe" data-act="openLink" data-arg='["https://tools.ecojia.cn/screenpen/download/"]'>💻 桌面客户端</button>
     </div>
   </div>
 
   {# ============ 5. 操作按钮组 ============ #}
   <div class="op-row">
-    <button class="btn btn-wx" onclick="copyText('{{ promo.wechat }}','微信号 {{ promo.wechat }} 已复制')">💬 微信</button>
-    <button class="btn btn-qq" onclick="toast('请加微信 {{ promo.wechat }} 获取 QQ 群号')">🐧 QQ</button>
+    <button class="btn btn-wx" data-act="copyText" data-arg='["{{ promo.wechat }}","微信号 {{ promo.wechat }} 已复制"]'>💬 微信</button>
+    <button class="btn btn-qq" data-act="toast" data-arg='["请加微信 {{ promo.wechat }} 获取 QQ 群号"]'>🐧 QQ</button>
     <button class="btn btn-outline-gold"
-            onclick="copyText('{{ promo.invite_base }}{{ account.invite_code }}','推广链接已复制')">🔗 复制链接</button>
+            data-act="copyText" data-arg='["{{ promo.invite_base }}{{ account.invite_code }}","推广链接已复制"]'>🔗 复制链接</button>
   </div>
 
   {# ============ 6. 盲盒 + 看广告 ============ #}
   <div class="extra-row">
-    <button class="blind-btn" onclick="openBlind()">🎁 盲盒抽奖(0)</button>
-    <button class="ad-btn" onclick="watchAd()">📺 看广告解锁1天</button>
+    <button class="blind-btn" data-act="openBlind">🎁 盲盒抽奖(0)</button>
+    <button class="ad-btn" data-act="watchAd">📺 看广告解锁1天</button>
   </div>
 
   {# ============ 7. 桌面端功能对照（旗舰：全部功能入口，无法实现的提示下载电脑端） ============ #}
@@ -251,13 +251,13 @@
       <div class="feat-item"><span class="ic">{{ icon("save") }}</span><span class="nm">截图存档</span>
         <a href="/canvas" class="st st-ok">在线使用 →</a></div>
       <div class="feat-item"><span class="ic">{{ icon("eye") }}</span><span class="nm">高清录屏</span>
-        <span class="st st-pc" onclick="openLink('https://tools.ecojia.cn/screenpen/download/')">下载电脑端</span></div>
+        <span class="st st-pc" data-act="openLink" data-arg='["https://tools.ecojia.cn/screenpen/download/"]'>下载电脑端</span></div>
       <div class="feat-item"><span class="ic">{{ icon("grid") }}</span><span class="nm">键鼠气泡反馈</span>
-        <span class="st st-pc" onclick="openLink('https://tools.ecojia.cn/screenpen/download/')">下载电脑端</span></div>
+        <span class="st st-pc" data-act="openLink" data-arg='["https://tools.ecojia.cn/screenpen/download/"]'>下载电脑端</span></div>
       <div class="feat-item"><span class="ic">{{ icon("chart") }}</span><span class="nm">PPT 提取</span>
-        <span class="st st-pc" onclick="openLink('https://tools.ecojia.cn/screenpen/download/')">下载电脑端</span></div>
+        <span class="st st-pc" data-act="openLink" data-arg='["https://tools.ecojia.cn/screenpen/download/"]'>下载电脑端</span></div>
       <div class="feat-item"><span class="ic">{{ icon("scan") }}</span><span class="nm">悬浮球控制台</span>
-        <span class="st st-pc" onclick="openLink('https://tools.ecojia.cn/screenpen/download/')">下载电脑端</span></div>
+        <span class="st st-pc" data-act="openLink" data-arg='["https://tools.ecojia.cn/screenpen/download/"]'>下载电脑端</span></div>
     </div>
   </div>
 

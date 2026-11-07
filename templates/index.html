@@ -20,10 +20,10 @@
 
 <!-- ═══ 全站速搜（复用 /api/ecosystem/search） ═══ -->
 <section class="quick-search" aria-label="全站速搜">
-  <form class="qs-form" onsubmit="return false" role="search">
+  <form class="qs-form" role="search">
     <label class="qs-label" for="qsInput">全站速搜</label>
     <input id="qsInput" class="qs-input" type="search" placeholder="搜产品 / 工具 / 子站 / 接口，例如：保险箱、计时器、资料" autocomplete="off">
-    <button class="btn btn-gold qs-btn" type="button" onclick="qsRun()">搜索</button>
+    <button class="btn btn-gold qs-btn" type="button" data-act="qsRun">搜索</button>
   </form>
   <div id="qsResult" class="qs-result" hidden></div>
 </section>

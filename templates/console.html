@@ -81,8 +81,8 @@
   </div>
   <div class="hub-tools">
     <span class="hub-refresh" id="hubTime"></span>
-    <button class="btn btn-ghost btn-sm" onclick="loadHub()">{{ icon("zap") }} 刷新状态</button>
-    <button class="btn btn-gold btn-sm" onclick="openHubForm()">+ 新增接入</button>
+    <button class="btn btn-ghost btn-sm" data-act="loadHub">{{ icon("zap") }} 刷新状态</button>
+    <button class="btn btn-gold btn-sm" data-act="openHubForm">+ 新增接入</button>
   </div>
 </section>
 
@@ -103,7 +103,7 @@
 </section>
 
 <div class="hub-modal" id="hubModal">
-  <form class="hub-form" onsubmit="return saveHub(event)">
+  <form class="hub-form" data-act-submit="saveHub">
     <h3>新增 / 更新接入后台</h3>
     <div class="hub-field"><label>标识 ID（英文，唯一）</label><input name="id" required placeholder="例如 douyin-recruit"></div>
     <div class="hub-field"><label>名称</label><input name="name" required placeholder="例如 抖音素人娱播招募 · 报名后台"></div>
@@ -116,7 +116,7 @@
     <div class="hub-field"><label>登录方式说明</label><input name="auth" placeholder="统一账号 / 独立账号"></div>
     <div class="hub-field"><label>备注</label><input name="note" placeholder="可选"></div>
     <div class="hub-form-foot">
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeHubForm()">取消</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-act="closeHubForm">取消</button>
       <button type="submit" class="btn btn-gold btn-sm">保存接入</button>
     </div>
   </form>
@@ -145,7 +145,7 @@ function cardHtml(c){
   const btns = [];
   if(c.admin_url) btns.push('<a class="btn btn-gold btn-sm" href="' + esc(c.admin_url) + '" target="_blank" rel="noopener">进入后台 ' + '→</a>');
   if(c.public_url) btns.push('<a class="btn btn-ghost btn-sm" href="' + esc(c.public_url) + '" target="_blank" rel="noopener">打开前台</a>');
-  btns.push('<a class="btn btn-ghost btn-sm hub-del" href="javascript:void(0)" onclick="delHub(\'' + esc(c.id) + '\')">移除</a>');
+  btns.push('<a class="btn btn-ghost btn-sm hub-del" href="#" data-act="delHub" data-arg="' + esc(JSON.stringify([c.id])) + '">移除</a>');
   return '' +
     '<div class="hub-card">' +
       '<div class="hub-top">' +
@@ -189,7 +189,7 @@ function toolCardHtml(t, center){
     : '<span class="hub-state st-unknown"><i></i>纯工具 · 无需后台</span>';
   const btn = done
     ? '<a class="btn btn-ghost btn-sm" href="' + esc(center.admin_url || t.url) + '" target="_blank" rel="noopener">进入后台</a>'
-    : '<a class="btn btn-ghost btn-sm" style="font-size:11px" href="javascript:void(0)" onclick="quickReg(\'' + esc(t.no) + '\')">补登后台</a>';
+    : '<a class="btn btn-ghost btn-sm" style="font-size:11px" href="#" data-act="quickReg" data-arg="' + esc(JSON.stringify([t.no])) + '">补登后台</a>';
   return '' +
     '<div class="hub-card"' + dim + '>' +
       '<div class="hub-top"><span class="hub-ico">' + esc(t.icon || '🧰') + '</span>' + badge + '</div>' +
