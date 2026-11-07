@@ -28,6 +28,21 @@
   </div>
 </div>
 
+<!-- ═══ 使用热度排行（V2.8：决定前台工具/产品排序） ═══ -->
+<section class="admin-card">
+  <h3>{{ icon("chart") }} 使用热度排行 <small>（「开始使用」点击 · 前台排序依据）</small></h3>
+  <p class="admin-tip">统计口径：只统计「开始使用」按钮点击，不含页面访问；同一 IP / 同一会话对同一目标 1 小时内只计 1 次；服务端异步入库，统计失败不影响用户跳转。置顶优先于热度，取消置顶后回到按热度排序。</p>
+  <div style="display:flex;gap:10px;align-items:center;margin:8px 0 10px;flex-wrap:wrap">
+    <select id="hc-kind" style="min-width:110px">
+      <option value="tool">工具清单</option>
+      <option value="product">产品矩阵</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" data-act="loadHeat">刷新排行</button>
+    <span id="hc-note" style="font-size:12px;color:#999">加载中…</span>
+  </div>
+  <div id="heat-list" style="font-size:12.5px;overflow-x:auto">加载中…</div>
+</section>
+
 <!-- ═══ 积木管理（V1.2 可视化后台）═══ -->
 <section class="admin-card brick-card">
   <div class="brick-head">
@@ -411,6 +426,46 @@ function uploadVideo(){
   };
   r.readAsDataURL(f);
 }
+async function loadHeat(){
+  const kind = document.getElementById('hc-kind').value;
+  const box = document.getElementById('heat-list');
+  const note = document.getElementById('hc-note');
+  box.innerHTML = '加载中…';
+  const d = await api('/api/admin/use-clicks?kind=' + encodeURIComponent(kind));
+  if(!d.ok){ box.innerHTML = '<div class="empty">加载失败</div>'; return; }
+  note.textContent = d.note || '';
+  let html = '<table style="width:100%;border-collapse:collapse">'
+    + '<tr style="color:#999;text-align:left">'
+    + '<th style="padding:6px 8px">名次</th><th style="padding:6px 8px">编号</th>'
+    + '<th style="padding:6px 8px">名称</th><th style="padding:6px 8px">点击</th>'
+    + '<th style="padding:6px 8px">状态</th><th style="padding:6px 8px">操作</th></tr>';
+  d.items.forEach(function(it, i){
+    const rank = i + 1;
+    const pin = it.pinned ? '<span style="color:#fbbf24">置顶' + (it.pin_rank !== null ? '(' + it.pin_rank + ')' : '') + '</span>' : '';
+    html += '<tr style="border-top:1px solid rgba(255,255,255,.06)">'
+      + '<td style="padding:6px 8px">' + rank + '</td>'
+      + '<td style="padding:6px 8px">' + it.no + '</td>'
+      + '<td style="padding:6px 8px">' + it.name + ' ' + pin + '</td>'
+      + '<td style="padding:6px 8px"><b>' + it.clicks + '</b></td>'
+      + '<td style="padding:6px 8px;color:#999">' + (it.status || '') + '</td>'
+      + '<td style="padding:6px 8px">'
+      + (it.pinned
+          ? '<a href="#" class="danger" data-act="pinHeat" data-arg=\'["' + it.no + '",false]\'>取消置顶</a>'
+          : '<a href="#" data-act="pinHeat" data-arg=\'["' + it.no + '",true]\'>置顶</a>')
+      + '</td></tr>';
+  });
+  box.innerHTML = html + '</table>';
+}
+
+async function pinHeat(target, pin){
+  const kind = document.getElementById('hc-kind').value;
+  const d = await api('/api/admin/use-click-pin', {method:'POST',
+    body: JSON.stringify({target: target, kind: kind, pin: pin})});
+  if(d.ok){ toast(d.msg); loadHeat(); }
+}
+
+document.getElementById('hc-kind').addEventListener('change', loadHeat);
+loadHeat();
 initUnified();
 </script>
 {% endblock %}

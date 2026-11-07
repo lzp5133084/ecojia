@@ -36,7 +36,7 @@
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/static/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107l">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107m">
 </head>
 <body>
 <a class="skip-link" href="#main">跳到主要内容</a>
@@ -256,6 +256,24 @@ async function logout(){
   const d = await api('/api/auth/logout', {method:'POST'});
   if(d.ok) location.href = d.redirect;
 }
+/* 「开始使用」点击热度上报：sendBeacon 异步发出，不阻塞跳转，失败静默。
+   去重与累加全部在服务端完成（同 IP / 同会话对同一目标 1 小时计 1 次）。 */
+document.addEventListener('click', function(e){
+  var el = e.target && e.target.closest ? e.target.closest('[data-use]') : null;
+  if(!el) return;
+  var body = JSON.stringify({
+    target: el.getAttribute('data-use'),
+    kind: el.getAttribute('data-use-kind') || 'tool'
+  });
+  try{
+    if(navigator.sendBeacon){
+      navigator.sendBeacon('/api/use-click', new Blob([body], {type:'application/json'}));
+    }else{
+      fetch('/api/use-click', {method:'POST', headers:{'Content-Type':'application/json'},
+        body:body, keepalive:true}).catch(function(){});
+    }
+  }catch(err){}
+}, true);
 </script>
 {% block scripts %}{% endblock %}
 <!-- CSP 事件委托绑定器：内联事件属性在 CSP 下会被拦截，统一走 data-act -->

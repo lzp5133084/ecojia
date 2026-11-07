@@ -24,11 +24,13 @@
 import base64
 import hashlib
 import hmac
+import queue
 import re
 import json
 import os
 import secrets
 import sqlite3
+import threading
 import time
 from datetime import datetime, timedelta
 from functools import wraps
@@ -41,7 +43,7 @@ import agent_service
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "ecojia.db")
-VERSION = "V2.7"
+VERSION = "V2.8"
 
 # 资料百事通公网入口（已部署到腾讯云服务器；备案后切换为 ziliao.ecojia.cn）
 MAIN_SITE_URL = "http://118.24.173.246:8300"
@@ -293,6 +295,91 @@ def save_ecosystem(data):
     with open(ECOSYSTEM_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     _eco_cache["mtime"] = None
+
+
+# ══════════════════ 使用热度（「开始使用」点击统计） ══════════════════
+# 统计口径：只统计「开始使用」按钮的点击行为，不统计页面访问；不采集个人身份信息，
+# 只保留加盐哈希后的 IP/会话用于 1 小时去重。服务端异步入库，写失败不影响跳转。
+_CLICK_Q = queue.Queue(maxsize=4000)
+
+
+def _click_salt():
+    return os.environ.get("ECJ_CLICK_SALT", "ecojia-use-click-v1")
+
+
+def _hash_key(raw):
+    return hashlib.sha256((_click_salt() + "|" + (raw or "")).encode()).hexdigest()[:32]
+
+
+def _click_worker():
+    """后台线程串行写入，避免每次点击都阻塞请求"""
+    while True:
+        item = _CLICK_Q.get()
+        try:
+            conn = sqlite3.connect(DB_PATH, timeout=5)
+            try:
+                conn.execute(
+                    "INSERT OR IGNORE INTO use_clicks"
+                    "(target, kind, ip_hash, sess, hour, created_at) "
+                    "VALUES (?,?,?,?,?,?)", item)
+                conn.commit()
+            finally:
+                conn.close()
+        except Exception as e:  # 统计失败只记录，不影响任何用户操作
+            print(f"[热度] 写入失败（已忽略）：{e}")
+        finally:
+            _CLICK_Q.task_done()
+
+
+threading.Thread(target=_click_worker, name="use-click-writer", daemon=True).start()
+
+
+def enqueue_use_click(target, kind, ip, sess):
+    """把一次点击放进队列，队列满直接丢弃（统计永远不阻塞业务）"""
+    now = datetime.now()
+    try:
+        _CLICK_Q.put_nowait((target, kind, _hash_key(ip), _hash_key(sess),
+                             now.strftime("%Y%m%d%H"),
+                             now.strftime("%Y-%m-%d %H:%M:%S")))
+    except queue.Full:
+        pass
+
+
+def _use_click_data(kind):
+    try:
+        conn = sqlite3.connect(DB_PATH, timeout=5)
+        conn.row_factory = sqlite3.Row
+        try:
+            counts = {r["target"]: r["c"] for r in conn.execute(
+                "SELECT target, COUNT(*) AS c FROM use_clicks WHERE kind=? GROUP BY target",
+                (kind,)).fetchall()}
+            pins = {r["target"]: r["pin_rank"] for r in conn.execute(
+                "SELECT target, pin_rank FROM use_pins WHERE kind=?", (kind,)).fetchall()}
+        finally:
+            conn.close()
+        return counts, pins
+    except sqlite3.Error:
+        return {}, {}
+
+
+def sort_by_heat(items, kind):
+    """排序：人工置顶 > 点击次数 > 人工权重 hot > 数据源原顺序。
+
+    冷启动兜底：没有任何点击数据时，靠 hot 与现有顺序决定，新条目不会永远垫底。
+    """
+    counts, pins = _use_click_data(kind)
+
+    def key(pair):
+        idx, it = pair
+        no = str(it.get("no") or "")
+        pin = pins.get(no)
+        return (0 if pin is not None else 1,
+                pin if pin is not None else 0,
+                -int(counts.get(no, 0)),
+                -int(it.get("hot") or 0),
+                idx)
+
+    return [it for _, it in sorted(enumerate(items), key=key)]
 
 
 def get_products():
@@ -926,6 +1013,26 @@ def init_db():
         created_at TEXT    NOT NULL,
         UNIQUE(user_id, app_key)
     )""")
+    # —— V2.8 使用热度：只统计「开始使用」点击，用于工具/产品排序 ——
+    # 1 小时去重靠两条唯一索引（同 IP、同会话各一条），插入用 INSERT OR IGNORE。
+    db.execute("""CREATE TABLE IF NOT EXISTS use_clicks (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        target     TEXT    NOT NULL,
+        kind       TEXT    NOT NULL DEFAULT 'tool',
+        ip_hash    TEXT    NOT NULL,
+        sess       TEXT    NOT NULL,
+        hour       TEXT    NOT NULL,
+        created_at TEXT    NOT NULL
+    )""")
+    db.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_click_ip ON use_clicks(target, ip_hash, hour)")
+    db.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_click_sess ON use_clicks(target, sess, hour)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_click_kind ON use_clicks(kind)")
+    db.execute("""CREATE TABLE IF NOT EXISTS use_pins (
+        target     TEXT PRIMARY KEY,
+        kind       TEXT    NOT NULL DEFAULT 'tool',
+        pin_rank   INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT    NOT NULL
+    )""")
     db.commit()
     for r in db.execute("SELECT id FROM users WHERE invite_code IS NULL OR invite_code=''").fetchall():
         db.execute("UPDATE users SET invite_code=? WHERE id=?", ("ECJ%d" % (10000 + r[0]), r[0]))
@@ -1186,8 +1293,11 @@ def index():
 
 @app.route("/products")
 def products_page():
-    """产品矩阵（独立页）：承载全部产品，首页只保留主打卡与入口链接"""
-    products = get_products()
+    """产品矩阵（独立页）：承载全部产品，首页只保留主打卡与入口链接
+
+    排序与其他位置共用同一份数据：人工置顶 > 「开始使用」点击热度 > 人工权重 > 原顺序。
+    """
+    products = sort_by_heat(get_products(), "product")
     live = len([p for p in products if p.get("status") == "已上线"])
     return render_template("products.html", products=products, live_count=live)
 
@@ -2634,12 +2744,84 @@ def huoxing_annual_public(did, year):
 
 @app.route("/tools")
 def tools_page():
-    """工具清单与使用说明（GitHub 全部可外部访问内容汇总）"""
+    """工具清单与使用说明（GitHub 全部可外部访问内容汇总）
+
+    左侧速查列表与右侧卡片共用同一个已排序列表，不各算一套。
+    """
     eco = load_ecosystem()
-    tools = eco.get("tools", [])
+    tools = sort_by_heat(eco.get("tools", []), "tool")
     online = [t for t in tools if t.get("url")]
     return render_template("tools.html", tools=tools,
                            total=len(tools), online=len(online))
+
+
+@app.route("/api/use-click", methods=["POST"])
+def api_use_click():
+    """「开始使用」点击上报：立即返回，真正的累加在后台线程完成。
+
+    去重：同一 IP / 同一会话对同一目标 1 小时内只计一次（库唯一索引兜底）。
+    失败一律静默，绝不阻塞用户跳转。
+    """
+    d = json_obj()
+    target = str(d.get("target") or "").strip()[:16]
+    kind = (d.get("kind") or "tool").strip()
+    if kind not in ("tool", "product"):
+        kind = "tool"
+    eco = load_ecosystem()
+    valid = {str(x.get("no")) for x in eco.get("tools" if kind == "tool" else "products", [])}
+    if target in valid:
+        # 有真实会话 cookie 时按会话去重；匿名访客没有 cookie，退回按 IP 去重，
+        # 否则所有匿名访客会共用同一个值，导致每个目标每小时只能计 1 次。
+        sess = request.cookies.get("session") or session.get("sid") or ("ip:" + client_ip())
+        enqueue_use_click(target, kind, client_ip(), sess)
+    return ("", 204)
+
+
+@app.route("/api/admin/use-clicks")
+@admin_required
+def api_admin_use_clicks():
+    """后台：点击热度排行（与前台同一套排序规则）"""
+    kind = request.args.get("kind", "tool")
+    if kind not in ("tool", "product"):
+        kind = "tool"
+    eco = load_ecosystem()
+    items = eco.get("tools" if kind == "tool" else "products", [])
+    counts, pins = _use_click_data(kind)
+    out = []
+    for t in sort_by_heat(items, kind):
+        no = str(t.get("no") or "")
+        out.append({"no": no, "name": t.get("name") or "", "status": t.get("status") or "",
+                    "clicks": int(counts.get(no, 0)), "pinned": no in pins,
+                    "pin_rank": pins.get(no)})
+    return jsonify({"ok": True, "kind": kind, "items": out,
+                    "note": "统计口径：仅「开始使用」点击；同一 IP/会话对同一目标 1 小时计 1 次；不含页面访问，不采集个人信息"})
+
+
+@app.route("/api/admin/use-click-pin", methods=["POST"])
+@admin_required
+def api_admin_use_click_pin():
+    """后台：手动置顶 / 取消置顶"""
+    d = json_obj()
+    target = str(d.get("target") or "").strip()[:16]
+    kind = d.get("kind") if d.get("kind") in ("tool", "product") else "tool"
+    if not target:
+        return jsonify({"ok": False, "msg": "缺少 target"}), 400
+    db = get_db()
+    if d.get("pin") is False:
+        db.execute("DELETE FROM use_pins WHERE target=? AND kind=?", (target, kind))
+        msg = "已取消置顶"
+    else:
+        row = db.execute("SELECT MIN(pin_rank) AS m FROM use_pins WHERE kind=?", (kind,)).fetchone()
+        rank = (row["m"] if row and row["m"] is not None else 0) - 1
+        db.execute("INSERT INTO use_pins(target, kind, pin_rank, updated_at) VALUES(?,?,?,?) "
+                   "ON CONFLICT(target) DO UPDATE SET pin_rank=excluded.pin_rank, "
+                   "kind=excluded.kind, updated_at=excluded.updated_at",
+                   (target, kind, rank, now()))
+        msg = "已置顶"
+    db.commit()
+    log_op("使用热度置顶" if d.get("pin") is not False else "取消使用热度置顶",
+           f"{kind}:{target}")
+    return jsonify({"ok": True, "msg": msg})
 
 
 @app.route("/login")

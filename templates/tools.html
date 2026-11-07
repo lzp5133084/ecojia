@@ -44,6 +44,7 @@
   <span class="tl-chip tl-repo">{{ icon("code") }} 源码托管 GitHub</span>
   <a class="btn btn-ghost btn-sm" href="/api/tools" target="_blank">数据接口 {{ icon("external") }}</a>
 </div>
+<p class="sort-note">{{ icon("chart") }} <b>排序说明</b>：按「开始使用」点击热度动态排序，左侧速查与右侧卡片共用同一份数据；同一 IP / 同一会话对同一工具 1 小时内只计 1 次；统计的是点击行为，不含页面访问，不采集个人身份信息。没有点击数据的工具按现有顺序与人工权重兜底，不会永远垫底。</p>
 
 <div class="tool-grid">
   {% for t in tools %}
@@ -63,7 +64,8 @@
 
     <div class="pcard-acts">
       {% if t.url %}
-      <a class="pbtn pbtn-main" href="{{ t.url }}" target="_blank" rel="noopener">开始使用 {{ icon("arrowright") }}</a>
+      <a class="pbtn pbtn-main" href="{{ t.url }}" target="_blank" rel="noopener"
+         data-use="{{ t.no }}" data-use-kind="tool">开始使用 {{ icon("arrowright") }}</a>
       {% else %}
       <button class="pbtn pbtn-main pbtn-off" type="button" data-act="pcNoEnd" data-arg='["soon"]'>开始使用<em>暂无</em></button>
       {% endif %}

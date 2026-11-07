@@ -17,6 +17,7 @@
   <span class="tl-chip tl-repo">{{ icon("code") }} 数据来自 ecosystem.json</span>
   <a class="btn btn-ghost btn-sm" href="/api/ecosystem/products" target="_blank">数据接口 {{ icon("external") }}</a>
 </div>
+<p class="sort-note">{{ icon("chart") }} <b>排序说明</b>：按「开始使用」点击热度动态排序，产品速览与下方完整卡片共用同一份数据；同一 IP / 同一会话对同一产品 1 小时内只计 1 次；统计的是点击行为，不含页面访问，不采集个人身份信息。没有点击数据的产品按现有顺序与人工权重兜底。</p>
 
 <section class="p-rail-wrap" aria-label="产品图标快捷入口">
   <div class="p-rail-head">
@@ -53,7 +54,8 @@
 
     <div class="pcard-acts">
       {% if L.use %}
-      <a class="pbtn pbtn-main" href="{{ L.use }}" {% if L.use[:4] == 'http' %}target="_blank" rel="noopener"{% endif %}>开始使用 {{ icon("arrowright") }}</a>
+      <a class="pbtn pbtn-main" href="{{ L.use }}" {% if L.use[:4] == 'http' %}target="_blank" rel="noopener"{% endif %}
+         data-use="{{ p.no }}" data-use-kind="product">开始使用 {{ icon("arrowright") }}</a>
       {% else %}
       <button class="pbtn pbtn-main pbtn-off" type="button" data-act="pcNoEnd" data-arg='["soon"]'>开始使用<em>暂无</em></button>
       {% endif %}

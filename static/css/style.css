@@ -486,6 +486,16 @@ button{font-family:inherit;cursor:pointer}
 }
 .tl-on{color:var(--ok);border-color:rgba(110,231,183,.35)}
 .tl-repo{color:var(--muted)}
+/* 排序口径说明：低调但可读，避免用户误以为按访问量/付费排序 */
+.sort-note{
+  display:flex;gap:8px;align-items:flex-start;
+  margin:-10px 0 24px;padding:10px 14px;
+  font-size:12.5px;line-height:1.65;color:var(--muted);
+  border:1px dashed var(--border);border-radius:10px;background:rgba(255,255,255,.02);
+}
+.sort-note .ic{flex:0 0 auto;width:15px;height:15px;margin-top:2px;color:var(--gold-hi)}
+.sort-note b{color:var(--text)}
+@media (max-width:640px){.sort-note{font-size:12px;margin:-6px 0 18px;padding:9px 11px}}
 .tool-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
 .tool-card{
   display:flex;flex-direction:column;
