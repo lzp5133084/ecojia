@@ -42,8 +42,11 @@ def remote_names(repo):
 
 
 def pick_branch(repo, name, branch):
-    """远端默认分支可能是 main 或 master，按存在性选择，避免硬编码"""
-    heads = L.try_git(repo, "ls-remote", "--heads", name, timeout=60)[1]
+    """远端默认分支可能是 main 或 master；本地已有远端跟踪分支就不再发网络请求"""
+    for cand in (branch, "main", "master"):
+        if L.ref_exists(repo, "%s/%s" % (name, cand)):
+            return cand
+    heads = L.try_git(repo, "ls-remote", "--heads", name, timeout=20)[1]
     refs = set()
     for line in heads.splitlines():
         if "\t" in line:
@@ -76,13 +79,16 @@ def inspect(repo):
         if not name:
             info["remotes"][kind] = {"error": "未配置远端"}
             continue
-        ok, _, err = L.try_git(repo, "fetch", name, branch, timeout=120)
+        ok, _, err = L.try_git(repo, "fetch", name, branch, timeout=90)
+        if not ok:
+            info["remotes"][kind] = {"error": "拉取失败或不可达: %s" % (err or "未知")[:80]}
+            continue
         rbranch = pick_branch(repo, name, branch)
         if rbranch != branch:
-            ok, _, err = L.try_git(repo, "fetch", name, rbranch, timeout=120)
+            ok, _, err = L.try_git(repo, "fetch", name, rbranch, timeout=90)
         ref = "%s/%s" % (name, rbranch)
         if not ok or not L.ref_exists(repo, ref):
-            info["remotes"][kind] = {"error": "拉取失败或分支不存在: %s" % err[:80]}
+            info["remotes"][kind] = {"error": "拉取失败或分支不存在: %s" % (err or "未知")[:80]}
             continue
         rcommit = L.git(repo, "rev-parse", ref)
         rfp, rn = L.fingerprint(repo, ref)

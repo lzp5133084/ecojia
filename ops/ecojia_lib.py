@@ -33,15 +33,22 @@ def log(msg, fp=sys.stdout):
     print(f"[{now_iso()}] {msg}", file=fp, flush=True)
 
 def git(repo, *args, check=True, timeout=60):
-    p = subprocess.run(["git", "-C", repo] + list(args),
-                       capture_output=True, text=True, timeout=timeout)
+    try:
+        p = subprocess.run(["git", "-C", repo] + list(args),
+                           capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"git {' '.join(args)} 超时({timeout}s)")
     if check and p.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)} 失败: {(p.stderr or p.stdout).strip()}")
     return p.stdout.strip()
 
 def try_git(repo, *args, timeout=60):
-    p = subprocess.run(["git", "-C", repo] + list(args),
-                       capture_output=True, text=True, timeout=timeout)
+    """网络操作可能卡住，超时按失败返回，不抛异常（否则整份判定矩阵会崩掉）"""
+    try:
+        p = subprocess.run(["git", "-C", repo] + list(args),
+                           capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return False, "", f"超时({timeout}s)"
     return p.returncode == 0, (p.stdout or "").strip(), (p.stderr or "").strip()
 
 # ── 内容指纹（唯一可比标准）──────────────────────────────────────────
