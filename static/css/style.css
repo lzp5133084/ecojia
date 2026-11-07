@@ -735,26 +735,55 @@ button{font-family:inherit;cursor:pointer}
 }
 .hero-nebula{padding:72px 30px;margin-top:18px}
 
-/* 主视觉动效：单层合成动画（transform/opacity），不使用动画库，不新增图片 */
+/* 主视觉动效：两层合成动画（transform/opacity），不使用动画库，不新增图片
+   2026-11-07 调整：原 26s / ±1.5% 实测 2 秒只漂 1.9px、像素差 0.13，肉眼完全看不出，
+   现改为 12s 一个循环、±4.5% 位移 + 1.02→1.11 缩放 + 明暗呼吸，并加一层慢速星尘。 */
 .hero-aurora{
   position:absolute;inset:-12%;z-index:-1;pointer-events:none;
-  transform:translate3d(0,0,0);will-change:transform;
+  transform:translate3d(0,0,0);will-change:transform,opacity;
   background:
-    radial-gradient(36% 40% at 26% 28%,rgba(244,114,182,.20),transparent 62%),
-    radial-gradient(30% 36% at 78% 62%,rgba(147,51,234,.18),transparent 66%),
-    radial-gradient(24% 28% at 58% 14%,rgba(251,191,36,.10),transparent 60%);
-  animation:heroDrift 26s ease-in-out infinite alternate;
+    radial-gradient(34% 38% at 22% 26%,rgba(244,114,182,.40),transparent 60%),
+    radial-gradient(30% 34% at 80% 64%,rgba(168,85,247,.34),transparent 64%),
+    radial-gradient(24% 26% at 56% 12%,rgba(251,191,36,.22),transparent 58%);
+  animation:heroDrift 12s ease-in-out infinite,
+            auroraBreath 9s ease-in-out infinite alternate;
 }
 @keyframes heroDrift{
-  from{transform:translate3d(-1.5%,0,0) scale(1)}
-  to{transform:translate3d(1.5%,-2%,0) scale(1.06)}
+  0%{transform:translate3d(-4.5%,1.5%,0) scale(1.02)}
+  33%{transform:translate3d(0,-2%,0) scale(1.08)}
+  66%{transform:translate3d(4.5%,-3.5%,0) scale(1.11)}
+  100%{transform:translate3d(-4.5%,1.5%,0) scale(1.02)}
+}
+@keyframes auroraBreath{
+  0%{opacity:.66}
+  100%{opacity:1}
+}
+/* 星尘层：整格位移，循环无缝；只动 transform，不触发重绘 */
+.hero-stars{
+  position:absolute;inset:-20% -10%;z-index:-1;pointer-events:none;opacity:.8;
+  background-image:
+    radial-gradient(1.8px 1.8px at 14% 18%,rgba(255,228,246,.95),transparent 55%),
+    radial-gradient(1.4px 1.4px at 38% 62%,rgba(206,180,255,.92),transparent 55%),
+    radial-gradient(2px 2px at 62% 26%,rgba(255,244,214,.95),transparent 55%),
+    radial-gradient(1.4px 1.4px at 78% 74%,rgba(255,179,222,.9),transparent 55%),
+    radial-gradient(1.6px 1.6px at 24% 86%,rgba(214,188,255,.9),transparent 55%),
+    radial-gradient(1.3px 1.3px at 88% 44%,rgba(255,255,255,.88),transparent 55%),
+    radial-gradient(1.6px 1.6px at 8% 52%,rgba(255,214,240,.85),transparent 55%),
+    radial-gradient(1.3px 1.3px at 52% 90%,rgba(255,235,200,.85),transparent 55%);
+  background-size:180px 180px;
+  animation:starDrift 15s linear infinite;
+}
+@keyframes starDrift{
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(-180px,-180px,0)}
 }
 /* 移动端与低刷新率设备：放慢或直接静态，避免持续占用 GPU */
 @media (max-width:640px){
-  .hero-aurora{animation-duration:44s}
+  .hero-aurora{animation-duration:18s,9s}
+  .hero-stars{animation-duration:22s}
 }
 @media (update:slow){
-  .hero-aurora{animation:none;will-change:auto;opacity:.85}
+  .hero-aurora,.hero-stars{animation:none;will-change:auto;opacity:.85}
 }
 
 /* 火星平面：舞台星云氛围（豆包羽毛素材弱化铺底） */
@@ -1871,7 +1900,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
    下：2×2 四按钮（开始使用 · 产品介绍 / 电脑端 · 手机端）
    缺端一律「暂无」占位，点击给提示，不留空位、不塌行
    ═══════════════════════════════════════════ */
-#main-product{display:grid;gap:20px;align-items:start;
+#main-product,.pcard-grid{display:grid;gap:20px;align-items:start;
   grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
 .pcard{
   position:relative;display:flex;flex-direction:column;gap:14px;
@@ -1981,6 +2010,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
     transition-duration:0s !important;scroll-behavior:auto !important}
   html:not([data-motion]){scroll-behavior:auto}
   html:not([data-motion]) .hero-aurora,
+  html:not([data-motion]) .hero-stars,
   html:not([data-motion]) .stardust{animation:none !important;will-change:auto;transform:none}
 }
 html[data-motion="reduce"] *,
@@ -1990,6 +2020,7 @@ html[data-motion="reduce"] *::after{
   transition-duration:0s !important;scroll-behavior:auto !important}
 html[data-motion="reduce"]{scroll-behavior:auto}
 html[data-motion="reduce"] .hero-aurora,
+html[data-motion="reduce"] .hero-stars,
 html[data-motion="reduce"] .stardust{animation:none !important;will-change:auto;transform:none}
 
 /* 三档选择器：页脚，桌面与手机通用，触控目标 ≥44px */

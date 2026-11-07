@@ -41,7 +41,7 @@ import agent_service
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "ecojia.db")
-VERSION = "V2.5"
+VERSION = "V2.6"
 
 # 资料百事通公网入口（已部署到腾讯云服务器；备案后切换为 ziliao.ecojia.cn）
 MAIN_SITE_URL = "http://118.24.173.246:8300"
@@ -1182,6 +1182,14 @@ def index():
                            hardware=get_hardware(), apis=eco.get("apis", []),
                            main_product=main, main_url=main.get("url") or MAIN_SITE_URL,
                            main_products=get_main_products())
+
+
+@app.route("/products")
+def products_page():
+    """产品矩阵（独立页）：承载全部产品，首页只保留主打卡与入口链接"""
+    products = get_products()
+    live = len([p for p in products if p.get("status") == "已上线"])
+    return render_template("products.html", products=products, live_count=live)
 
 
 @app.route("/vault")

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "icon_macro.html" import icon %}
+{% block title %}产品矩阵 · 全部 {{ products|length }} 个产品{% endblock %}
+{% block description %}数字生态家园产品矩阵：全部 {{ products|length }} 个产品的简介、适用环境、作用与电脑端 / 手机端入口，统一三行信息 + 2×2 四按钮卡片，缺端明确标注「暂无」。{% endblock %}
+{% block content %}
+
+<section class="page-head">
+  <h1>{{ icon("grid") }}产品矩阵</h1>
+  <p>生态内全部 <b>{{ products|length }}</b> 个数字成员。每张卡片按同一标准呈现：
+  <b>简介 · 应用环境 · 作用</b> 三行信息，下方 <b>开始使用 / 产品介绍 / 电脑端 / 手机端</b> 四个入口；
+  尚未提供的端会显示「暂无」并给出提示，不留空位。</p>
+</section>
+
+<div class="tools-bar">
+  <span class="tl-chip">{{ icon("package") }} 全部 {{ products|length }}</span>
+  <span class="tl-chip tl-on">{{ icon("globe") }} 已上线 {{ live_count }}</span>
+  <span class="tl-chip tl-repo">{{ icon("code") }} 数据来自 ecosystem.json</span>
+  <a class="btn btn-ghost btn-sm" href="/api/ecosystem/products" target="_blank">数据接口 {{ icon("external") }}</a>
+</div>
+
+<div class="pcard-grid">
+  {% for p in products %}
+  {% set L = p.links or {} %}
+  <article class="pcard" id="p-{{ p.no }}">
+    <div class="pcard-head">
+      <span class="pcard-badge">{{ p.no }}{% if p.main %} · 主打{% endif %} · {{ p.status }}</span>
+      <span class="pcard-icon">{{ icon(picon(p.icon), "ic-neon") }}</span>
+    </div>
+    <h2 class="pcard-name">{{ p.name }}{% if p.en %}<em>{{ p.en }}</em>{% endif %}</h2>
+
+    <dl class="pcard-info">
+      <div><dt>简介</dt><dd>{{ p.desc }}</dd></div>
+      <div><dt>应用环境</dt><dd>{{ p.scope }}</dd></div>
+      <div><dt>作用</dt><dd>{{ p.use or '—' }}</dd></div>
+    </dl>
+
+    <div class="pcard-acts">
+      {% if L.use %}
+      <a class="pbtn pbtn-main" href="{{ L.use }}" {% if L.use[:4] == 'http' %}target="_blank" rel="noopener"{% endif %}>开始使用 {{ icon("arrowright") }}</a>
+      {% else %}
+      <button class="pbtn pbtn-main pbtn-off" type="button" data-act="pcNoEnd" data-arg='["soon"]'>开始使用<em>暂无</em></button>
+      {% endif %}
+
+      <button class="pbtn" type="button" data-act="pcIntro" aria-expanded="false" aria-controls="more-{{ p.no }}">产品介绍</button>
+
+      {% if L.pc %}
+      <a class="pbtn" href="{{ L.pc }}" target="_blank" rel="noopener">电脑端</a>
+      {% else %}
+      <button class="pbtn pbtn-off" type="button" data-act="pcNoEnd" data-arg='["pc"]'>电脑端<em>暂无</em></button>
+      {% endif %}
+
+      {% if L.app %}
+      <a class="pbtn" href="{{ L.app }}" target="_blank" rel="noopener">手机端</a>
+      {% else %}
+      <button class="pbtn pbtn-off" type="button" data-act="pcNoEnd" data-arg='["app"]'>手机端<em>暂无</em></button>
+      {% endif %}
+    </div>
+
+    <div class="pcard-more" id="more-{{ p.no }}">
+      <div class="pmore-sec">
+        <span class="pmore-k">三端支持</span>
+        <div class="pmore-ends">
+          {% if L.use %}<a href="{{ L.use }}" target="_blank" rel="noopener">网页版 · 可用</a>{% else %}<span class="poff">网页版 · 暂无</span>{% endif %}
+          {% if L.pc %}<a href="{{ L.pc }}" target="_blank" rel="noopener">电脑端 · 可下载</a>{% else %}<span class="poff">电脑端 · 暂无</span>{% endif %}
+          {% if L.app %}<a href="{{ L.app }}" target="_blank" rel="noopener">手机端 · 可下载</a>{% else %}<span class="poff">手机端 · 暂无</span>{% endif %}
+        </div>
+      </div>
+      <div class="pmore-sec">
+        <span class="pmore-k">适用场景</span>
+        <p>{{ p.scope }}{% if p.use %}；{{ p.use }}{% endif %}。</p>
+      </div>
+      {% if L.intro %}<a class="pmore-link" href="{{ L.intro }}">查看完整产品介绍 {{ icon("arrowright") }}</a>{% endif %}
+      {% if p.no == '13' %}<a class="pmore-link" href="/wishes?product={{ p.name }}">提交你的想法 {{ icon("arrowright") }}</a>{% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+{% endblock %}

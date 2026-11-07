@@ -1145,26 +1145,6 @@
       "note": "部署助手 V1.0 自动登记"
     },
     {
-      "no": "T27",
-      "name": "泸州任氏宗亲网",
-      "en": "",
-      "repo": null,
-      "type": "网页工具（单页 HTML）",
-      "entry": "index.html",
-      "run": "浏览器打开即用",
-      "port": null,
-      "url": "https://tools.ecojia.cn/luzhouren-clan/",
-      "size_kb": 354,
-      "updated": "2026-10-24",
-      "status": "已上线·HTTPS",
-      "desc": "传承宗族文化，凝聚血脉亲情。查询族谱、寻根寻亲、了解宗亲动态。",
-      "use": "查族谱、寻根寻亲、看宗亲动态",
-      "steps": [
-        "打开链接即可使用"
-      ],
-      "note": "部署助手 V1.0 自动登记"
-    },
-    {
       "no": "T28",
       "name": "数字生态",
       "en": "",
@@ -1199,26 +1179,6 @@
       "status": "已上线·HTTPS",
       "desc": "LAN share hub - file transfer, camera view, remote desktop",
       "use": "局域网内传文件、看摄像头、远程操作，不用数据线",
-      "steps": [
-        "打开链接即可使用"
-      ],
-      "note": "部署助手 V1.0 自动登记"
-    },
-    {
-      "no": "T30",
-      "name": "理赔资料助手",
-      "en": "",
-      "repo": "claims-doc-assistant",
-      "type": "网页工具（单页 HTML）",
-      "entry": "index.html",
-      "run": "浏览器打开即用",
-      "port": null,
-      "url": "https://tools.ecojia.cn/claims-doc-assistant/",
-      "size_kb": 48780,
-      "updated": "2026-10-25",
-      "status": "已上线·HTTPS",
-      "desc": "理赔资料助手网页版：OCR 文字识别（Tesseract + PaddleOCR 双引擎）自动提取单据信息，材料自动归类、进度跟踪，理赔不再跑断腿。",
-      "use": "OCR 识别理赔单据，材料自动归类、进度跟着走",
       "steps": [
         "打开链接即可使用"
       ],
@@ -1550,5 +1510,13 @@
         "hero_idea": "首屏中央是环绕星轨的个人数字核心星球，每个功能入口为沿轨道运行的彩色小行星，拖动星球可切换不同生态模块。"
       }
     ]
+  },
+  "_meta": {
+    "rev": 3,
+    "updated": "2026-11-07 17:32",
+    "tools": 33,
+    "products": 17,
+    "note": "单一数据源。改动本文件必须同时把 rev +1，否则部署守卫会拒绝安装（防止旧文件静默覆盖）。",
+    "sha256": "d3061f2c41f810c8"
   }
 }

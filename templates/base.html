@@ -26,12 +26,17 @@
     if(v === 'reduce') document.documentElement.setAttribute('data-motion', 'reduce');
     else if(v === 'on') document.documentElement.setAttribute('data-motion', 'on');
   }catch(e){}
+  /* 旧链接兼容：/#products 已迁至独立产品页，避免外部收藏与残留锚点变死链 */
+  if(location.hash === '#products'){ location.replace('/products'); }
+  window.addEventListener('hashchange', function(){
+    if(location.hash === '#products'){ location.replace('/products'); }
+  });
 })();
 </script>
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/static/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107h">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107j">
 </head>
 <body>
 <a class="skip-link" href="#main">跳到主要内容</a>
@@ -49,7 +54,7 @@
     </a>
     <nav class="nav">
       <a href="/" class="{{ 'active' if request.path=='/' else '' }}">生态主页</a>
-      <a href="/#products" >产品矩阵</a>
+      <a href="/products" class="{{ 'active' if request.path=='/products' else '' }}">产品矩阵</a>
       <a href="/tools" class="{{ 'active' if request.path=='/tools' else '' }}">工具清单</a>
       <a href="/wishes" class="{{ 'active' if request.path=='/wishes' else '' }}">许愿墙</a>
       <a href="/huoxing" class="{{ 'active' if request.path=='/huoxing' else '' }}">火星平面</a>

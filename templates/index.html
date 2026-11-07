@@ -5,6 +5,7 @@
 <!-- ═══ 品牌主视觉 ═══ -->
 <section class="hero hero-nebula">
   <div class="hero-aurora" aria-hidden="true"></div>
+  <div class="hero-stars" aria-hidden="true"></div>
   <div class="hero-badge">DIGITAL ECOSYSTEM · 数字生态</div>
   <h1 class="hero-title">数字<em>生态</em>家园</h1>
   <p class="hero-sub">一个账号，连接所有产品 —— 让科技温暖每个家庭</p>
@@ -86,23 +87,14 @@
   {% endfor %}
 </section>
 
-<!-- ═══ 全部产品入口条（原「产品矩阵」大卡网格，与上方主打卡重复，已精简为入口条） ═══ -->
-<section class="section" id="products">
+<!-- ═══ 全部产品入口（已迁至独立页 /products，首页不再重复展示） ═══ -->
+<section class="section" id="all-products-link">
   <div class="sec-head">
-    <h2>全部产品</h2>
-    <p>{{ products|length }} 位数字成员 · 已上线的直接进入，未上线的点进去可许愿催更</p>
+    <h2>全部 17 位数字成员</h2>
+    <p>产品介绍、适用环境、电脑端与手机端入口，统一收在独立产品页</p>
   </div>
   <div class="p-strip">
-    {% for p in products %}
-    {% set st = {'已上线':'live','规划中':'plan','敬请期待':'soon','虚位以待':'open'}[p.status] %}
-    {% if p.main and p.url %}
-    <a class="p-chip {{ st }}" href="#p-{{ p.no }}"><span class="pc-no">{{ p.no }}</span><span class="pc-name">{{ p.name }}</span><span class="pc-st">{{ p.status }}</span></a>
-    {% elif p.url %}
-    <a class="p-chip {{ st }}" href="{{ p.url }}"><span class="pc-no">{{ p.no }}</span><span class="pc-name">{{ p.name }}</span><span class="pc-st">{{ p.status }}</span></a>
-    {% else %}
-    <a class="p-chip {{ st }}" href="/wishes?product={{ p.name }}"><span class="pc-no">{{ p.no }}</span><span class="pc-name">{{ p.name }}</span><span class="pc-st">{{ p.status }}</span></a>
-    {% endif %}
-    {% endfor %}
+    <a class="p-chip live" href="/products">{{ icon("grid") }} 进入产品矩阵 · 查看全部 {{ products|length }} 个产品 {{ icon("arrowright") }}</a>
   </div>
 </section>
 
@@ -182,20 +174,23 @@
   input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); lastQ=''; run(); } });
 })();
 
-/* 主视觉动效：光晕离开视口即暂停，避免后台持续渲染占用 GPU */
+/* 主视觉动效：光晕 + 星尘离开视口即暂停，避免后台持续渲染占用 GPU。
+   手动「始终减弱」优先；「始终开启」时忽略系统 reduce。 */
 (function(){
-  var aurora = document.querySelector('.hero-aurora');
-  if(!aurora) return;
-  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var layers = document.querySelectorAll('.hero-aurora,.hero-stars');
+  if(!layers.length) return;
+  var pref = '';
+  try{ pref = localStorage.getItem('ecoj_motion') || ''; }catch(e){}
+  if(pref === 'reduce') return;
+  if(pref !== 'on' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  function play(on){
+    for(var i=0;i<layers.length;i++) layers[i].style.animationPlayState = on ? 'running' : 'paused';
+  }
   if(!('IntersectionObserver' in window)) return;
   new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      aurora.style.animationPlayState = e.isIntersecting ? 'running' : 'paused';
-    });
-  }, {threshold: 0}).observe(aurora);
-  document.addEventListener('visibilitychange', function(){
-    aurora.style.animationPlayState = document.hidden ? 'paused' : 'running';
-  });
+    entries.forEach(function(e){ play(e.isIntersecting); });
+  }, {threshold: 0}).observe(document.querySelector('.hero-nebula'));
+  document.addEventListener('visibilitychange', function(){ play(!document.hidden); });
 })();
 </script>
 {% endblock %}
