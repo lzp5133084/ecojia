@@ -41,6 +41,19 @@ def remote_names(repo):
     return names
 
 
+def pick_branch(repo, name, branch):
+    """远端默认分支可能是 main 或 master，按存在性选择，避免硬编码"""
+    heads = L.try_git(repo, "ls-remote", "--heads", name, timeout=60)[1]
+    refs = set()
+    for line in heads.splitlines():
+        if "\t" in line:
+            refs.add(line.split("\t", 1)[1].strip())
+    for cand in (branch, "refs/heads/main", "refs/heads/master"):
+        if cand in refs:
+            return cand.replace("refs/heads/", "")
+    return branch
+
+
 def inspect(repo):
     """采集本地与各远端的版本矩阵"""
     branch = L.git(repo, "rev-parse", "--abbrev-ref", "HEAD")
@@ -64,7 +77,10 @@ def inspect(repo):
             info["remotes"][kind] = {"error": "未配置远端"}
             continue
         ok, _, err = L.try_git(repo, "fetch", name, branch, timeout=120)
-        ref = "%s/%s" % (name, branch)
+        rbranch = pick_branch(repo, name, branch)
+        if rbranch != branch:
+            ok, _, err = L.try_git(repo, "fetch", name, rbranch, timeout=120)
+        ref = "%s/%s" % (name, rbranch)
         if not ok or not L.ref_exists(repo, ref):
             info["remotes"][kind] = {"error": "拉取失败或分支不存在: %s" % err[:80]}
             continue
@@ -72,7 +88,7 @@ def inspect(repo):
         rfp, rn = L.fingerprint(repo, ref)
         ci = L.commit_info(repo, ref) or {}
         info["remotes"][kind] = {
-            "name": name, "ref": ref,
+            "name": name, "ref": ref, "branch": rbranch,
             "commit": rcommit[:7], "commit_full": rcommit,
             "content_sha256": rfp, "files": rn,
             "commit_time": ci.get("commit_time"), "subject": ci.get("subject"),
@@ -166,7 +182,8 @@ def do_sync(info, dry=False):
             if dry:
                 L.log("  [dry-run] 跳过实际推送")
                 continue
-            ok, out, err = L.try_git(repo, "push", name, "HEAD:refs/heads/%s" % info["branch"],
+            ok, out, err = L.try_git(repo, "push", name,
+                                     "HEAD:refs/heads/%s" % info["remotes"][k].get("branch", info["branch"]),
                                      timeout=180)
             if ok:
                 L.log("✓ 已推送 %s" % k)

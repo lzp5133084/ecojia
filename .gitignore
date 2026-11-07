@@ -26,3 +26,4 @@ logs/
 
 # 版本戳为本机/部署产物，不入库（跨端比对用 commit + 内容指纹）
 BUILD.json
+.sync_status.json
