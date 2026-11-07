@@ -1865,13 +1865,62 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
   .foot-links a{min-height:40px;display:inline-flex;align-items:center;padding:6px 2px}
   .tn-close,.tool-nav-toggle{min-width:44px;min-height:44px}
 }
-/* ---- 尊重系统「减弱动态效果」 ----
+/* ---- 页面动效偏好（页脚三档开关） ----
+   手动选择优先于系统设置，优先级规则：
+   · html[data-motion="reduce"] → 强制静态（无视系统设置）
+   · html[data-motion="on"]     → 强制播放（无视系统 reduce）
+   · html 无 data-motion（auto）→ 跟随系统 prefers-reduced-motion
    注意：这里必须写 0s，不要写 .01ms —— 旧的压缩器会把 .01ms 输出成 NaN，
    整条声明被判为非法丢弃，降级会静默失效（2026-11-07 实测发现）。 */
 @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:0s !important;animation-iteration-count:1 !important;
+  html:not([data-motion]) *,
+  html:not([data-motion]) *::before,
+  html:not([data-motion]) *::after{
+    animation-duration:0s !important;animation-iteration-count:1 !important;
     transition-duration:0s !important;scroll-behavior:auto !important}
-  html{scroll-behavior:auto}
+  html:not([data-motion]){scroll-behavior:auto}
+  html:not([data-motion]) .hero-aurora,
+  html:not([data-motion]) .stardust{animation:none !important;will-change:auto;transform:none}
+}
+html[data-motion="reduce"] *,
+html[data-motion="reduce"] *::before,
+html[data-motion="reduce"] *::after{
+  animation-duration:0s !important;animation-iteration-count:1 !important;
+  transition-duration:0s !important;scroll-behavior:auto !important}
+html[data-motion="reduce"]{scroll-behavior:auto}
+html[data-motion="reduce"] .hero-aurora,
+html[data-motion="reduce"] .stardust{animation:none !important;will-change:auto;transform:none}
+
+/* 三档选择器：页脚，桌面与手机通用，触控目标 ≥44px */
+.motion-pref{
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;
+  margin-top:8px;font-size:12.5px;color:var(--muted);
+}
+.motion-label{letter-spacing:1px}
+.motion-sel{
+  min-height:44px;padding:8px 34px 8px 14px;border-radius:12px;
+  font-family:inherit;font-size:13.5px;color:var(--gold-hi);
+  background-color:var(--card);border:1px solid var(--border);cursor:pointer;
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  background-image:
+    linear-gradient(45deg,transparent 50%,currentColor 50%),
+    linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 18px) 19px,calc(100% - 13px) 19px;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+  transition:border-color .18s ease,background-color .18s ease;
+}
+.motion-sel:hover{border-color:var(--border-hi);background-color:var(--card-hi)}
+.motion-sel:focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px}
+.motion-note{
+  flex-basis:100%;margin:0;font-size:12px;line-height:1.65;
+  color:rgba(169,155,192,.92);text-align:center;
+}
+.motion-note b{color:var(--gold-hi);font-weight:600}
+@media (max-width:640px){
+  .motion-pref{gap:8px}
+  .motion-sel{min-height:44px;font-size:14px}
+  /* 说明文字长短不同会让页脚高度跳动，手机端预留两行固定高度 */
+  .motion-note{min-height:2.65em}
 }
 /* ---- 全站速搜（首页） ---- */
 .quick-search{max-width:760px;margin:0 auto 48px;text-align:center}

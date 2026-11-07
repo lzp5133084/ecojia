@@ -18,10 +18,20 @@
 <meta property="og:image" content="https://ecojia.cn/static/img/hero-nebula-opt.jpg">
 <meta name="theme-color" content="#1a1025">
 <meta name="csp-nonce" content="{{ csp_nonce }}">
+<script>
+/* 动效偏好：必须在首屏绘制前生效，避免动画先跑一下再停 */
+(function(){
+  try{
+    var v = localStorage.getItem('ecoj_motion') || 'auto';
+    if(v === 'reduce') document.documentElement.setAttribute('data-motion', 'reduce');
+    else if(v === 'on') document.documentElement.setAttribute('data-motion', 'on');
+  }catch(e){}
+})();
+</script>
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/static/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107e">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107g">
 </head>
 <body>
 <a class="skip-link" href="#main">跳到主要内容</a>
@@ -85,6 +95,16 @@
       <a href="/contact">联系我们</a><i>·</i>
       <a href="/tools">工具清单</a>
     </div>
+    <div class="motion-pref">
+      <label class="motion-label" for="motion-sel">页面动效</label>
+      <select id="motion-sel" class="motion-sel" data-act-change="setMotion"
+              aria-describedby="motion-note">
+        <option value="auto">跟随系统</option>
+        <option value="reduce">始终减弱</option>
+        <option value="on">始终开启</option>
+      </select>
+      <p class="motion-note" id="motion-note">当前：跟随系统</p>
+    </div>
     <div class="foot-beian"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">蜀ICP备2025124820号-2</a></div>
   </div>
 </footer>
@@ -110,6 +130,57 @@ function _toastFitKeyboard(){
 if(window.visualViewport){
   window.visualViewport.addEventListener('resize', _toastFitKeyboard);
 }
+/* 页面动效偏好：页脚三档开关（跟随系统 / 始终减弱 / 始终开启）
+   手动选择优先于系统设置，选择写入 localStorage，刷新与再次访问都保持 */
+(function(){
+  var KEY = 'ecoj_motion', root = document.documentElement;
+  var mq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  function sysReduce(){ return !!(mq && mq.matches); }
+  function saved(){ try{ return localStorage.getItem(KEY) || 'auto'; }catch(e){ return 'auto'; } }
+  function apply(v){
+    if(v === 'reduce') root.setAttribute('data-motion', 'reduce');
+    else if(v === 'on') root.setAttribute('data-motion', 'on');
+    else root.removeAttribute('data-motion');
+  }
+  function paint(v){
+    var el = document.getElementById('motion-note');
+    if(!el) return;
+    var s = sysReduce(), name, why;
+    if(v === 'reduce'){
+      name = '始终减弱';
+      why = s ? '手动选择生效，系统同样要求减弱'
+              : '手动选择优先于系统设置';
+    }else if(v === 'on'){
+      name = '始终开启';
+      why = s ? '手动选择优先，系统虽要减弱也照常播放'
+              : '手动选择生效，正常播放动效';
+    }else{
+      name = '跟随系统';
+      why = s ? '系统已开启「减弱动态效果」，页面自动静止'
+              : '系统未开启「减弱动态效果」，正常播放动效';
+    }
+    el.innerHTML = '当前：<b>' + name + '</b>。' + why + '。';
+  }
+  window.setMotion = function(){
+    var sel = document.getElementById('motion-sel');
+    var v = sel ? sel.value : 'auto';
+    if(v !== 'auto' && v !== 'reduce' && v !== 'on') v = 'auto';
+    try{ localStorage.setItem(KEY, v); }catch(e){}
+    apply(v); paint(v);
+  };
+  function sync(){
+    var v = saved(), sel = document.getElementById('motion-sel');
+    if(sel && sel.value !== v) sel.value = v;
+    apply(v); paint(v);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sync);
+  else sync();
+  if(mq){
+    var onchg = function(){ if(saved() === 'auto') paint('auto'); };
+    if(mq.addEventListener) mq.addEventListener('change', onchg);
+    else if(mq.addListener) mq.addListener(onchg);
+  }
+})();
 /* CSRF：统一拦在 fetch 层，写请求自动带一次性 token（用后服务端轮换，403 时自动重领重试一次） */
 (function(){
   var of = window.fetch, tok = '';
