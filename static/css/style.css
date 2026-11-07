@@ -286,6 +286,14 @@ button{font-family:inherit;cursor:pointer}
 }
 .wish-form-card textarea{resize:vertical}
 .form-tip{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.7}
+.agree-row{display:flex;align-items:flex-start;gap:9px;margin:18px 0 4px;text-align:left}
+.agree-row input[type=checkbox]{
+  width:18px;height:18px;min-width:18px;flex:0 0 auto;margin:2px 0 0;padding:0;
+  accent-color:var(--gold);border-radius:6px;
+}
+.agree-row label{margin:0;font-size:12.5px;line-height:1.8;color:var(--muted);cursor:pointer}
+.agree-row a{color:var(--gold-hi);text-decoration:underline;text-underline-offset:3px}
+.agree-row a:hover{color:#fbbf24}
 .wl-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
 .wl-tools{display:flex;gap:10px;align-items:center}
 .wl-tools input{width:200px}
@@ -620,6 +628,10 @@ button{font-family:inherit;cursor:pointer}
 .foot-info{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:center;font-size:12.5px;color:var(--muted)}
 .foot-info i{font-style:normal;color:rgba(244,114,182,.3)}
 .foot-slogan{font-size:12px;color:rgba(244,114,182,.55);letter-spacing:3px}
+.foot-links{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:center;font-size:12.5px}
+.foot-links a{color:var(--muted);transition:color .18s ease;padding:2px 0}
+.foot-links a:hover{color:var(--gold-hi)}
+.foot-links i{font-style:normal;color:rgba(244,114,182,.3)}
 .foot-beian{margin-top:6px;font-size:12px}
 .foot-beian a{color:rgba(244,114,182,.45);text-decoration:none;letter-spacing:1px}
 .foot-beian a:hover{color:#fbbf24}
@@ -653,7 +665,13 @@ button{font-family:inherit;cursor:pointer}
 /* 首屏星云背景（豆包 seedream 生成素材） */
 .hero-nebula{
   position:relative;isolation:isolate;border-radius:24px;overflow:hidden;
-  background:url("../img/hero-nebula.jpg") center/cover no-repeat, var(--bg-soft);
+  background-color:var(--bg-soft);
+  background-image:url("../img/hero-nebula-opt.jpg");
+  background-image:-webkit-image-set(url("../img/hero-nebula.webp") type("image/webp"),url("../img/hero-nebula-opt.jpg") type("image/jpeg"));
+  background-image:image-set(url("../img/hero-nebula.webp") type("image/webp"),url("../img/hero-nebula-opt.jpg") type("image/jpeg"));
+  background-position:center;
+  background-size:cover;
+  background-repeat:no-repeat;
 }
 .hero-nebula::before{
   content:"";position:absolute;inset:0;z-index:-1;
@@ -661,12 +679,43 @@ button{font-family:inherit;cursor:pointer}
 }
 .hero-nebula{padding:72px 30px;margin-top:18px}
 
+/* 主视觉动效：单层合成动画（transform/opacity），不使用动画库，不新增图片 */
+.hero-aurora{
+  position:absolute;inset:-12%;z-index:-1;pointer-events:none;
+  transform:translate3d(0,0,0);will-change:transform;
+  background:
+    radial-gradient(36% 40% at 26% 28%,rgba(244,114,182,.20),transparent 62%),
+    radial-gradient(30% 36% at 78% 62%,rgba(147,51,234,.18),transparent 66%),
+    radial-gradient(24% 28% at 58% 14%,rgba(251,191,36,.10),transparent 60%);
+  animation:heroDrift 26s ease-in-out infinite alternate;
+}
+@keyframes heroDrift{
+  from{transform:translate3d(-1.5%,0,0) scale(1)}
+  to{transform:translate3d(1.5%,-2%,0) scale(1.06)}
+}
+/* 移动端与低刷新率设备：放慢或直接静态，避免持续占用 GPU */
+@media (max-width:640px){
+  .hero-aurora{animation-duration:44s}
+}
+@media (update:slow){
+  .hero-aurora{animation:none;will-change:auto;opacity:.85}
+}
+
 /* 火星平面：舞台星云氛围（豆包羽毛素材弱化铺底） */
 .fx-stage{
-  background:
-    url("../img/feather-neon.jpg") right -60px top -40px/420px auto no-repeat,
-    radial-gradient(60% 50% at 50% 30%,rgba(244,114,182,.08),transparent 70%),
-    var(--bg-soft);
+  background-color:var(--bg-soft);
+  background-image:
+    url("../img/feather-neon-opt.jpg"),
+    radial-gradient(60% 50% at 50% 30%,rgba(244,114,182,.08),transparent 70%);
+  background-image:
+    -webkit-image-set(url("../img/feather-neon.webp") type("image/webp"),url("../img/feather-neon-opt.jpg") type("image/jpeg")),
+    radial-gradient(60% 50% at 50% 30%,rgba(244,114,182,.08),transparent 70%);
+  background-image:
+    image-set(url("../img/feather-neon.webp") type("image/webp"),url("../img/feather-neon-opt.jpg") type("image/jpeg")),
+    radial-gradient(60% 50% at 50% 30%,rgba(244,114,182,.08),transparent 70%);
+  background-position:right -60px top -40px, center;
+  background-size:420px auto, auto;
+  background-repeat:no-repeat, no-repeat;
 }
 .fx-stage::before{
   content:"";position:absolute;inset:0;z-index:0;
@@ -677,7 +726,13 @@ button{font-family:inherit;cursor:pointer}
 /* 工具清单页顶部横幅（豆包素材） */
 .tools-hero{
   border-radius:24px;overflow:hidden;position:relative;isolation:isolate;
-  background:url("../img/tools-banner.jpg") center/cover no-repeat, var(--bg-soft);
+  background-color:var(--bg-soft);
+  background-image:url("../img/tools-banner-opt.jpg");
+  background-image:-webkit-image-set(url("../img/tools-banner.webp") type("image/webp"),url("../img/tools-banner-opt.jpg") type("image/jpeg"));
+  background-image:image-set(url("../img/tools-banner.webp") type("image/webp"),url("../img/tools-banner-opt.jpg") type("image/jpeg"));
+  background-position:center;
+  background-size:cover;
+  background-repeat:no-repeat;
   padding:44px 34px;margin-bottom:26px;
 }
 .tools-hero::before{
@@ -1739,3 +1794,51 @@ body.hx-lock{overflow:hidden}
 .kc-detail{margin:0;font-size:13px;line-height:1.6;color:#b7add2;word-break:break-all}
 .kc-ms{position:absolute;top:16px;right:18px;font-size:11px;color:#6f6688}
 @media(max-width:560px){.kc-grid{grid-template-columns:1fr}.kc-ms{position:static;margin-top:8px}}
+
+/* ---- 可访问性与触控（P1：键盘焦点可见 + 44px 触控目标） ---- */
+:focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px;border-radius:8px}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid var(--gold-hi);outline-offset:2px}
+.skip-link{position:absolute;left:-9999px;top:0;z-index:1200;padding:10px 18px;border-radius:0 0 12px 0;
+  background:var(--gold-grad);color:#2a1035;font-size:14px;font-weight:700}
+.skip-link:focus{left:0}
+@media (max-width:767px){
+  .nav a{min-height:44px;display:inline-flex;align-items:center;padding:10px 14px}
+  .btn-sm{min-height:44px;padding:10px 16px}
+  .foot-links a{min-height:40px;display:inline-flex;align-items:center;padding:6px 2px}
+  .tn-close,.tool-nav-toggle{min-width:44px;min-height:44px}
+}
+/* ---- 尊重系统「减弱动态效果」 ---- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;scroll-behavior:auto !important}
+  html{scroll-behavior:auto}
+}
+/* ---- 全站速搜（首页） ---- */
+.quick-search{max-width:760px;margin:0 auto 48px;text-align:center}
+.qs-form{display:flex;gap:10px;align-items:center;background:var(--card);
+  border:1px solid var(--border);border-radius:16px;padding:10px 12px;transition:border-color .18s ease}
+.qs-form:focus-within{border-color:var(--border-hi);box-shadow:0 0 0 3px rgba(244,114,182,.10)}
+.qs-label{position:absolute;left:-9999px}
+.qs-input{flex:1;min-width:0;background:transparent;border:0;color:var(--text);font-size:14.5px;
+  font-family:inherit;padding:8px 6px;outline:none}
+.qs-input::placeholder{color:var(--muted);opacity:.85}
+.qs-btn{flex:0 0 auto;padding:10px 22px;border-radius:12px;font-size:14px}
+.qs-result{margin-top:12px;text-align:left;border:1px solid var(--border);border-radius:14px;
+  background:var(--card);padding:8px;max-height:420px;overflow-y:auto}
+.qs-count{font-size:12px;color:var(--muted);padding:6px 10px}
+.qs-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;transition:background .16s ease}
+.qs-item:hover{background:var(--card-hi)}
+.qs-type{flex:0 0 auto;font-size:11px;color:var(--gold-hi);border:1px solid var(--border);
+  border-radius:8px;padding:2px 8px}
+.qs-name{flex:0 0 auto;font-size:13.5px;color:var(--text);font-weight:600;max-width:180px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qs-desc{flex:1;min-width:0;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qs-empty{padding:14px 10px;font-size:13px;color:var(--muted);text-align:center}
+.qs-empty a{color:var(--gold-hi);text-decoration:underline}
+@media (max-width:560px){
+  .qs-form{flex-wrap:wrap}
+  .qs-input{flex:1 1 100%;padding:8px 4px}
+  .qs-btn{flex:1 1 100%}
+  .qs-desc{display:none}
+}

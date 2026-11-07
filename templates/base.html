@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 {% from "icon_macro.html" import icon %}
 <head>
@@ -20,7 +20,7 @@
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/static/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107a">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107c">
 </head>
 <body>
 <a class="skip-link" href="#main">跳到主要内容</a>
@@ -111,7 +111,7 @@ async function logout(){
 </script>
 {% block scripts %}{% endblock %}
 <!-- 生态栏：返回首页+登录状态+AI小鸽子 -->
-<script src="{{ url_for("static", filename="js/eco-bar.min.js") }}?v=20261107a" defer></script>
-<script src="{{ url_for("static", filename="js/promote.min.js") }}?v=20261107a" defer></script>
+<script src="{{ url_for("static", filename="js/eco-bar.min.js") }}?v=20261107c" defer></script>
+<script src="{{ url_for("static", filename="js/promote.min.js") }}?v=20261107c" defer></script>
 </body>
 </html>

@@ -4,6 +4,7 @@
 
 <!-- ═══ 品牌主视觉 ═══ -->
 <section class="hero hero-nebula">
+  <div class="hero-aurora" aria-hidden="true"></div>
   <div class="hero-badge">DIGITAL ECOSYSTEM · 数字生态</div>
   <h1 class="hero-title">数字<em>生态</em>家园</h1>
   <p class="hero-sub">一个账号，连接所有产品 —— 让科技温暖每个家庭</p>
@@ -193,6 +194,22 @@
   window.qsRun = function(){ lastQ = ''; run(); };
   input.addEventListener('input', function(){ clearTimeout(timer); timer = setTimeout(run, 420); });
   input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); lastQ=''; run(); } });
+})();
+
+/* 主视觉动效：光晕离开视口即暂停，避免后台持续渲染占用 GPU */
+(function(){
+  var aurora = document.querySelector('.hero-aurora');
+  if(!aurora) return;
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if(!('IntersectionObserver' in window)) return;
+  new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      aurora.style.animationPlayState = e.isIntersecting ? 'running' : 'paused';
+    });
+  }, {threshold: 0}).observe(aurora);
+  document.addEventListener('visibilitychange', function(){
+    aurora.style.animationPlayState = document.hidden ? 'paused' : 'running';
+  });
 })();
 </script>
 {% endblock %}

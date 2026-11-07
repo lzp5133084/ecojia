@@ -28,7 +28,7 @@
   /* ---------- 样式：2027 黑金星霓风 ---------- */
   var css = `
 #ecoBarWrap,#ecoBarWrap *{box-sizing:border-box;margin:0;padding:0;font-family:"HarmonyOS Sans SC","MiSans","PingFang SC","Microsoft YaHei",sans-serif}
-#ecoBarWrap{position:relative;z-index:2147483000}
+#ecoBarWrap{position:relative;z-index:990}
 /* —— 面板内快捷入口条（返回首页 + 登录/注册） —— */
 .eb-quick{display:flex;gap:9px;padding:10px 14px;border-bottom:1px solid rgba(240,199,94,.16);
  background:linear-gradient(90deg,rgba(240,199,94,.06),transparent 70%)}
@@ -42,7 +42,7 @@
 @keyframes ebDotPulse{0%,100%{box-shadow:0 0 6px #7ee2a8}50%{box-shadow:0 0 14px #7ee2a8}}
 .eb-qbtn .eb-role{font-size:10px;color:#f0c75e;background:rgba(240,199,94,.15);padding:1px 7px;border-radius:999px}
 /* —— 悬浮球 —— */
-.eb-ball{position:fixed;right:22px;bottom:24px;width:62px;height:62px;border-radius:50%;cursor:grab;z-index:2147483002;
+.eb-ball{position:fixed;right:22px;bottom:calc(24px + env(safe-area-inset-bottom,0px));width:62px;height:62px;border-radius:50%;cursor:grab;z-index:9991;
  display:flex;align-items:center;justify-content:center;flex-direction:column;
  background:radial-gradient(circle at 32% 28%,#3a2f16,#14100a 70%);
  border:1.5px solid rgba(240,199,94,.65);box-shadow:0 6px 24px rgba(0,0,0,.5),0 0 22px rgba(240,199,94,.28);
@@ -58,8 +58,8 @@
 @keyframes ebBreath{0%,100%{box-shadow:0 6px 24px rgba(0,0,0,.5),0 0 16px rgba(240,199,94,.22)}50%{box-shadow:0 6px 28px rgba(0,0,0,.5),0 0 34px rgba(240,199,94,.5)}}
 .eb-ball.hide{transform:scale(0);opacity:0;pointer-events:none}
 /* —— 对话浮窗 —— */
-.eb-panel{position:fixed;right:22px;bottom:24px;width:420px;max-width:calc(100vw - 24px);height:600px;max-height:calc(100vh - 60px);
- border-radius:20px;overflow:hidden;display:flex;flex-direction:column;z-index:2147483002;
+.eb-panel{position:fixed;right:22px;bottom:calc(24px + env(safe-area-inset-bottom,0px));width:420px;max-width:calc(100vw - 24px);height:600px;max-height:calc(100vh - 60px);
+ border-radius:20px;overflow:hidden;display:flex;flex-direction:column;z-index:9995;
  background:linear-gradient(175deg,rgba(26,21,12,.96),rgba(14,11,7,.97));
  border:1px solid rgba(240,199,94,.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
  box-shadow:0 24px 70px rgba(0,0,0,.6),0 0 40px rgba(240,199,94,.12);
@@ -131,11 +131,11 @@
  animation:ebTipIn .5s cubic-bezier(.34,1.56,.64,1)}
 @keyframes ebTipIn{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
 .eb-tip b{display:block;margin-bottom:2px;font-size:13px}
-/* —— 移动端适配 —— */
+/* —— 移动端适配（浮球上移，避让子站底部 TabBar 与手机安全区） —— */
 @media (max-width:720px){
- .eb-ball{right:14px;bottom:16px;width:54px;height:54px}
+ .eb-ball{right:14px;bottom:calc(80px + env(safe-area-inset-bottom,0px));width:54px;height:54px}
  .eb-panel{right:0;left:0;bottom:0;width:100%;max-width:100%;height:78vh;border-radius:20px 20px 0 0;transform-origin:bottom center}
- .eb-tip{right:78px;bottom:22px;max-width:190px}
+ .eb-tip{right:76px;bottom:calc(86px + env(safe-area-inset-bottom,0px));max-width:190px}
 }
 /* —— 浅色页面自适应：白金主题（与深色黑金同源高级感） —— */
 #ecoBarWrap.eb-light .eb-quick{border-bottom-color:rgba(180,140,40,.18);background:linear-gradient(90deg,rgba(212,175,55,.08),transparent 70%)}
