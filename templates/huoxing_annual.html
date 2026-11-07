@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% from "icon_macro.html" import icon %}
 {% block title %}{{ data.year }} 年度火星年报 · {{ identity.mars_name }}{% endblock %}
+{% block description %}火星身份证年度年报：汇总一年的身份链记录，生成可分享的年度回顾。{% endblock %}
+{% block robots %}<meta name="robots" content="noindex,nofollow">{% endblock %}
 {% block content %}
 
 <section class="page-head hx-head">

@@ -5,9 +5,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}数字生态家园{% endblock %} · ecojia.cn</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<meta name="description" content="{% block description %}数字生态家园（ecojia.cn）是军哥懂保打造的数字生活门户：一个账号连接数字保险箱、悬浮计时器、多码集、资料百事通、秘密MM 等全部产品，覆盖网页、安卓与电脑三端，每个产品都提供使用说明与下载入口。{% endblock %}">
+<meta name="keywords" content="数字生态家园,ecojia.cn,数字保险箱,悬浮计时器,多码集,资料百事通,秘密MM,鼠标画笔,工具清单,军哥懂保">
+<meta name="author" content="军哥懂保">
+{% block robots %}<meta name="robots" content="index,follow">{% endblock %}
+<link rel="canonical" href="https://ecojia.cn{{ request.path }}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="数字生态家园">
+<meta property="og:title" content="{{ self.title() }} · ecojia.cn">
+<meta property="og:description" content="{{ self.description() }}">
+<meta property="og:url" content="https://ecojia.cn{{ request.path }}">
+<meta property="og:image" content="https://ecojia.cn/static/img/hero-nebula-opt.jpg">
+<meta name="theme-color" content="#1a1025">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/static/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107a">
 </head>
 <body>
+<a class="skip-link" href="#main">跳到主要内容</a>
 {% include "icon_sprite.html" %}
 <div class="aurora" aria-hidden="true"></div>
 <div class="stardust" aria-hidden="true"></div>
@@ -42,7 +58,7 @@
   </div>
 </header>
 
-<main class="wrap page">
+<main class="wrap page" id="main">
 {% block content %}{% endblock %}
 </main>
 
@@ -61,6 +77,13 @@
       <span>微信：xunijiayuan</span>
     </div>
     <div class="foot-slogan">一个账号 · 万物互联 · 服务生活的数字生态</div>
+    <div class="foot-links">
+      <a href="/about">关于我们</a><i>·</i>
+      <a href="/privacy">隐私政策</a><i>·</i>
+      <a href="/terms">用户协议</a><i>·</i>
+      <a href="/contact">联系我们</a><i>·</i>
+      <a href="/tools">工具清单</a>
+    </div>
     <div class="foot-beian"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">蜀ICP备2025124820号-2</a></div>
   </div>
 </footer>
@@ -88,7 +111,7 @@ async function logout(){
 </script>
 {% block scripts %}{% endblock %}
 <!-- 生态栏：返回首页+登录状态+AI小鸽子 -->
-<script src="{{ url_for("static", filename="js/eco-bar.js") }}?v=20261026b" defer></script>
-<script src="{{ url_for("static", filename="js/promote.js") }}?v=20261030c" defer></script>
+<script src="{{ url_for("static", filename="js/eco-bar.min.js") }}?v=20261107a" defer></script>
+<script src="{{ url_for("static", filename="js/promote.min.js") }}?v=20261107a" defer></script>
 </body>
 </html>

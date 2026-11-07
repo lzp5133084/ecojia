@@ -1,6 +1,8 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% from "icon_macro.html" import icon %}
 {% block title %}护照互认验证器 · 火星身份证{% endblock %}
+{% block description %}火星身份证护照互认验证器：输入凭证即可核验身份链记录是否真实存在且未被篡改。{% endblock %}
+{% block robots %}<meta name="robots" content="noindex,nofollow">{% endblock %}
 {% block content %}
 
 <section class="page-head hx-head">
@@ -136,7 +138,7 @@
     }else{
       box.className = "hxv-result bad";
       box.innerHTML = `
-        <div class="hxv-verdict"><span class="hxv-badge bad">✕ 验真未通过</span></div>
+        <div class="hxv-verdict"><span class="hxv-badge bad">× 验真未通过</span></div>
         <ul class="hxv-issues">${r.issues.map(i=>`<li>${esc(i)}</li>`).join("")}</ul>
         <p class="hxv-note">这份文件可能被改动过，或不是完整的火星护照。请与持有人核对来源。</p>`;
     }

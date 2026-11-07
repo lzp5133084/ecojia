@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}在线画板 · 鼠标画笔{% endblock %}
+{% block description %}在线画板 · 鼠标画笔：打开网页即可手绘、标注与演示，适合教学、直播批注与办公讲解，无需安装客户端。{% endblock %}
 {% block content %}
 {# ==================================================================
    在线画板（旗舰模板）
@@ -37,23 +38,23 @@
 
 <div class="canvas-wrap">
   <div class="toolbar">
-    <button class="tbtn active" data-tool="pen">✏️ 画笔</button>
-    <button class="tbtn" data-tool="hl">🖍️ 荧光</button>
-    <button class="tbtn" data-tool="line">📏 直线</button>
-    <button class="tbtn" data-tool="arrow">➡️ 箭头</button>
-    <button class="tbtn" data-tool="rect">▭ 矩形</button>
-    <button class="tbtn" data-tool="ellipse">⬭ 椭圆</button>
-    <button class="tbtn" data-tool="text">T 文字</button>
-    <button class="tbtn" data-tool="eraser">🧹 橡皮</button>
+    <button class="tbtn active" data-tool="pen">画笔</button>
+    <button class="tbtn" data-tool="hl">荧光</button>
+    <button class="tbtn" data-tool="line">直线</button>
+    <button class="tbtn" data-tool="arrow">箭头</button>
+    <button class="tbtn" data-tool="rect">矩形</button>
+    <button class="tbtn" data-tool="ellipse">椭圆</button>
+    <button class="tbtn" data-tool="text">文字</button>
+    <button class="tbtn" data-tool="eraser">橡皮</button>
     <span style="width:1px;height:24px;background:#3A3E48;margin:0 4px;"></span>
     <div id="colorList"></div>
     <span style="width:1px;height:24px;background:#3A3E48;margin:0 4px;"></span>
     <input type="range" class="width-range" id="widthRange" min="1" max="40" value="4">
     <span class="width-val" id="widthVal">4</span>
     <span style="flex:1;"></span>
-    <button class="action-btn secondary" id="btnUndo">↩ 撤销</button>
-    <button class="action-btn secondary" id="btnClear">🗑 清空</button>
-    <button class="action-btn" id="btnSave">💾 保存PNG</button>
+    <button class="action-btn secondary" id="btnUndo">撤销</button>
+    <button class="action-btn secondary" id="btnClear">清空</button>
+    <button class="action-btn" id="btnSave">保存 PNG</button>
   </div>
   <div class="canvas-area">
     <canvas id="drawCanvas"></canvas>

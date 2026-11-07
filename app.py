@@ -71,6 +71,35 @@ def agent_cors(resp):
     return resp
 
 
+# ---- API 轻量限流：同一 IP 每分钟最多 90 次（防刷与误用爬虫） ----
+_API_HITS = {}
+_API_LIMIT = 90
+_API_WINDOW = 60
+
+
+@app.before_request
+def _api_rate_limit():
+    if not request.path.startswith("/api/"):
+        return None
+    ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
+    now_ts = time.time()
+    if len(_API_HITS) > 5000:
+        for k, v in list(_API_HITS.items()):
+            if now_ts - v[1] >= _API_WINDOW:
+                _API_HITS.pop(k, None)
+    rec = _API_HITS.get(ip)
+    if not rec or now_ts - rec[1] >= _API_WINDOW:
+        _API_HITS[ip] = [1, now_ts]
+        return None
+    rec[0] += 1
+    if rec[0] > _API_LIMIT:
+        resp = jsonify({"ok": False, "msg": "请求过于频繁，请稍后再试"})
+        resp.status_code = 429
+        resp.headers["Retry-After"] = str(_API_WINDOW)
+        return resp
+    return None
+
+
 # ══════════════════ 错误页 ══════════════════
 @app.errorhandler(404)
 @app.errorhandler(405)
@@ -863,6 +892,27 @@ def digital_path_redirect(_p=""):
 @app.route("/wishes")
 def wishes_page():
     return render_template("wishes.html", products=get_products())
+
+
+# ── 合规与信息页（隐私政策 / 用户协议 / 关于我们 / 联系我们） ──
+@app.route("/about")
+def about_page():
+    return render_template("about.html")
+
+
+@app.route("/privacy")
+def privacy_page():
+    return render_template("privacy.html")
+
+
+@app.route("/terms")
+def terms_page():
+    return render_template("terms.html")
+
+
+@app.route("/contact")
+def contact_page():
+    return render_template("contact.html")
 
 
 @app.route("/huoxing")
@@ -2331,8 +2381,8 @@ def api_register():
     ref = (d.get("ref") or "").strip().upper()
     if not (3 <= len(username) <= 20):
         return jsonify({"ok": False, "msg": "用户名需3-20个字符"}), 400
-    if len(password) < 6:
-        return jsonify({"ok": False, "msg": "密码至少6位"}), 400
+    if len(password) < 8 or not re.search(r"[A-Za-z]", password) or not re.search(r"\d", password):
+        return jsonify({"ok": False, "msg": "密码至少8位，且需同时包含字母和数字"}), 400
     db = get_db()
     if db.execute("SELECT 1 FROM users WHERE username=?", (username,)).fetchone():
         return jsonify({"ok": False, "msg": "用户名已存在"}), 400
@@ -2344,9 +2394,9 @@ def api_register():
             ref_msg = "\uff0c已关联邀请人「%s」" % inviter_name
         else:
             ref_msg = "\uff0c邀请码无效，已按自然流量登记"
-    # 首个注册用户自动成为管理员
+    # 首个注册用户仅在显式开启引导开关时成为管理员（避免陌生人抢占管理权）
     is_first = db.execute("SELECT COUNT(*) c FROM users").fetchone()["c"] == 0
-    role = "admin" if is_first else "user"
+    role = "admin" if (is_first and os.environ.get("ECJ_BOOTSTRAP_ADMIN") == "1") else "user"
     cur = db.execute(
         "INSERT INTO users(username, password_hash, nickname, role, inviter_id, created_at) VALUES(?,?,?,?,?,?)",
         (username, generate_password_hash(password), nickname, role, inviter_id, now()))
@@ -2361,16 +2411,54 @@ def api_register():
                     "nickname": nickname, "redirect": url_for("index")})
 
 
+# ── 登录失败锁定（进程内计数，10 分钟内失败 5 次锁 15 分钟） ──
+_LOGIN_FAIL = {}
+_LOGIN_MAX_FAIL = 5
+_LOGIN_WINDOW = 600
+_LOGIN_LOCK = 900
+
+
+def _login_guard(key):
+    """返回剩余锁定秒数，0 表示可继续尝试"""
+    rec = _LOGIN_FAIL.get(key)
+    if not rec:
+        return 0
+    now_ts = time.time()
+    if rec[2] > now_ts:
+        return int(rec[2] - now_ts)
+    if now_ts - rec[1] > _LOGIN_WINDOW:
+        _LOGIN_FAIL.pop(key, None)
+    return 0
+
+
+def _login_fail(key):
+    now_ts = time.time()
+    rec = _LOGIN_FAIL.get(key)
+    if not rec or now_ts - rec[1] > _LOGIN_WINDOW:
+        _LOGIN_FAIL[key] = [1, now_ts, 0]
+        return
+    rec[0] += 1
+    if rec[0] >= _LOGIN_MAX_FAIL:
+        rec[2] = now_ts + _LOGIN_LOCK
+
+
 @app.route("/api/auth/login", methods=["POST"])
 def api_login():
     d = request.get_json(silent=True) or {}
     username = (d.get("username") or "").strip()
     password = d.get("password") or ""
+    ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
+    guard_key = ip + "|" + username
+    wait = _login_guard(guard_key)
+    if wait:
+        return jsonify({"ok": False, "msg": f"登录失败次数过多，请 {wait // 60 + 1} 分钟后再试"}), 429
     row = get_db().execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
     if not row or not check_password_hash(row["password_hash"], password):
+        _login_fail(guard_key)
         return jsonify({"ok": False, "msg": "用户名或密码错误"}), 400
     if row["role"] == "disabled":
         return jsonify({"ok": False, "msg": "账号已被禁用"}), 403
+    _LOGIN_FAIL.pop(guard_key, None)
     session["uid"] = row["id"]
     log_op("登录", f"用户名:{username}", row["id"])
     return jsonify({"ok": True, "msg": f"欢迎回来，{row['nickname']}",
@@ -2405,6 +2493,18 @@ def api_auth_bridge():
 
 
 # ══════════════════ 生态底座 API（供其他程序调用 / 查找 / 新增 / 修改） ══════════════════
+@app.route("/api/docs")
+def api_docs():
+    """接口索引：外部程序对接入口（机器可读）"""
+    eco = load_ecosystem()
+    return jsonify({"ok": True, "service": "数字生态家园", "version": VERSION,
+                    "base_url": "https://ecojia.cn",
+                    "auth": "先 POST /api/auth/login 建立会话（Cookie），管理类接口需 admin 角色",
+                    "rate_limit": f"每 IP 每分钟 {_API_LIMIT} 次，超出返回 429",
+                    "manifest": "https://ecojia.cn/api/ecosystem/manifest",
+                    "apis": eco.get("apis", [])})
+
+
 @app.route("/api/ecosystem/manifest")
 def api_ecosystem_manifest():
     """底座全量数据：其他程序或网页读取生态信息的单一入口"""

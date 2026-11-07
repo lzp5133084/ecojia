@@ -1,6 +1,7 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% from "icon_macro.html" import icon %}
 {% block title %}火星平面 · 火星身份证{% endblock %}
+{% block description %}火星平面 · 火星身份证：把人生中重要的经历、成绩、荣耀、纪念与心情铸成链式存证的身份记录，支持见证、遗产、资源共享与年度火星年报。{% endblock %}
 {% block content %}
 
 <section class="page-head hx-head">
@@ -37,7 +38,7 @@
       <span id="hxNudgeHint"></span>
     </div>
     <button class="btn btn-gold btn-sm" id="hxNudgeGo" type="button">{{ icon("sparkles") }} 现在记录</button>
-    <button class="hx-nudge-close" id="hxNudgeClose" type="button" aria-label="本月不再提醒">✕</button>
+    <button class="hx-nudge-close" id="hxNudgeClose" type="button" aria-label="本月不再提醒">×</button>
   </div>
 
   <!-- ══════════ 见证收件箱（V1.7） ══════════ -->
@@ -301,7 +302,7 @@
   <div class="hx-modal-card">
     <div class="hx-modal-head">
       <h3 id="hxModalTitle">新增历程</h3>
-      <button class="hx-modal-close" type="button" data-close="hxModal" aria-label="关闭">✕</button>
+      <button class="hx-modal-close" type="button" data-close="hxModal" aria-label="关闭">×</button>
     </div>
     <form id="hxForm" class="hx-form">
       <input type="hidden" id="fId" value="">
@@ -363,7 +364,7 @@
   <div class="hx-modal-card hx-modal-sm">
     <div class="hx-modal-head">
       <h3>编辑火星身份</h3>
-      <button class="hx-modal-close" type="button" data-close="hxIdModal" aria-label="关闭">✕</button>
+      <button class="hx-modal-close" type="button" data-close="hxIdModal" aria-label="关闭">×</button>
     </div>
     <form id="hxIdForm" class="hx-form">
       <div class="hx-id-edit-avatar">
@@ -403,7 +404,7 @@
   <div class="hx-modal-card">
     <div class="hx-modal-head">
       <h3>{{ icon("sparkles") }} AI 记录助手</h3>
-      <button class="hx-modal-close" type="button" data-close="hxAiModal" aria-label="关闭">✕</button>
+      <button class="hx-modal-close" type="button" data-close="hxAiModal" aria-label="关闭">×</button>
     </div>
     <div class="hx-ai-body">
       <p class="hx-ai-intro">说一句话或一段话，AI 帮你归类到七类、起标题、润色成完整历程。<br>
@@ -439,7 +440,7 @@
   <div class="hx-modal-card hx-modal-sm">
     <div class="hx-modal-head">
       <h3>{{ icon("users") }} 邀请见证人</h3>
-      <button class="hx-modal-close" type="button" data-close="hxWitModal" aria-label="关闭">✕</button>
+      <button class="hx-modal-close" type="button" data-close="hxWitModal" aria-label="关闭">×</button>
     </div>
     <form id="hxWitForm" class="hx-form">
       <input type="hidden" id="witRid" value="">
@@ -470,7 +471,7 @@
   <div class="hx-modal-card hx-modal-sm">
     <div class="hx-modal-head">
       <h3>{{ icon("heart") }} 数字遗产约定</h3>
-      <button class="hx-modal-close" type="button" data-close="hxLegacyModal" aria-label="关闭">✕</button>
+      <button class="hx-modal-close" type="button" data-close="hxLegacyModal" aria-label="关闭">×</button>
     </div>
     <form id="hxLegacyForm" class="hx-form">
       <p class="hx-wit-intro">指定一位继承人。如果账号连续多年不活跃，你「纪念」类的历程将按本约定移交给继承人。
@@ -507,7 +508,7 @@
   <div class="hx-modal-card">
     <div class="hx-modal-head">
       <h3 id="hxResModalTitle">{{ icon("package") }} 发布共享资源</h3>
-      <button class="hx-modal-close" type="button" data-close="hxResModal" aria-label="关闭">✕</button>
+      <button class="hx-modal-close" type="button" data-close="hxResModal" aria-label="关闭">×</button>
     </div>
     <form id="hxResForm" class="hx-form">
       <input type="hidden" id="resId" value="">
@@ -573,7 +574,7 @@
   <div class="hx-modal-card hx-res-detail-card">
     <div class="hx-modal-head">
       <h3 id="hxResDetailTitle">{{ icon("package") }} 资源详情</h3>
-      <button class="hx-modal-close" type="button" data-close="hxResDetail" aria-label="关闭">✕</button>
+      <button class="hx-modal-close" type="button" data-close="hxResDetail" aria-label="关闭">×</button>
     </div>
     <div id="hxResDetailBody" class="hx-res-detail"></div>
   </div>

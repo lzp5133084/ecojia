@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 {% from "icon_macro.html" import icon %}
 {% block title %}工具清单{% endblock %}
+{% block description %}数字生态家园工具清单：35 款自研工具的使用说明、运行方式、端口与源码入口，含数字保险箱、悬浮计时器、鼠标画笔、多码集、局域网快传、理赔资料助手等，可按编号速查并直接跳转下载。{% endblock %}
 {% block content %}
 
 <!-- 左侧工具速查栏（可拉出/收起） -->
 <button id="toolNavToggle" class="tool-nav-toggle" type="button" aria-label="打开工具列表">
-  <span class="tnt-ic">☰</span><span class="tnt-txt">工具列表</span>
+  <span class="tnt-ic">{{ icon("grid") }}</span><span class="tnt-txt">工具列表</span>
 </button>
 <div id="toolNavMask" class="tool-nav-mask"></div>
 <aside id="toolNav" class="tool-nav" aria-label="工具速查列表">
   <div class="tn-head">
     <h2>工具速查</h2>
-    <button id="toolNavClose" class="tn-close" type="button" aria-label="收起列表">✕</button>
+    <button id="toolNavClose" class="tn-close" type="button" aria-label="收起列表">{{ icon("xmark") }}</button>
   </div>
   <input id="toolSearch" class="tn-search" type="search" placeholder="搜索名称 / 编号 / 关键词…" autocomplete="off">
   <div class="tn-count">匹配 <b id="tnMatch">{{ total }}</b> / {{ total }} 个工具</div>

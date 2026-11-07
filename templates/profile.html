@@ -1,5 +1,8 @@
 {% extends "base.html" %}
+{% from "icon_macro.html" import icon %}
 {% block title %}个人中心 · 权益与推广{% endblock %}
+{% block description %}个人中心：查看数字生态家园账号的权益、邀请推广记录与使用数据。{% endblock %}
+{% block robots %}<meta name="robots" content="noindex,nofollow">{% endblock %}
 {% block content %}
 {# ==================================================================
    个人中心（旗舰模板）
@@ -240,20 +243,20 @@
 
   {# ============ 7. 桌面端功能对照（旗舰：全部功能入口，无法实现的提示下载电脑端） ============ #}
   <div class="pcard">
-    <h3>🎨 桌面端功能对照（三端统一）</h3>
+    <h3>桌面端功能对照（三端统一）</h3>
     <p class="tip">桌面端鼠标画笔具备的全部功能，网页端可实现的直接使用，无法实现的请下载电脑端。</p>
     <div class="feat-grid">
-      <div class="feat-item"><span class="ic">✏️</span><span class="nm">画笔工具（8种）</span>
+      <div class="feat-item"><span class="ic">{{ icon("pencil") }}</span><span class="nm">画笔工具（8种）</span>
         <a href="/canvas" class="st st-ok">在线使用 →</a></div>
-      <div class="feat-item"><span class="ic">💾</span><span class="nm">截图存档</span>
+      <div class="feat-item"><span class="ic">{{ icon("save") }}</span><span class="nm">截图存档</span>
         <a href="/canvas" class="st st-ok">在线使用 →</a></div>
-      <div class="feat-item"><span class="ic">🎬</span><span class="nm">高清录屏</span>
+      <div class="feat-item"><span class="ic">{{ icon("eye") }}</span><span class="nm">高清录屏</span>
         <span class="st st-pc" onclick="openLink('https://tools.ecojia.cn/screenpen/download/')">下载电脑端</span></div>
-      <div class="feat-item"><span class="ic">⌨️</span><span class="nm">键鼠气泡反馈</span>
+      <div class="feat-item"><span class="ic">{{ icon("grid") }}</span><span class="nm">键鼠气泡反馈</span>
         <span class="st st-pc" onclick="openLink('https://tools.ecojia.cn/screenpen/download/')">下载电脑端</span></div>
-      <div class="feat-item"><span class="ic">📊</span><span class="nm">PPT 提取</span>
+      <div class="feat-item"><span class="ic">{{ icon("chart") }}</span><span class="nm">PPT 提取</span>
         <span class="st st-pc" onclick="openLink('https://tools.ecojia.cn/screenpen/download/')">下载电脑端</span></div>
-      <div class="feat-item"><span class="ic">🖱️</span><span class="nm">悬浮球控制台</span>
+      <div class="feat-item"><span class="ic">{{ icon("scan") }}</span><span class="nm">悬浮球控制台</span>
         <span class="st st-pc" onclick="openLink('https://tools.ecojia.cn/screenpen/download/')">下载电脑端</span></div>
     </div>
   </div>

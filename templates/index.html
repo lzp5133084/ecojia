@@ -17,6 +17,16 @@
   </div>
 </section>
 
+<!-- ═══ 全站速搜（复用 /api/ecosystem/search） ═══ -->
+<section class="quick-search" aria-label="全站速搜">
+  <form class="qs-form" onsubmit="return false" role="search">
+    <label class="qs-label" for="qsInput">全站速搜</label>
+    <input id="qsInput" class="qs-input" type="search" placeholder="搜产品 / 工具 / 子站 / 接口，例如：保险箱、计时器、资料" autocomplete="off">
+    <button class="btn btn-gold qs-btn" type="button" onclick="qsRun()">搜索</button>
+  </form>
+  <div id="qsResult" class="qs-result" hidden></div>
+</section>
+
 <!-- ═══ 当前主打区（支持多主打） ═══ -->
 <section class="main-product" id="main-product">
   {% for mp in main_products %}
@@ -141,4 +151,48 @@
   </div>
 </section>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  var input = document.getElementById('qsInput');
+  var box = document.getElementById('qsResult');
+  if(!input || !box) return;
+  var timer = null, lastQ = '';
+  var TYPES = {product:'产品', hardware:'硬件', subdomain:'子站', api:'接口'};
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function run(){
+    var q = input.value.trim();
+    if(q.length < 1){ box.hidden = true; box.innerHTML = ''; return; }
+    if(q === lastQ) return;
+    lastQ = q;
+    fetch('/api/ecosystem/search?q=' + encodeURIComponent(q))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.ok || !d.hits || !d.hits.length){
+          box.innerHTML = '<div class="qs-empty">没有找到「' + esc(q) + '」，可到 <a href="/wishes">许愿墙</a> 提交需求</div>';
+          box.hidden = false; return;
+        }
+        var html = '<div class="qs-count">找到 ' + d.count + ' 条结果</div>';
+        d.hits.slice(0, 12).forEach(function(h){
+          var it = h.item || {};
+          var name = it.name || it.host || it.path || '';
+          var desc = it.scope || it.desc || it.target || '';
+          var url = it.url || (it.host ? 'https://' + it.host : '/tools');
+          html += '<a class="qs-item" href="' + esc(url) + '"' + (it.host || it.url ? ' target="_blank" rel="noopener"' : '') + '>'
+               + '<span class="qs-type">' + (TYPES[h.type] || h.type) + '</span>'
+               + '<span class="qs-name">' + esc(name) + '</span>'
+               + '<span class="qs-desc">' + esc(desc) + '</span></a>';
+        });
+        box.innerHTML = html; box.hidden = false;
+      })
+      .catch(function(){ box.innerHTML = '<div class="qs-empty">搜索服务暂时不可用，请稍后再试</div>'; box.hidden = false; });
+  }
+  window.qsRun = function(){ lastQ = ''; run(); };
+  input.addEventListener('input', function(){ clearTimeout(timer); timer = setTimeout(run, 420); });
+  input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); lastQ=''; run(); } });
+})();
+</script>
 {% endblock %}
