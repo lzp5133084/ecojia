@@ -1,0 +1,69 @@
+{% extends "legal_base.html" %}
+{% block title %}关于我们{% endblock %}
+{% block description %}关于数字生态家园：由军哥懂保独立打造的个人数字生活门户，介绍站点定位、产品矩阵、技术架构、内容维护方式与备案主体信息，以及合作与反馈渠道。{% endblock %}
+{% block robots %}<meta name="robots" content="index,follow">{% endblock %}
+
+{% block intro %}
+一个账号，连接所有产品 —— 让科技温暖每个家庭。这里说明这个站点是谁做的、为什么做、怎么维护。
+{% endblock %}
+
+{% block legal %}
+
+<h2>一、我们是谁</h2>
+<p>数字生态家园（ecojia.cn）由<strong>军哥懂保</strong>独立设计与开发，是一位专注保险与家庭保障领域的从业者，
+出于「把复杂工具做简单、把零散服务做统一」的想法，逐步搭建起来的个人数字生活门户。</p>
+<p>站点不追逐流量与广告收入，产品以免费为主，靠个人投入与用户反馈驱动迭代。目标是：让一个普通家庭，
+用一套账号、一套界面，就能把证件保管、计时专注、资料查找、屏幕标注这些日常小事一次配齐。</p>
+
+<h2>二、我们提供什么</h2>
+<ul>
+  <li><strong>统一账号体系</strong>：一次注册，生态内产品共用身份，不用反复填资料。</li>
+  <li><strong>主打产品</strong>：数字保险箱（家庭重要资料加密保管）、悬浮计时器（三端同步专注工具）、
+      鼠标画笔（教学直播办公标注神器）、资料百事通（全民共创资料库）、多码集（聚合码管理）。</li>
+  <li><strong>工具清单</strong>：35 款自研工具的使用说明、运行方式与下载入口，按编号速查。</li>
+  <li><strong>许愿墙</strong>：把您想要的功能写下来，需求集中度高的会优先开发。</li>
+  <li><strong>火星平面</strong>：给每个人一张火星身份证，记录人生七类历程并做完整性存证。</li>
+  <li><strong>开放接口</strong>：站点作为生态底座，公开接口清单（<code>/api/ecosystem/manifest</code>），方便其他程序调用。</li>
+</ul>
+
+<h2>三、技术架构</h2>
+<table>
+  <thead><tr><th>层级</th><th>方案</th></tr></thead>
+  <tbody>
+    <tr><td>网关 / 反向代理</td><td>Caddy 2（自动 HTTPS、HTTP/3、gzip / zstd 压缩、统一安全响应头）</td></tr>
+    <tr><td>应用服务</td><td>Flask + gunicorn（gthread 多线程 worker），systemd 托管，仅监听 127.0.0.1</td></tr>
+    <tr><td>数据存储</td><td>SQLite（本地文件），定时备份</td></tr>
+    <tr><td>前端</td><td>原生 HTML / CSS / JavaScript，无框架依赖；图片提供 WebP 与 JPEG 双格式回退</td></tr>
+    <tr><td>AI 能力</td><td>火山方舟（豆包）大模型接口</td></tr>
+    <tr><td>部署环境</td><td>腾讯云 · Ubuntu · 中国境内节点</td></tr>
+  </tbody>
+</table>
+<p>全站不引入第三方统计与广告脚本，页面首屏以「少请求、小体积」为设计前提。</p>
+
+<h2>四、内容与维护</h2>
+<ul>
+  <li>站点由站长个人维护，功能更新会在首页与「更新日志」区域公布。</li>
+  <li>产品说明、使用指引尽量写清楚「怎么用、注意什么」，专业名词在页面内提供直白解释。</li>
+  <li>发现内容有误、链接失效或功能异常，欢迎直接反馈，我们优先修复影响使用的问题。</li>
+</ul>
+
+<h2>五、备案与主体信息</h2>
+<table>
+  <tbody>
+    <tr><th>站点名称</th><td>数字生态家园</td></tr>
+    <tr><th>主域名</th><td>ecojia.cn（www 统一 301 跳转至主域）</td></tr>
+    <tr><th>备案号</th><td>蜀ICP备2025124820号-2</td></tr>
+    <tr><th>负责人 / 作者</th><td>军哥懂保</td></tr>
+    <tr><th>联系微信</th><td>xunijiayuan</td></tr>
+    <tr><th>联系邮箱</th><td>100469004@qq.com</td></tr>
+    <tr><th>联系电话</th><td>18180309010</td></tr>
+    <tr><th>服务器所在地</th><td>中国境内（腾讯云）</td></tr>
+  </tbody>
+</table>
+<p>备案信息可登录 <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">工信部备案管理系统</a> 核验。</p>
+
+<h2>六、合作与反馈</h2>
+<p>欢迎以下形式的交流：产品需求与缺陷反馈、工具使用场景分享、开源项目共建、内容授权与转载申请。
+请通过<a href="/contact">联系我们</a>页面的任一渠道发起，说明来意与联系方式，我们会在 15 个工作日内答复。</p>
+
+{% endblock %}

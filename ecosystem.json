@@ -8,7 +8,7 @@
     "wechat": "xunijiayuan",
     "positioning": "本网站是整个数字生态的底座：所有产品共用统一入口、统一账号、统一数据源；后续新工具以「积木」方式持续加入，加入后自动出现在门户与许愿墙。",
     "data_file": "ecosystem.json",
-    "updated_at": "2026-11-05",
+    "updated_at": "2026-11-07",
     "security_note": "本文件为公开数据源，禁止写入任何密码、密钥、Token；服务器与第三方凭据一律存放在腾讯云站内信 / Windows凭据管理器，不落库不落文件。",
     "usage": "其他程序或网页可直接读取本文件（或调用 /api/ecosystem/manifest）获取生态全部信息；新增/修改积木只需改本文件，服务自动热加载。",
     "style": "2027星霓暖赛博风（用户选定，豆包 doubao-seed-2.1-turbo 生成方案）"
@@ -1251,6 +1251,94 @@
       "note": "三端共用 www.ecojia.cn/timer/version.json 做版本检查；作者军哥懂保，微信 xunijiayuan；推广达 1 / 5 / 10 / 20 人分别解锁推广大使、精英级大使、骨灰级大使、项目合伙人，盲盒福利后期公布。",
       "pages_url": "https://ecojia.cn/timer/",
       "repo": null
+    },
+    {
+      "no": "T36",
+      "name": "保单整理 · 一键梳理",
+      "en": "Policy Organizer",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器直接打开 index.html",
+      "port": null,
+      "url": "https://tools.ecojia.cn/baodanzhengli/",
+      "size_kb": 28,
+      "updated": "2026-11-07",
+      "status": "已上线·HTTPS",
+      "desc": "把家里所有社保与商业保单一次录清：缴费时间、保单类型、保障有效期、受益人确权，一张清单全掌握，到期前自动提醒不脱保。",
+      "steps": [
+        "打开页面即见「六大核心服务」说明，点「✨ 免费预约整理」填写需求",
+        "按提示录入每张保单：险种、保额、缴费年限、到期时间、受益人",
+        "系统生成保单全景清单与缴费日历，到期前 90 天提醒需备齐的证件",
+        "需要专业报告时点「💳 立即付费」，由军哥出具受益人确权确认书与规划建议"
+      ],
+      "note": "作者军哥懂保，微信 xunijiayuan；上线方式：把 保单整理/ 目录整体放到 tools.ecojia.cn 静态根目录的 baodanzhengli/ 下即可访问，四站共用同一套 共享资源/。",
+      "pages_url": ""
+    },
+    {
+      "no": "T37",
+      "name": "保障检视 · 缺口诊断",
+      "en": "Coverage Review",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器直接打开 index.html",
+      "port": null,
+      "url": "https://tools.ecojia.cn/baozhangjianshi/",
+      "size_kb": 28,
+      "updated": "2026-11-07",
+      "status": "已上线·HTTPS",
+      "desc": "七大维度逐项检视现有保障，量化叠加、重复与缺口，直接给出推荐配置、建议补齐、增额调整、去除建议四类动作清单。",
+      "steps": [
+        "点「🔍 免费预约检视」提交家庭结构与已有保单概况",
+        "按七大检视维度（身故、重疾、医疗、意外、寿险、年金、责任）逐项打分",
+        "查看叠加 / 重复 / 缺口量化评分与错配、可缩减、可退保清单",
+        "按「推荐配置 / 建议补齐 / 增额调整 / 去除建议」四类建议逐条处理"
+      ],
+      "note": "检视结论仅作规划参考，不构成投保建议；作者军哥懂保，微信 xunijiayuan。上线目录名 baozhangjianshi/。",
+      "pages_url": ""
+    },
+    {
+      "no": "T38",
+      "name": "理赔协助 · 全程跟进",
+      "en": "Claim Assist",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器直接打开 index.html",
+      "port": null,
+      "url": "https://tools.ecojia.cn/lipeixiezhu/",
+      "size_kb": 30,
+      "updated": "2026-11-07",
+      "status": "已上线·HTTPS",
+      "desc": "报案话术、材料清单、进度跟进一站式协助：理赔全流程一张图看懂，附常见问题 TOP5，紧急案件 2 小时响应。",
+      "steps": [
+        "点「🆘 提交案件求助」填写险种、出险时间与就诊医院",
+        "按材料清单模板准备病历、发票、诊断证明与银行卡信息",
+        "参照理赔全流程图跟进：报案 → 交件 → 审核 → 补件 → 结案",
+        "需要深度协助时点「💳 立即付费」，由专属顾问全程对接保险公司"
+      ],
+      "note": "按件计费，8% 浮动费率；先看「常见问题 TOP5」再决定是否付费；上线目录名 lipeixiezhu/。",
+      "pages_url": ""
+    },
+    {
+      "no": "T39",
+      "name": "案件分析 · 拒赔维权",
+      "en": "Case Analysis",
+      "type": "网页工具（单页HTML）",
+      "entry": "index.html",
+      "run": "浏览器直接打开 index.html",
+      "port": null,
+      "url": "https://tools.ecojia.cn/anjianfenxi/",
+      "size_kb": 31,
+      "updated": "2026-11-07",
+      "status": "已上线·HTTPS",
+      "desc": "拒赔不等于没道理：六大分析维度深度解剖条款，输出证据链评估与维权策略（协商 / 投诉 / 诉讼），并附甲状腺癌、猝死、腹腔镜三则翻盘案例。",
+      "steps": [
+        "点「🔬 提交案件分析」上传拒赔通知书与保单条款截图",
+        "按六大分析维度逐项核对：条款释义、告知义务、事故性质、材料完整性、时效、比例赔付",
+        "查看证据链评估报告与维权路径优先级（协商 → 监管投诉 → 诉讼）",
+        "需要出具正式诊断意见时点「💳 立即付费」，按 15% 浮动费率结算"
+      ],
+      "note": "诊断结论为专业分析意见，不替代司法鉴定；作者军哥懂保，微信 xunijiayuan；上线目录名 anjianfenxi/。",
+      "pages_url": ""
     }
   ],
   "stages": [

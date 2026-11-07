@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /console
+Disallow: /keys
+Disallow: /profile
+Disallow: /api/
+Disallow: /huoxing/card
+
+Sitemap: https://ecojia.cn/sitemap.xml
