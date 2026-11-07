@@ -32,6 +32,7 @@ import sqlite3
 import time
 from datetime import datetime, timedelta
 from functools import wraps
+from urllib.parse import urlparse
 
 from flask import (Flask, g, session, request, jsonify, Response,
                    render_template, redirect, url_for, send_from_directory)
@@ -40,7 +41,7 @@ import agent_service
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "ecojia.db")
-VERSION = "V2.1"
+VERSION = "V2.2"
 
 # 资料百事通公网入口（已部署到腾讯云服务器；备案后切换为 ziliao.ecojia.cn）
 MAIN_SITE_URL = "http://118.24.173.246:8300"
@@ -72,8 +73,9 @@ def agent_cors(resp):
     if origin in AGENT_ORIGINS and request.path.startswith("/api/"):
         resp.headers["Access-Control-Allow-Origin"] = origin
         resp.headers["Access-Control-Allow-Credentials"] = "true"
-        resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        resp.headers["Access-Control-Allow-Headers"] = "Content-Type, X-CSRF-Token"
         resp.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
+        resp.headers["Access-Control-Expose-Headers"] = "X-CSRF-Token, X-CSRF-Fail"
     return resp
 
 
@@ -891,6 +893,9 @@ def init_db():
     # —— 服务端会话：登出即可真正失效 ——
     # 早先只靠 Flask 签名 Cookie，logout 只清浏览器端，旧 Cookie 仍可读个人数据
     # （渗透确认的中危）。改为服务端持有会话记录，Cookie 里只放随机 sid。
+    # scope 区分会话归属（portal / ziliao）：子站把会话写进同一张表，
+    # 才可能做到「一处登出、一处吊销、全站失效」。uid 在不同库中是不同用户，
+    # 必须靠 scope 隔离，否则子站 sid 拿到门户会被误认成同 id 的门户用户。
     db.execute("""CREATE TABLE IF NOT EXISTS sessions (
         sid        TEXT PRIMARY KEY,
         uid        INTEGER NOT NULL,
@@ -899,9 +904,17 @@ def init_db():
         expire_at  REAL    NOT NULL,
         ip         TEXT    DEFAULT '',
         ua         TEXT    DEFAULT '',
-        revoked    INTEGER NOT NULL DEFAULT 0
+        revoked    INTEGER NOT NULL DEFAULT 0,
+        scope      TEXT    NOT NULL DEFAULT 'portal',
+        csrf       TEXT    DEFAULT ''
     )""")
+    for _col in ("scope TEXT NOT NULL DEFAULT 'portal'", "csrf TEXT DEFAULT ''"):
+        try:
+            db.execute("ALTER TABLE sessions ADD COLUMN %s" % _col)
+        except sqlite3.OperationalError:
+            pass  # 列已存在
     db.execute("CREATE INDEX IF NOT EXISTS idx_sess_uid ON sessions(uid)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sess_scope ON sessions(scope)")
     # —— V2 统一权益：任意账号 × 任意项目 的 VIP 授权 ——
     db.execute("""CREATE TABLE IF NOT EXISTS app_grants (
         id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -952,10 +965,11 @@ def _session_start(uid):
     db.execute("DELETE FROM sessions WHERE expire_at < ?", (now_ts - 86400,))
     sid = secrets.token_urlsafe(32)
     db.execute(
-        "INSERT INTO sessions(sid,uid,created_at,last_seen,expire_at,ip,ua) "
-        "VALUES(?,?,?,?,?,?,?)",
+        "INSERT INTO sessions(sid,uid,created_at,last_seen,expire_at,ip,ua,scope,csrf) "
+        "VALUES(?,?,?,?,?,?,?,'portal',?)",
         (sid, uid, now_ts, now_ts, now_ts + SESSION_TTL, client_ip(),
-         (request.headers.get("User-Agent") or "")[:200]))
+         (request.headers.get("User-Agent") or "")[:200],
+         secrets.token_urlsafe(32)))
     db.commit()
     session.clear()
     session["sid"] = sid
@@ -981,7 +995,7 @@ def current_user():
             session.clear()
         return None
     db = get_db()
-    row = db.execute("SELECT * FROM sessions WHERE sid=?", (sid,)).fetchone()
+    row = db.execute("SELECT * FROM sessions WHERE sid=? AND scope='portal'", (sid,)).fetchone()
     now_ts = time.time()
     if not row or row["revoked"] or row["expire_at"] <= now_ts:
         session.clear()
@@ -1019,6 +1033,119 @@ def admin_required(fn):
             return jsonify({"ok": False, "msg": "需要管理员权限"}), 403
         return fn(*a, **kw)
     return wrapper
+
+
+# ══════════════════ CSRF 防护（SameSite=None 本身不防 CSRF） ══════════════════
+# 两级，都不动现有表单结构：
+# 1) 全局来源校验：凡带会话 Cookie 的写请求（POST/PUT/PATCH/DELETE），
+#    Origin/Referer 必须是本站源；两者都缺失或跨站一律 403。
+# 2) 关键写操作（发布、上传、删数据、管理配置）再加一次性 token：
+#    GET /api/csrf 领取 → 请求头 X-CSRF-Token 携带 → 用后服务端立即轮换，
+#    新 token 通过响应头回传，前端 api() 自动续用（无需刷新页面）。
+_CSRF_SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
+_CSRF_ALLOWED_HOSTS = {
+    "ecojia.cn", "www.ecojia.cn", "tools.ecojia.cn", "ziliao.ecojia.cn",
+    "127.0.0.1", "localhost",
+}
+_CSRF_KEY_WRITE = re.compile(
+    r"^/api/("
+    r"wishes(/.*)?|"
+    r"huoxing/(records|resources|family|legacy|identity)(/.*)?|"
+    r"admin/(promo/(qr|video)|hub(/.*)?)|"
+    r"ecosystem/products(/.*)?|"
+    r"promo/realname|"
+    r"agent/history"
+    r")$"
+)
+
+
+def _same_origin():
+    """Origin/Referer 是否本站源。两者都缺失时视为不安全（带 Cookie 的写请求不允许裸奔）"""
+    src = (request.headers.get("Origin") or "").strip()
+    if not src or src == "null":
+        src = (request.referrer or "").strip()
+    if not src:
+        return False
+    try:
+        host = (urlparse(src).hostname or "").lower()
+    except ValueError:
+        return False
+    return host in _CSRF_ALLOWED_HOSTS
+
+
+@app.before_request
+def _csrf_guard():
+    if request.method in _CSRF_SAFE_METHODS:
+        return None
+    # 没带会话 Cookie 的请求没有可被冒用的身份，不存在 CSRF（登录/注册等入口不受影响）
+    if app.config.get("SESSION_COOKIE_NAME", "session") not in request.cookies:
+        return None
+    if not _same_origin():
+        return jsonify({"ok": False, "msg": "来源校验失败，请从站内正常操作"}), 403
+    if not _CSRF_KEY_WRITE.match(request.path):
+        return None
+    sid = session.get("sid")
+    if not sid:
+        return jsonify({"ok": False, "msg": "请先登录"}), 401
+    db = get_db()
+    row = db.execute("SELECT csrf FROM sessions WHERE sid=? AND scope='portal'", (sid,)).fetchone()
+    sent = (request.headers.get("X-CSRF-Token") or "").strip()
+    if not row or not row["csrf"] or not hmac.compare_digest(sent, row["csrf"]):
+        return (jsonify({"ok": False, "msg": "操作令牌已失效，请刷新页面后重试"}), 403,
+                {"X-CSRF-Fail": "1"})
+    new_tok = secrets.token_urlsafe(32)
+    db.execute("UPDATE sessions SET csrf=? WHERE sid=?", (new_tok, sid))
+    db.commit()
+    g.csrf_new = new_tok
+    return None
+
+
+@app.after_request
+def _csrf_rotate_header(resp):
+    """把轮换后的新 token 回传给前端，避免每次写操作都要重新领"""
+    tok = getattr(g, "csrf_new", "")
+    if tok:
+        resp.headers["X-CSRF-Token"] = tok
+    return resp
+
+
+@app.route("/api/csrf")
+def api_csrf():
+    """领取当前会话的一次性 CSRF token"""
+    if not current_user():
+        return jsonify({"ok": False, "msg": "请先登录", "token": ""}), 401
+    sid = session.get("sid")
+    db = get_db()
+    row = db.execute("SELECT csrf FROM sessions WHERE sid=?", (sid,)).fetchone()
+    tok = (row["csrf"] or "") if row else ""
+    if not tok:
+        tok = secrets.token_urlsafe(32)
+        db.execute("UPDATE sessions SET csrf=? WHERE sid=?", (tok, sid))
+        db.commit()
+    return jsonify({"ok": True, "token": tok, "header": "X-CSRF-Token"})
+
+
+@app.route("/api/admin/sessions/revoke", methods=["POST"])
+@admin_required
+def api_admin_sessions_revoke():
+    """主动吊销会话：uid + scope 精确吊销，或 all=true 全站强制下线"""
+    d = json_obj()
+    scope = (d.get("scope") or "portal").strip()
+    db = get_db()
+    if d.get("all"):
+        n = db.execute("UPDATE sessions SET revoked=1 WHERE revoked=0").rowcount
+    elif d.get("uid"):
+        try:
+            uid = int(d["uid"])
+        except (TypeError, ValueError):
+            return jsonify({"ok": False, "msg": "uid 必须是整数"}), 400
+        n = db.execute("UPDATE sessions SET revoked=1 WHERE uid=? AND scope=?",
+                       (uid, scope)).rowcount
+    else:
+        return jsonify({"ok": False, "msg": "需要 uid 或 all=true"}), 400
+    db.commit()
+    log_op("吊销会话", "scope=%s uid=%s 数量=%d" % (scope, d.get("uid"), n), _uid())
+    return jsonify({"ok": True, "msg": "已吊销 %d 个会话" % n, "revoked": n})
 
 
 # ══════════════════ 页面路由 ══════════════════

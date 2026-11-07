@@ -110,6 +110,46 @@ function _toastFitKeyboard(){
 if(window.visualViewport){
   window.visualViewport.addEventListener('resize', _toastFitKeyboard);
 }
+/* CSRF：统一拦在 fetch 层，写请求自动带一次性 token（用后服务端轮换，403 时自动重领重试一次） */
+(function(){
+  var of = window.fetch, tok = '';
+  function claim(base){
+    if(tok) return Promise.resolve(tok);
+    return of(base + '/api/csrf', {credentials:'include', mode:'cors'})
+      .then(function(r){ return r.json(); })
+      .then(function(d){ tok = d.token || ''; return tok; })
+      .catch(function(){ return ''; });
+  }
+  window.ecjCsrf = function(){ return claim(''); };
+  window.fetch = function(input, init){
+    init = init || {};
+    var url = (typeof input === 'string') ? input : ((input && input.url) || '');
+    var m = (init.method || 'GET').toUpperCase();
+    if(m === 'GET' || m === 'HEAD' || m === 'OPTIONS') return of(input, init);
+    /* 子站（tools/ziliao）调门户 API 时，令牌要到门户领，不能在本域找 */
+    var abs = /^(https?:\/\/[^\/]+)/i.exec(url);
+    var base = (abs && abs[1] !== location.origin) ? abs[1] : '';
+    function run(t){
+      if(t){
+        var h = new Headers(init.headers || {});
+        h.set('X-CSRF-Token', t);
+        init.headers = h;
+      }
+      return of(input, init).then(function(r){
+        var nt = r.headers.get('X-CSRF-Token');
+        if(nt) tok = nt;
+        return r;
+      });
+    }
+    return claim(base).then(run).then(function(r){
+      if(r.status === 403 && r.headers.get('X-CSRF-Fail')){
+        tok = '';
+        return claim(base).then(run);
+      }
+      return r;
+    });
+  };
+})();
 async function api(url, opts={}){
   const r = await fetch(url, Object.assign({headers:{'Content-Type':'application/json'}}, opts));
   let data = {};
