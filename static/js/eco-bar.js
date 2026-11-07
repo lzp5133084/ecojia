@@ -402,7 +402,7 @@
 
   /* ---------- 首次引导气泡 ---------- */
   function hideTip() { var t = document.querySelector(".eb-tip"); if (t) t.remove(); localStorage.setItem("eco_tip_seen", "1"); }
-  if (!localStorage.getItem("eco_tip_seen")) {
+  if (!localStorage.getItem("eco_tip_seen") && !/^\/login\/?$/.test(location.pathname)) {
     setTimeout(function () {
       var tip = document.createElement("div"); tip.className = "eb-tip";
       tip.innerHTML = "<b>👋 我是小鸽子</b>找不到工具？页面打不开？点我直接问～";

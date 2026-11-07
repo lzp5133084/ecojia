@@ -233,6 +233,8 @@
   }
 
   function build() {
+    /* 手机小屏的登录页优先保证表单干净，不叠加浮动推广按钮 */
+    if (window.innerWidth <= 640 && /^\/login\/?$/.test(location.pathname)) return;
     var host = document.createElement('div');
     host.id = 'ecoPromoteHost';
     host.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483600;';

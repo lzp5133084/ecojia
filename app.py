@@ -2492,6 +2492,32 @@ def api_auth_bridge():
     })
 
 
+# ---- 找回密码申请：写入操作日志，由管理员人工核验后重置 ----
+_RESET_LAST = {}
+
+
+@app.route("/api/auth/reset-request", methods=["POST"])
+def api_reset_request():
+    d = request.get_json(silent=True) or {}
+    username = (d.get("username") or "").strip()
+    contact = (d.get("contact") or "").strip()[:80]
+    note = (d.get("note") or "").strip()[:300]
+    if len(username) < 3:
+        return jsonify({"ok": False, "msg": "请填写正确的用户名（至少 3 个字符）"}), 400
+    ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
+    key = ip + "|" + username
+    if time.time() - _RESET_LAST.get(key, 0) < 600:
+        return jsonify({"ok": False, "msg": "申请已提交，请 10 分钟后再试"}), 429
+    row = get_db().execute("SELECT id, nickname FROM users WHERE username=?", (username,)).fetchone()
+    if not row:
+        return jsonify({"ok": False, "msg": "该用户名不存在，请核对后重试"}), 404
+    _RESET_LAST[key] = time.time()
+    log_op("找回密码申请",
+           "用户名:%s(id=%s) 联系方式:%s 说明:%s" % (username, row["id"], contact or "未填写", note or "无"),
+           row["id"])
+    return jsonify({"ok": True, "msg": "申请已提交，管理员核验后 24 小时内联系你"})
+
+
 # ══════════════════ 生态底座 API（供其他程序调用 / 查找 / 新增 / 修改） ══════════════════
 @app.route("/api/docs")
 def api_docs():

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 {% from "icon_macro.html" import icon %}
 <head>
@@ -20,7 +20,7 @@
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/static/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107c">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107d">
 </head>
 <body>
 <a class="skip-link" href="#main">跳到主要内容</a>
@@ -94,8 +94,20 @@ function toast(msg, ok=true){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast show' + (ok ? '' : ' err');
+  _toastFitKeyboard();
   clearTimeout(t._timer);
   t._timer = setTimeout(()=>t.className='toast', 2600);
+}
+/* 键盘弹起后视觉视口变矮，fixed 定位的提示会被压在键盘下，这里按视觉视口把提示抬上来 */
+function _toastFitKeyboard(){
+  const t = document.getElementById('toast');
+  const vv = window.visualViewport;
+  if(!t || !vv) return;
+  const hidden = window.innerHeight - (vv.offsetTop + vv.height);
+  t.style.bottom = hidden > 60 ? (hidden + 16) + 'px' : '';
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', _toastFitKeyboard);
 }
 async function api(url, opts={}){
   const r = await fetch(url, Object.assign({headers:{'Content-Type':'application/json'}}, opts));
@@ -111,7 +123,8 @@ async function logout(){
 </script>
 {% block scripts %}{% endblock %}
 <!-- 生态栏：返回首页+登录状态+AI小鸽子 -->
-<script src="{{ url_for("static", filename="js/eco-bar.min.js") }}?v=20261107c" defer></script>
-<script src="{{ url_for("static", filename="js/promote.min.js") }}?v=20261107c" defer></script>
+<script src="{{ url_for("static", filename="js/eco-bar.min.js") }}?v=20261107d" defer></script>
+<script src="{{ url_for("static", filename="js/promote.min.js") }}?v=20261107d" defer></script>
 </body>
 </html>
+

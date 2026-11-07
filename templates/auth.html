@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "icon_macro.html" import icon %}
 {% block title %}登录 / 注册{% endblock %}
-{% block description %}登录或注册数字生态家园账号：一个账号畅游全生态产品，注册可填写邀请码获得双方权益，账号体系后续将统一打通资料百事通等子站。{% endblock %}
+{% block description %}登录或注册数字生态家园账号：一个账号畅游全生态产品，注册可填写邀请码获得双方权益；忘记密码可提交找回申请，由管理员人工核验后重置。{% endblock %}
 {% block content %}
 
 <section class="auth-wrap">
@@ -11,33 +11,48 @@
       <div class="auth-brand-name">数字生态家园</div>
       <div class="auth-brand-domain">一个账号 · 万物互联</div>
     </div>
-    <div class="auth-tabs">
-      <button id="tab-login" class="auth-tab active" onclick="switchTab('login')">登录</button>
-      <button id="tab-reg" class="auth-tab" onclick="switchTab('reg')">注册</button>
+
+    <div class="auth-tabs" role="tablist" aria-label="账号入口">
+      <button id="tab-login" class="auth-tab active" type="button" onclick="switchTab('login')">登录</button>
+      <button id="tab-reg" class="auth-tab" type="button" onclick="switchTab('reg')">注册</button>
+      <button id="tab-reset" class="auth-tab" type="button" onclick="switchTab('reset')">找回密码</button>
     </div>
 
     {% if deny %}<div class="deny-tip">{{ icon("shieldalert") }} {{ deny }}</div>{% endif %}
 
-    <form id="form-login" onsubmit="return doLogin(event)">
+    <!-- 登录 -->
+    <form id="form-login" onsubmit="return doLogin(event)" novalidate>
       <label for="l-username">用户名</label>
-      <input id="l-username" type="text" autocomplete="username" placeholder="请输入用户名" required>
+      <input id="l-username" type="text" autocomplete="username" autocapitalize="off"
+             autocorrect="off" spellcheck="false" enterkeyhint="next"
+             placeholder="请输入用户名" required>
       <label for="l-password">密码</label>
-      <input id="l-password" type="password" autocomplete="current-password" placeholder="请输入密码" required>
+      <input id="l-password" type="password" autocomplete="current-password"
+             enterkeyhint="go" placeholder="请输入密码" required>
+      <div id="login-err" class="auth-err" role="alert" hidden></div>
       <button class="btn btn-gold btn-block" type="submit">进入生态 {{ icon("arrowright") }}</button>
-      <p class="form-tip">一个账号畅游全生态：资料百事通等子站后续统一打通</p>
+      <p class="form-tip">
+        忘记密码？<a class="auth-link" href="#" onclick="switchTab('reset');return false;">提交找回申请</a>
+        <br>一个账号畅游全生态：资料百事通等子站后续统一打通
+      </p>
     </form>
 
-    <form id="form-reg" style="display:none" onsubmit="return doReg(event)">
+    <!-- 注册 -->
+    <form id="form-reg" style="display:none" onsubmit="return doReg(event)" novalidate>
       <label for="r-username">用户名 <small>（3-20字符）</small></label>
-      <input id="r-username" type="text" autocomplete="username" placeholder="用于登录的唯一账号" required>
+      <input id="r-username" type="text" autocomplete="username" autocapitalize="off"
+             autocorrect="off" spellcheck="false" enterkeyhint="next"
+             placeholder="用于登录的唯一账号" required>
       <label for="r-nickname">昵称 <small>（选填，展示用）</small></label>
-      <input id="r-nickname" type="text" placeholder="大家怎么称呼您">
+      <input id="r-nickname" type="text" enterkeyhint="next" placeholder="大家怎么称呼您">
       <label for="r-password">密码 <small>（至少8位，需同时包含字母和数字）</small></label>
-      <input id="r-password" type="password" autocomplete="new-password" placeholder="设置密码" minlength="8" required>
+      <input id="r-password" type="password" autocomplete="new-password" enterkeyhint="next"
+             placeholder="设置密码" minlength="8" required>
       <label for="r-password2">确认密码</label>
-      <input id="r-password2" type="password" autocomplete="new-password" placeholder="再输一次" minlength="8" required>
+      <input id="r-password2" type="password" autocomplete="new-password" enterkeyhint="next"
+             placeholder="再输一次" minlength="8" required>
       <label for="r-ref">邀请码 <small>（选填，填写好友的专属邀请码，双方都有奖励）</small></label>
-      <input id="r-ref" type="text" placeholder="如 ECJ10001，留空则按自然流量登记">
+      <input id="r-ref" type="text" enterkeyhint="done" placeholder="如 ECJ10001，留空则按自然流量登记">
       <div class="agree-row">
         <input id="r-agree" type="checkbox" required>
         <label for="r-agree">我已阅读并同意
@@ -45,8 +60,25 @@
           <a href="/privacy" target="_blank" rel="noopener">《隐私政策》</a>
         </label>
       </div>
+      <div id="reg-err" class="auth-err" role="alert" hidden></div>
       <button class="btn btn-gold btn-block" type="submit">{{ icon("sparkles") }} 创建账号</button>
       <p class="form-tip">账号数据仅用于本站登录与作品保存，可随时申请删除或注销</p>
+    </form>
+
+    <!-- 找回密码 -->
+    <form id="form-reset" style="display:none" onsubmit="return doReset(event)" novalidate>
+      <p class="auth-note">本站账号由管理员人工核验后重置。提交下方信息，管理员会在 24 小时内通过你留下的联系方式核对身份，核实后为你重置密码。</p>
+      <label for="s-username">用户名</label>
+      <input id="s-username" type="text" autocomplete="username" autocapitalize="off"
+             autocorrect="off" spellcheck="false" enterkeyhint="next"
+             placeholder="需要找回的账号" required>
+      <label for="s-contact">联系方式 <small>（微信 / 邮箱 / 手机号）</small></label>
+      <input id="s-contact" type="text" enterkeyhint="next" placeholder="便于管理员联系你核对身份">
+      <label for="s-note">补充说明 <small>（选填）</small></label>
+      <input id="s-note" type="text" enterkeyhint="done" placeholder="例如：注册时用的昵称、大致注册时间">
+      <div id="reset-err" class="auth-err" role="alert" hidden></div>
+      <button class="btn btn-gold btn-block" type="submit">{{ icon("shieldlock") }} 提交找回申请</button>
+      <p class="form-tip">急用可直接加微信 <strong>xunijiayuan</strong> 说明情况，处理更快</p>
     </form>
   </div>
 </section>
@@ -55,24 +87,36 @@
 
 {% block scripts %}
 <script>
+document.body.classList.add('auth-page');
+var AUTH_TABS = {login:'form-login', reg:'form-reg', reset:'form-reset'};
 function switchTab(t){
-  document.getElementById('tab-login').classList.toggle('active', t==='login');
-  document.getElementById('tab-reg').classList.toggle('active', t==='reg');
-  document.getElementById('form-login').style.display = t==='login' ? '' : 'none';
-  document.getElementById('form-reg').style.display = t==='reg' ? '' : 'none';
+  Object.keys(AUTH_TABS).forEach(function(k){
+    document.getElementById('tab-' + k).classList.toggle('active', k === t);
+    document.getElementById(AUTH_TABS[k]).style.display = (k === t ? '' : 'none');
+  });
+  var card = document.querySelector('.auth-card');
+  if(card && window.scrollY > card.offsetTop - 20){ window.scrollTo({top: card.offsetTop - 16, behavior: 'smooth'}); }
+  if(t === 'reset'){
+    var u = document.getElementById('l-username');
+    var s = document.getElementById('s-username');
+    if(u && s && !s.value && u.value.trim()) s.value = u.value.trim();
+  }
+  clearErr();
 }
-async function doLogin(e){
-  e.preventDefault();
-  const d = await api('/api/auth/login', {method:'POST', body: JSON.stringify({
-    username: document.getElementById('l-username').value.trim(),
-    password: document.getElementById('l-password').value
-  })});
-  if(d.ok){ toast(d.msg); setTimeout(()=>location.href=d.redirect, 500); }
-  return false;
+function setErr(id, msg){
+  var box = document.getElementById(id);
+  if(!box) return;
+  box.textContent = msg || '操作失败，请稍后重试';
+  box.hidden = false;
+  if(box.scrollIntoView) box.scrollIntoView({block: 'center', behavior: 'smooth'});
 }
-async function doReg(e){
-  e.preventDefault();
-  (function(){
+function clearErr(){
+  ['login-err','reg-err','reset-err'].forEach(function(id){
+    var b = document.getElementById(id);
+    if(b){ b.hidden = true; b.textContent = ''; }
+  });
+}
+function prefillRef(){
   const p = new URLSearchParams(location.search);
   const r = p.get('ref');
   if(r){
@@ -83,12 +127,36 @@ async function doReg(e){
     const s2 = localStorage.getItem('ecoj_ref');
     if(s2){ switchTab('reg'); document.getElementById('r-ref').value = s2; }
   }
-})();
-const p1 = document.getElementById('r-password').value;
+}
+document.addEventListener('DOMContentLoaded', prefillRef);
+
+async function doLogin(e){
+  e.preventDefault();
+  clearErr();
+  const u = document.getElementById('l-username').value.trim();
+  const p = document.getElementById('l-password').value;
+  if(!u){ setErr('login-err', '请输入用户名'); document.getElementById('l-username').focus(); return false; }
+  if(!p){ setErr('login-err', '请输入密码'); document.getElementById('l-password').focus(); return false; }
+  const d = await api('/api/auth/login', {method:'POST', body: JSON.stringify({username: u, password: p})});
+  if(d.ok){ toast(d.msg); setTimeout(()=>location.href=d.redirect, 500); }
+  else { setErr('login-err', d.msg || '登录失败，请检查用户名和密码'); }
+  return false;
+}
+
+async function doReg(e){
+  e.preventDefault();
+  clearErr();
+  const u = document.getElementById('r-username').value.trim();
+  const p1 = document.getElementById('r-password').value;
   const p2 = document.getElementById('r-password2').value;
-  if(p1 !== p2){ toast('两次密码不一致', false); return false; }
+  if(u.length < 3){ setErr('reg-err', '用户名至少 3 个字符'); document.getElementById('r-username').focus(); return false; }
+  if(p1.length < 8 || !/[A-Za-z]/.test(p1) || !/\d/.test(p1)){
+    setErr('reg-err', '密码至少 8 位，且需同时包含字母和数字'); document.getElementById('r-password').focus(); return false;
+  }
+  if(p1 !== p2){ setErr('reg-err', '两次密码不一致'); document.getElementById('r-password2').focus(); return false; }
+  if(!document.getElementById('r-agree').checked){ setErr('reg-err', '请先勾选同意《用户协议》与《隐私政策》'); return false; }
   const d = await api('/api/auth/register', {method:'POST', body: JSON.stringify({
-    username: document.getElementById('r-username').value.trim(),
+    username: u,
     nickname: document.getElementById('r-nickname').value.trim(),
     password: p1,
     ref: (document.getElementById('r-ref')||{}).value || ''
@@ -97,6 +165,27 @@ const p1 = document.getElementById('r-password').value;
     localStorage.removeItem('ecoj_ref');
     toast(d.msg + (d.role==='admin' ? '（已自动成为管理员）' : '') + (d.invite_code ? '，你的专属邀请码：'+d.invite_code : ''));
     setTimeout(()=>location.href=d.redirect, 1600);
+  } else {
+    setErr('reg-err', d.msg || '注册失败，请稍后重试');
+  }
+  return false;
+}
+
+async function doReset(e){
+  e.preventDefault();
+  clearErr();
+  const u = document.getElementById('s-username').value.trim();
+  if(u.length < 3){ setErr('reset-err', '请填写正确的用户名（至少 3 个字符）'); document.getElementById('s-username').focus(); return false; }
+  const d = await api('/api/auth/reset-request', {method:'POST', body: JSON.stringify({
+    username: u,
+    contact: document.getElementById('s-contact').value.trim(),
+    note: document.getElementById('s-note').value.trim()
+  })});
+  if(d.ok){
+    toast(d.msg);
+    document.getElementById('form-reset').reset();
+  } else {
+    setErr('reset-err', d.msg || '提交失败，请稍后重试');
   }
   return false;
 }
