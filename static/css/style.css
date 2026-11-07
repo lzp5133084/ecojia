@@ -1865,10 +1865,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
   .foot-links a{min-height:40px;display:inline-flex;align-items:center;padding:6px 2px}
   .tn-close,.tool-nav-toggle{min-width:44px;min-height:44px}
 }
-/* ---- 尊重系统「减弱动态效果」 ---- */
+/* ---- 尊重系统「减弱动态效果」 ----
+   注意：这里必须写 0s，不要写 .01ms —— 旧的压缩器会把 .01ms 输出成 NaN，
+   整条声明被判为非法丢弃，降级会静默失效（2026-11-07 实测发现）。 */
 @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
-    transition-duration:.01ms !important;scroll-behavior:auto !important}
+  *,*::before,*::after{animation-duration:0s !important;animation-iteration-count:1 !important;
+    transition-duration:0s !important;scroll-behavior:auto !important}
   html{scroll-behavior:auto}
 }
 /* ---- 全站速搜（首页） ---- */
