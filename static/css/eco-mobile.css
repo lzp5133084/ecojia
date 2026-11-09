@@ -1,0 +1,301 @@
+/* ECO-MOBILE v1 · 全站移动端基线（作者：军哥懂保 / 微信 xunijiayuan）
+   作用：统一尺度与避让，不改任何业务逻辑。只在 ≤820px 生效。
+   令牌：底 #1a1025 · 卡片 #241433 · 描边 rgba(255,255,255,.10)
+        主字 #f3edfa(13.6:1) · 次字 #b9aec9(6.4:1) · 强调 #f0c75e(9.1:1)
+        字号 12/14/16/20/28 · 行高 1.65 · 圆角 8/12/16/20 · 间距 4/8/12/16/24 · 触控 44px
+   ★ 本项目唯一令牌来源，新增/修改样式请引用下面的变量，不要另起一套色值 */
+:root{
+  --eco-bg:#1a1025;
+  --eco-bg2:#241433;
+  --eco-line:rgba(255,255,255,.10);
+  --eco-text:#f3edfa;
+  --eco-muted:#b9aec9;
+  --eco-accent:#f0c75e;
+  --eco-r1:8px; --eco-r2:12px; --eco-r3:16px; --eco-r4:20px;
+  --eco-sp1:4px; --eco-sp2:8px; --eco-sp3:12px; --eco-sp4:16px; --eco-sp5:24px;
+  --eco-fs1:12px; --eco-fs2:14px; --eco-fs3:16px; --eco-fs4:20px; --eco-fs5:28px;
+  --eco-tap:44px;
+  --eco-bb:0px; /* 由 eco-mobile.js 实测底部固定栏高度后写入 */
+}
+
+@media (max-width:820px){
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;max-width:100%;overflow-x:clip}
+  body{overflow-wrap:anywhere;max-width:100%;overflow-x:clip}
+
+  /* ---- 1. 横向溢出兜底 ---- */
+  img,video{max-width:100%}
+  table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  pre{max-width:100%;overflow-x:auto}
+  /* 内联写死的固定宽双栏（霓虹系等），窄屏一律单列 */
+  [style*="grid-template-columns: 1fr 320px"],
+  [style*="grid-template-columns:1fr 320px"],
+  [style*="grid-template-columns: 1fr 340px"],
+  [style*="grid-template-columns:1fr 340px"],
+  [style*="grid-template-columns: 1fr 360px"],
+  [style*="grid-template-columns:1fr 360px"]{grid-template-columns:1fr!important}
+
+  /* ---- 2. 字号地板（辅助文字 ≥12px；正文由各页 14px 起） ---- */
+  small,figcaption,.meta,.muted,.note,.sub,.desc,.hint,
+  [class*="-tip"],[class*="-note"],[class*="-sub"],[class*="-desc"],[class*="muted"]{
+    font-size:max(var(--eco-fs1),1em)!important;line-height:1.6}
+  [style*="font-size:9px"],[style*="font-size: 9px"],
+  [style*="font-size:10px"],[style*="font-size: 10px"],
+  [style*="font-size:11px"],[style*="font-size: 11px"]{font-size:var(--eco-fs1)!important;line-height:1.6}
+
+  /* ---- 2b. 小字地板（全站实测高频类名，11px/10px 一律抬到 12px） ---- */
+  .tn-no,.tn-count,.p-status,.ftag,.path,.eyebrow,.badge,.tool-en,.tags .tag,.tag-chip,
+  .meta-chip,.eb-chips-lb,.eb-foot,.eb-moreinfo,kbd,footer em,.footer em,dt{
+    font-size:max(var(--eco-fs1),1em)!important;line-height:1.5}
+
+  /* ---- 3. 触控地板（高度统一 44；图标按钮补足 44 宽） ---- */
+  button,.btn,[role=button],[data-act],[data-tab],select,.tab,.tab-item,.nav-item,
+  input:not([type=checkbox]):not([type=radio]):not([type=hidden]),textarea{
+    min-height:var(--eco-tap)}
+  .icon-btn,.toggle-btn,.mini-btn,.close-btn,.eb-hbtn,.eb-send,.eco-nosize,
+  .edit-btn,.favorite-button,.fold{min-width:var(--eco-tap)}
+  /* 工具速查抽屉的条目原来只有 35px 高，逐条点不准 */
+  .tn-item,.tn-search,.tn-close,.help{min-height:var(--eco-tap)}
+  .help{min-width:var(--eco-tap);font-size:var(--eco-fs1)!important;padding:0}
+
+  /* ---- 4. 首启弹窗：跟 dvh 走 + 内容可滚 + 底部按钮常驻 + 右上常驻关闭 ---- */
+  #permIntro{padding:8px!important;align-items:flex-start!important}
+  #permIntro>div{
+    max-height:calc(100dvh - 16px)!important;
+    overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  #permIntro>div>:last-child{
+    position:sticky!important;bottom:0!important;background:#12151f!important;
+    padding:var(--eco-sp3) 0 var(--eco-sp1)!important;
+    box-shadow:0 -12px 18px rgba(6,8,14,.55)!important}
+  button.eco-perm-x{
+    position:sticky;top:0;
+    width:var(--eco-tap);height:var(--eco-tap);
+    margin:-4px -4px var(--eco-sp1) auto;float:right;
+    display:flex;align-items:center;justify-content:center;
+    background:#1c2130;color:var(--eco-accent);
+    border:1px solid rgba(232,200,122,.35);border-radius:var(--eco-r2);
+    font-size:18px;line-height:1;cursor:pointer;z-index:2}
+
+  /* ---- 5. iframe 壳页：壳高 dvh，壳内不再重复滚动 ---- */
+  html.eco-shell{height:100dvh!important;overflow:hidden!important}
+  html.eco-shell body{height:100dvh!important;overflow:hidden!important}
+  html.eco-shell .stage{flex:1 1 auto!important;min-height:0!important}
+  html.eco-shell .stage>iframe{
+    width:100%!important;height:100%!important;display:block;overscroll-behavior:contain}
+
+  /* ---- 6. 固定浮层避让（AI 球 / 小鸽子气泡 / 推广条） ---- */
+  /* 推广容器本身透明、铺满首屏，会拦掉下面按钮的点击；只有真实广告子节点才接收事件 */
+  #ecoPromoteHost{pointer-events:none!important}
+  #ecoPromoteHost>*{pointer-events:auto}
+  /* 小鸽子提示气泡：首屏会压住列表里的排序/切换链接，滚动前不显示（球本体照常可用）
+     该规则已提到 ⑥ 段做全端生效，这里只保留球本体尺寸 */
+  #ebBall{
+    width:var(--eco-tap)!important;height:var(--eco-tap)!important;
+    bottom:calc(var(--eco-bb) + 14px)!important}
+  /* 气泡与推广标的位置由脚本按避让结果写内联样式，这里不再写死 right/bottom */
+  .fab{bottom:calc(var(--eco-bb) + 66px)!important;right:10px!important}
+
+  /* ---- 7. 底部安全区（仅普通文档流页面，壳页由 JS 排除）
+         预留浮层高度，保证被浮层压住的内容能滚动出来 ---- */
+  /* 页脚信息条（程序大小/时间/作者/微信）在手机上原本固定 91px 压在内容上 */
+  .page-meta{
+    position:static!important;
+    flex-direction:column!important;align-items:flex-start!important;
+    gap:2px!important;padding:8px 12px!important;font-size:var(--eco-fs1)!important}
+  .page-meta .meta-left,.page-meta .meta-right{flex-wrap:wrap!important;gap:2px 12px!important;justify-content:flex-start!important}
+  .page-meta .meta-item{font-size:var(--eco-fs1)!important}
+  html.eco-pad body{
+    padding-bottom:calc(var(--eco-bb) + var(--eco-reserve,0px) + 14px + env(safe-area-inset-bottom))!important}
+  /* 门户（Flask 模板）没有基线 JS，用固定预留，避免 AI 球/推广压住首屏按钮 */
+  body.eco-portal{padding-bottom:calc(96px + env(safe-area-inset-bottom))!important}
+}
+
+/* ============ ⑥ 说明类折叠 / 联动工具横滑 / 长面板收口（全端生效；HTML 一行未改） ============ */
+/* 统一折叠组件：.eco-fold > .eco-fold-bar + .eco-fold-body（内容只换位置，不删） */
+.eco-fold-bar{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;box-sizing:border-box;
+  padding:9px 12px;border:1px solid var(--border,rgba(192,132,252,.22));border-radius:14px;
+  background:var(--bg-card,rgba(53,32,69,.5));color:var(--text-primary,#f3edfa);font-size:14px;line-height:1.4;
+  font-family:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;appearance:none}
+.eco-fold-bar:focus-visible{outline:2px solid var(--text-accent,#f9a8d4);outline-offset:2px}
+.eco-fold-bar .eco-fold-t{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.eco-fold-bar .eco-fold-a{flex:0 0 auto;min-width:60px;min-height:44px;display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:var(--text-accent,#f9a8d4);border-left:1px solid rgba(192,132,252,.18)}
+.eco-fold:not(.eco-open)>.eco-fold-body{display:none!important}
+.eco-fold.eco-open>.eco-fold-body{display:block}
+
+/* 小鸽子提示气泡：全端统一「滚动 1.2 屏后才出现」——桌面 1024 档它原来正压在录屏笔右栏的
+   登录/首页两个按钮上（实测 y=653 命中 div.eb-tip）。球本体不受影响，照常可点。
+   录屏笔整页不滚动，所以该页气泡一律不出现，避免和右侧固定面板打架。 */
+html.eco-m:not(.eco-scrolled) .eb-tip{display:none!important}
+html.eco-screenpen .eb-tip{display:none!important}
+
+/* 页尾通用说明区 #gx-about：收起后只剩一行摘要 */
+#gx-about.eco-fold{margin-bottom:26px}
+#gx-about.eco-fold>.eco-fold-bar{margin:0 0 12px}
+
+/* 联动工具 #gx-links：一行横滑小条目（图标 + 名称 + 一句用途），details 变体不接管 */
+#gx-links.eco-row ul{display:flex!important;flex-wrap:nowrap!important;grid-template-columns:none!important;
+  gap:10px!important;margin:10px 0 0!important;padding:2px 0 10px!important;
+  overflow-x:auto!important;overflow-y:hidden!important;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;
+  scroll-snap-type:x proximity;scrollbar-width:none}
+#gx-links.eco-row ul::-webkit-scrollbar{display:none}
+#gx-links.eco-row li{flex:0 0 auto!important;max-width:330px;display:flex!important;align-items:center;gap:10px;
+  margin:0!important;padding:10px 12px!important;border-radius:12px!important;scroll-snap-align:start;box-sizing:border-box}
+#gx-links.eco-row li .eco-gx-ic{flex:0 0 30px;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  background:rgba(120,60,160,.20);color:var(--text-accent,#f9a8d4)}
+#gx-links.eco-row li .eco-gx-tx{min-width:0;flex:1 1 auto}
+#gx-links.eco-row li a{display:block!important;font-size:14px!important;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#gx-links.eco-row li span{display:block!important;margin-top:2px!important;font-size:12px!important;line-height:1.35;
+  color:var(--text-secondary,#cbb8e4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#gx-links summary{min-height:44px;display:flex;align-items:center;font-size:14px;box-sizing:border-box}
+
+/* 常见问题 #faq：每问一行可点，默认只展开第一条 */
+#faq dl dt.eco-faq-q{position:relative;cursor:pointer;display:flex;align-items:center;gap:8px;
+  min-height:44px;box-sizing:border-box;padding-right:66px;-webkit-tap-highlight-color:transparent}
+#faq dl dt.eco-faq-q:focus-visible{outline:2px solid var(--text-accent,#f9a8d4);outline-offset:2px}
+#faq dl dt.eco-faq-q::after{content:'展开';position:absolute;right:0;top:50%;transform:translateY(-50%);
+  font-size:13px;font-weight:400;color:var(--text-accent,#f9a8d4)}
+#faq dl dt.eco-faq-q[aria-expanded="true"]::after{content:'收起'}
+#faq dl dt.eco-faq-q[aria-expanded="false"]+dd{display:none!important}
+
+/* ---- 录屏笔：侧栏内容区可滚 + 底部工具按钮固定成脚 ---- */
+html.eco-screenpen #panel{display:flex;flex-direction:column;
+  max-height:calc(100dvh - 32px);overflow:hidden}
+html.eco-screenpen #pBody{flex:1 1 auto;min-height:0;
+  overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-right:2px}
+html.eco-screenpen .panel.collapsed #pBody{max-height:0;flex:0 0 auto}
+html.eco-screenpen .eco-p-foot{flex:0 0 auto;margin-top:8px;padding-top:8px;border-top:1px solid rgba(232,200,122,.18)}
+html.eco-screenpen .panel.collapsed .eco-p-foot{display:none!important}
+html.eco-screenpen .eco-p-foot .grid4{margin-top:0}
+html.eco-screenpen .eco-p-foot .grid3{margin-top:6px}
+html.eco-screenpen #pBody>.eco-fold{margin-top:10px;padding:0!important;border:0!important;background:none!important}
+html.eco-screenpen #pBody>.eco-fold>.eco-fold-bar{background:rgba(232,200,122,.08);border-color:rgba(232,200,122,.32);color:#EDEDF0}
+html.eco-screenpen #pBody>.eco-fold>.eco-fold-bar .eco-fold-a{border-left-color:rgba(232,200,122,.25);color:#E8C87A}
+html.eco-screenpen #pBody>.eco-fold>.eco-fold-body{padding:12px 14px;margin-top:8px;border:1px solid rgba(232,200,122,.28);
+  border-radius:14px;background:rgba(232,200,122,.06);font-size:12.5px;line-height:1.75}
+
+/* ---- digital-vault：安卓卡「3 条核心 + 展开全部」· 三列等高等宽 · 特色卡等高 · 版心 1200/1320 ---- */
+html.eco-vault .card-grid{align-items:stretch}
+html.eco-vault .dl-card{display:flex;flex-direction:column}
+html.eco-vault .dl-card>.eco-fold{margin-top:12px;padding:0!important;border:0!important;background:none!important}
+html.eco-vault .dl-card>.eco-fold>.eco-fold-body{padding:12px 14px;margin-top:8px;border:1px solid rgba(232,200,122,.28);
+  border-radius:14px;background:rgba(232,200,122,.06);font-size:12.5px;line-height:1.75}
+html.eco-vault .feat-grid{grid-auto-rows:1fr}
+html.eco-vault .feat-item{display:flex;flex-direction:column}
+html.eco-vault .feat-item .f-ic{height:32px;display:flex;align-items:center;margin-bottom:10px}
+html.eco-vault .feat-item p{flex:1 1 auto}
+@media (min-width:1024px){
+  html.eco-vault .hero,html.eco-vault .downloads,html.eco-vault .features,html.eco-vault .guide,
+  html.eco-vault #gx-about,html.eco-vault #gx-links{max-width:1200px}
+}
+
+/* ============================================================
+   小鸽子 · 商业级重做（全站统一走注入层，改这里就是改全站）
+   方向 A（默认 · 黑金圆章）：58px 圆 + 金色线描对话图标 + 小字「小鸽子」
+   方向 B（html.eco-ball-b · 琥珀胶囊）：44px 高横排，图标 + 「小鸽子」，文字更清楚
+   共同：静态投影、1px 金边、无呼吸/无发光/无缩放弹跳；按下仅 0.97 收缩
+   ============================================================ */
+html.eco-m .eb-ball{
+  width:58px!important;height:58px!important;border-radius:50%!important;
+  border:1px solid rgba(240,199,94,.55)!important;
+  background:linear-gradient(168deg,#2b2215 0%,#171208 58%,#0e0b07 100%)!important;
+  box-shadow:0 1px 0 rgba(255,236,190,.14) inset,0 6px 18px rgba(0,0,0,.46),0 1px 2px rgba(0,0,0,.5)!important;
+  animation:none!important;
+  transition:border-color .22s ease,box-shadow .22s ease,transform .12s ease!important;
+  -webkit-tap-highlight-color:transparent;
+}
+html.eco-m .eb-ball:hover{border-color:rgba(240,199,94,.86)!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.5),0 0 0 3px rgba(240,199,94,.09)!important}
+html.eco-m .eb-ball:active{transform:scale(.97)!important}
+/* 可拖动：触摸拖动时不触发页面滚动；拖动中取消过渡与缩放，松手贴边有 0.18s 归位动画 */
+html.eco-m .eb-ball{touch-action:none!important;cursor:grab}
+html.eco-m .eb-ball.dragging{transition:none!important;transform:none!important;opacity:.92!important;cursor:grabbing}
+html.eco-m .eb-ball.dragging:active{transform:none!important}
+html.eco-m .eb-ball.eco-ball-docked{transition:left .18s ease,top .18s ease,border-color .22s ease,box-shadow .22s ease!important}
+/* 手机首屏（未滚动 1.2 屏）：首屏没有空白位，球只能压在标题/说明上，
+   降一档透明度降低干扰，仍可点；滚动后 eco-mobile.js 摘掉这个类恢复常态 */
+html.eco-m .eb-ball.eco-ball-dim:not(.hide){opacity:.66!important}
+html.eco-m .eb-ball.eco-ball-dim{transition:opacity .25s ease,border-color .22s ease,box-shadow .22s ease!important}
+/* 滚动过程中降透明：边滚边读时球不抢视线，停下 1.2s 自动恢复（eco-mobile.js 控制） */
+html.eco-m.eco-scrolling .eb-ball:not(.hide){opacity:.5!important}
+/* 顶部导航横滑提示：右侧渐隐到边缘，表示「右边还有页签」；滚到尾部由 JS 摘掉 */
+html.eco-m header.topbar .nav.eco-nav-more{
+  -webkit-mask-image:linear-gradient(to right,#000 0,#000 calc(100% - 44px),transparent 100%);
+  mask-image:linear-gradient(to right,#000 0,#000 calc(100% - 44px),transparent 100%)}
+html.eco-m .eb-ball .eb-ai{display:none!important}
+html.eco-m .eb-ball .eb-ico{display:flex;align-items:center;justify-content:center;color:#f0c75e;line-height:0}
+html.eco-m .eb-ball .eb-ico svg{width:23px;height:23px;display:block}
+html.eco-m .eb-ball .eb-ico .eb-dot{position:absolute;top:9px;right:10px;width:5px;height:5px;
+  border-radius:50%;background:#f0c75e;box-shadow:0 0 0 2px rgba(27,22,16,.9)}
+html.eco-m .eb-ball .eb-sub{
+  font-size:9.5px!important;line-height:1!important;color:#cbb98a!important;
+  letter-spacing:.9px!important;margin-top:4px!important;white-space:nowrap!important;
+}
+/* 方向 B：琥珀胶囊（横排，文字更清楚，辨识更强）
+   开关两种写法都认：<html class="eco-ball-b"> 或 <html data-eco-dove="b"> */
+html.eco-m.eco-ball-b .eb-ball,
+html.eco-m[data-eco-dove="b"] .eb-ball{
+  width:auto!important;min-width:104px!important;height:44px!important;border-radius:22px!important;
+  flex-direction:row!important;gap:7px!important;padding:0 15px 0 13px!important;
+  border:1px solid rgba(240,199,94,.42)!important;
+  background:linear-gradient(160deg,#241d11 0%,#120e08 100%)!important;
+  box-shadow:0 1px 0 rgba(255,240,200,.16) inset,0 5px 16px rgba(0,0,0,.45)!important;
+}
+html.eco-m.eco-ball-b .eb-ball .eb-ico svg,
+html.eco-m[data-eco-dove="b"] .eb-ball .eb-ico svg{width:18px;height:18px}
+html.eco-m.eco-ball-b .eb-ball .eb-ico .eb-dot,
+html.eco-m[data-eco-dove="b"] .eb-ball .eb-ico .eb-dot{display:none}
+html.eco-m.eco-ball-b .eb-ball .eb-sub,
+html.eco-m[data-eco-dove="b"] .eb-ball .eb-sub{
+  font-size:12.5px!important;letter-spacing:.4px!important;margin-top:0!important;color:#e9d9ac!important;
+}
+/* 方向 B 去掉旧的方章角标 */
+html.eco-m.eco-ball-b .eb-ball::after,
+html.eco-m[data-eco-dove="b"] .eb-ball::after{display:none!important}
+
+/* 首启气泡：深底 + 1px 金线，标题一行 + 正文最多两行；整块高过 96 就不出 */
+html.eco-m .eb-tip{
+  position:fixed;box-sizing:border-box;width:204px;max-width:204px;
+  background:#1b1610!important;color:#efe6d0!important;
+  border:1px solid rgba(240,199,94,.40)!important;border-radius:13px!important;
+  padding:10px 30px 10px 12px!important;
+  font-size:12px!important;line-height:1.58!important;letter-spacing:.1px!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.5)!important;
+  display:block!important;overflow:visible!important;
+  animation:ecoPin .26s ease-out!important;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+html.eco-m .eb-tip b{
+  display:block!important;font-size:12.5px!important;font-weight:600!important;
+  color:#f6e6b4!important;margin:0 0 3px!important;letter-spacing:.3px!important;
+}
+html.eco-m .eb-tip .eb-tip-t{
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  overflow:hidden;color:#cfc4ad;
+}
+html.eco-m .eb-tip .eb-tip-x{
+  position:absolute;top:4px;right:4px;width:24px;height:24px;
+  display:flex;align-items:center;justify-content:center;
+  border:0;background:transparent;color:#8d8266;font-size:15px;line-height:1;
+  cursor:pointer;padding:0;font-family:inherit;
+}
+html.eco-m .eb-tip .eb-tip-x:hover{color:#f0c75e}
+/* 收起：淡出 + 6px 下移，不弹跳 */
+html.eco-m .eb-tip.eco-tip-out{opacity:0!important;transform:translateY(6px)!important;
+  transition:opacity .2s ease,transform .2s ease!important;pointer-events:none!important}
+@keyframes ecoPin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+@media (min-width:1440px){
+  html.eco-vault .hero,html.eco-vault .downloads,html.eco-vault .features,html.eco-vault .guide,
+  html.eco-vault #gx-about,html.eco-vault #gx-links{max-width:1320px}
+}
+
+/* ---- ≤820 紧凑排版（说明区边距、推荐区贴边横滑） ---- */
+@media (max-width:820px) {
+  #gx-about{margin:16px auto 18px!important;padding:0 14px!important;line-height:1.65!important}
+  #gx-about .gx-card{padding:14px 14px!important;margin-bottom:10px!important;border-radius:14px!important}
+  #gx-links.eco-row{margin:6px auto 20px!important;padding:0 14px!important}
+  #gx-links.eco-row h2{font-size:14px!important;margin:0 0 8px!important;letter-spacing:.4px}
+  #gx-links.eco-row .gxl-lead{display:none!important}
+  #gx-links.eco-row ul{margin:0 -14px!important;padding:2px 14px 8px!important}
+  #gx-links.eco-row li{max-width:78vw;padding:9px 11px!important;gap:9px}
+}

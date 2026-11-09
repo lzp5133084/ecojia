@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+{% from "icon_macro.html" import icon %}
+{% block title %}你家能撑几个月 · 家庭抗风险测算{% endblock %}
+{% block description %}填 4 个数，30 秒算出现在如果主要收入中断，你家能撑几个月。基于可动用资金与每月固定支出的算术估算，不采集、不上传，结果可保存为分享卡；想进一步看保障缺口可进入可选的保障体检。{% endblock %}
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/baozhang.css') }}?v=20261110p5">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[
+{"@type":"WebApplication","name":"家庭抗风险测算","url":"https://ecojia.cn/baozhang-score","applicationCategory":"FinanceApplication","operatingSystem":"Web","inLanguage":"zh-CN","description":"填 4 个数，算出现在如果主要收入中断，家庭能撑几个月。纯算术估算，不采集个人数据。","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}},
+{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"数字生态家园","item":"https://ecojia.cn/"},{"@type":"ListItem","position":2,"name":"家庭抗风险测算","item":"https://ecojia.cn/baozhang-score"}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"能撑几个月是怎么算的？","acceptedAnswer":{"@type":"Answer","text":"可撑月数 = 可动用资金 ÷（每月固定支出 × 主要收入者占比假设）。这个系数是固定假设，不是对家庭真实收入的测量：1 人按 100%，2 人按 60%，3 人及以上按 45%，隐含前提是几份收入比较接近。全部系数在页面「计算口径」中公开。"}},
+{"@type":"Question","name":"填的数字会被保存吗？","acceptedAnswer":{"@type":"Answer","text":"不会。页面不要求登录，输入只在本次计算请求中使用，不写入数据库，也不接入任何第三方统计脚本。"}},
+{"@type":"Question","name":"结果算预测吗？","acceptedAnswer":{"@type":"Answer","text":"不是预测，只是基于输入数字的算术结果，不构成投保建议，实际保障以保险合同条款为准。"}}]}
+]}</script>
+{% endblock %}
+{% block content %}
+
+<section class="bz-hero">
+  <p class="bz-kicker">{{ icon("clock") }} 30 秒 · 4 个数 · 不用翻任何材料</p>
+  <h1>你家能撑几个月？</h1>
+  <p class="bz-sub">如果主要收入中断，家里现在能马上动用的钱，可以覆盖多久的固定支出。只做算术，不预测未来，也不推荐任何产品。</p>
+  <ul class="bz-badges">
+    <li>不登录</li>
+    <li>不保存输入</li>
+    <li>不接第三方统计</li>
+    <li>同一组输入结果固定</li>
+  </ul>
+</section>
+
+<div class="bz-grid">
+  <section class="bz-card bz-form-card" id="bzFormCard">
+    <div class="bz-card-head">
+      <h2>填 4 个数</h2>
+      <span>都是平时大概知道的数字，不用翻保单</span>
+    </div>
+
+    <form id="bzForm" novalidate>
+      <div class="bz-field">
+        <div class="bz-label-row">
+          <label for="bzLiquid">家里能马上动用的钱 <small>元</small></label>
+          <button class="bz-q" type="button" data-tip="tipLiquid" aria-expanded="false" aria-controls="tipLiquid" aria-label="名词解释：可动用资金">?</button>
+        </div>
+        <div class="bz-input">
+          <span class="bz-pre">¥</span>
+          <input id="bzLiquid" name="liquid" type="number" min="0" step="1000" inputmode="decimal" placeholder="例如 80000" autocomplete="off" required>
+        </div>
+        <p class="bz-hint">存款、货币基金等 1–3 天能取出来的钱，不含房产</p>
+        <p class="bz-tip" id="tipLiquid" hidden>就是急用的时候能马上拿出来、又不会损失大部分本金的钱。房子、车子这类短期卖不掉或卖不上价的，不算在内。</p>
+      </div>
+
+      <div class="bz-field">
+        <div class="bz-label-row">
+          <label for="bzExpense">家庭每月固定支出 <small>元/月</small></label>
+          <button class="bz-q" type="button" data-tip="tipExpense" aria-expanded="false" aria-controls="tipExpense" aria-label="名词解释：固定支出">?</button>
+        </div>
+        <div class="bz-input">
+          <span class="bz-pre">¥</span>
+          <input id="bzExpense" name="expense" type="number" min="1" step="100" inputmode="decimal" placeholder="例如 12000" autocomplete="off" required>
+        </div>
+        <p class="bz-hint">房贷/房租、生活、教育、还款等每月大致都要花的钱</p>
+        <p class="bz-tip" id="tipExpense" hidden>固定支出指每个月基本都要发生的支出：住房、吃饭、水电、交通、孩子教育、贷款还款等。偶尔一次旅游、大件购物可以先不算。</p>
+      </div>
+
+      <div class="bz-field">
+        <div class="bz-label-row">
+          <span id="bzEarnersLabel">家里有几个人的收入在支撑</span>
+          <button class="bz-q" type="button" data-tip="tipEarners" aria-expanded="false" aria-controls="tipEarners" aria-label="名词解释：收入支撑人数">?</button>
+        </div>
+        <div class="bz-seg" role="group" aria-labelledby="bzEarnersLabel">
+          <button class="bz-seg-btn" type="button" data-earners="1" aria-pressed="false">1 人</button>
+          <button class="bz-seg-btn is-on" type="button" data-earners="2" aria-pressed="true">2 人</button>
+          <button class="bz-seg-btn" type="button" data-earners="3" aria-pressed="false">3 人</button>
+          <button class="bz-seg-btn" type="button" data-earners="4" aria-pressed="false">4 人及以上</button>
+        </div>
+        <input type="hidden" name="earners" id="bzEarners" value="2">
+        <p class="bz-tip" id="tipEarners" hidden>指每月有稳定收入、共同承担家庭开支的人数。人数越多，单一收入中断时家庭现金流的缓冲通常越大。</p>
+      </div>
+
+      <div class="bz-field">
+        <div class="bz-label-row">
+          <label for="bzHousing">其中每月房贷或房租 <small>元/月</small></label>
+          <button class="bz-q" type="button" data-tip="tipHousing" aria-expanded="false" aria-controls="tipHousing" aria-label="名词解释：房贷或房租">?</button>
+        </div>
+        <div class="bz-input">
+          <span class="bz-pre">¥</span>
+          <input id="bzHousing" name="housing" type="number" min="0" step="100" inputmode="decimal" placeholder="例如 4500，没有可填 0" autocomplete="off">
+        </div>
+        <p class="bz-hint">单独填一次，只用来看住房支出占比，不会重复扣减</p>
+        <p class="bz-tip" id="tipHousing" hidden>这部分通常已经包含在上一项的「每月固定支出」里。这里再单独填一次，是为了看住房支出占固定支出的比例，帮助判断调整哪一块对月数影响更直接。</p>
+      </div>
+
+      <button class="btn btn-gold btn-lg bz-submit" type="submit" id="bzSubmit">算出我能撑几个月</button>
+      <p class="bz-err" id="bzErr" role="alert" hidden></p>
+      <p class="bz-privacy">不登录、不上传、不保存；输入只在本次计算请求里使用。结果只是算术估算，不是预测。</p>
+    </form>
+  </section>
+
+  <section class="bz-card bz-result-card" id="bzResult" hidden aria-live="polite">
+    <p class="bz-result-kicker">如果主要收入中断，这个家大约能撑</p>
+    <div class="bz-months"><strong id="bzMonths">0.0</strong><em>个月</em></div>
+    <div class="bz-tier-row">
+      <span class="bz-tier" id="bzTier">—</span>
+      <span class="bz-tier-range" id="bzTierRange"></span>
+    </div>
+    <p class="bz-conclusion" id="bzConclusion"></p>
+    <p class="bz-caveat" id="bzCaveat" hidden></p>
+
+    <div class="bz-scale" aria-hidden="true">
+      <div class="bz-scale-bar"><span class="bz-scale-mark" id="bzMark"></span></div>
+      <div class="bz-scale-labels"><span class="l0">0</span><span class="l3">3</span><span class="l6">6</span><span class="l12">12</span><span class="l18">18+</span></div>
+    </div>
+    <p class="bz-reference" id="bzReference"></p>
+
+    <div class="bz-tags" id="bzTags"></div>
+
+    <p class="bz-disclaimer" id="bzDisclaimer"></p>
+
+    <div class="bz-actions">
+      <button class="btn btn-gold" type="button" id="bzShare">生成分享卡</button>
+      <button class="btn btn-ghost" type="button" id="bzAgain">改一改数字</button>
+    </div>
+    <a class="bz-jump" id="bzPolicyNextStrong" href="/policy" hidden>想知道这个月数是被哪一块拖短的，把家里的保单录进来，缺口一目了然 {{ icon("arrowright") }}</a>
+    <p class="bz-hint" id="bzPolicyNextLight" hidden>想再细一点？可以<a href="/policy">把家里的保单录进家庭保单夹</a>，之后测算不用重复填保额。</p>
+    <a class="bz-jump" href="#bzDetail" data-open-detail="1">想知道差在哪？做一次保障体检 {{ icon("arrowright") }}</a>
+
+    <div class="bz-share-box" id="bzShareBox" hidden>
+      <div class="bz-share-tabs" role="group" aria-label="分享卡版本">
+        <button class="bz-tab is-on" type="button" data-card="qr">带二维码</button>
+        <button class="bz-tab" type="button" data-card="plain">纯净版</button>
+      </div>
+      <img id="bzCardImg" class="bz-share-img" alt="家庭抗风险结果分享卡：月数、家庭结构与一句结论，右下角附回站二维码" width="1080" height="1350">
+      <canvas id="bzCanvas" class="bz-canvas-src" width="1080" height="1350" aria-hidden="true"></canvas>
+      <div class="bz-share-foot">
+        <p>二维码指向 ecojia.cn/baozhang-score，离线静态图，不加载任何外部请求。手机上长按图片保存；电脑端可直接下载。</p>
+        <button class="btn btn-ghost btn-sm" type="button" id="bzDownload">下载图片</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="bz-card bz-result-empty" id="bzEmpty">
+    <h2 class="bz-ehead">{{ icon("chart") }}结果会出现在这里</h2>
+    <p class="bz-etext">左侧填完 4 个数，这一栏会给出「能撑几个月」、所处区间、一句话建议，还能存成分享卡。</p>
+    <ol class="bz-esteps">
+      <li>① 可动用资金</li>
+      <li>② 每月固定支出</li>
+      <li>③ 收入支撑人数</li>
+    </ol>
+    <p class="bz-efoot">全部在本地算，不登录、不上传，刷新即清空。</p>
+  </section>
+</div>
+
+<section class="bz-card bz-advice" id="bzAdvice" hidden>
+  <h2>怎么把这几个月变长</h2>
+  <div class="bz-advice-grid">
+    <div class="bz-advice-item">
+      <h3>{{ icon("chart") }}存款侧</h3>
+      <p id="bzAdviceSavings"></p>
+    </div>
+    <div class="bz-advice-item">
+      <h3>{{ icon("shieldlock") }}保障侧</h3>
+      <p id="bzAdviceProtection"></p>
+    </div>
+  </div>
+  <div class="bz-mini-row" id="bzMiniRow"></div>
+</section>
+
+<section class="bz-detail" id="bzDetail">
+  <div class="bz-detail-head">
+    <div>
+      <h2>想知道差在哪？</h2>
+      <p>可选的第二步：补充保单细节，看家庭责任缺口、保费杠杆率和分项缺口。不强制进入，也不做产品推荐。</p>
+    </div>
+    <button class="btn btn-ghost" type="button" id="bzDetailToggle" aria-expanded="false" aria-controls="bzDetailBody">开始保障体检 {{ icon("arrowright") }}</button>
+  </div>
+
+  <div id="bzDetailBody" hidden>
+    <p class="bz-hint" id="bzPolicySource" hidden></p>
+    <form id="bzDetailForm" class="bz-detail-form" novalidate>
+      <fieldset>
+        <legend>家庭与负债</legend>
+        <div class="bz-dgrid">
+          <div class="bz-dfield">
+            <label for="bzAge">年龄 <small>岁</small></label>
+            <input id="bzAge" name="age" type="number" min="18" max="70" step="1" inputmode="numeric" placeholder="例如 35" required>
+          </div>
+          <div class="bz-dfield">
+            <label for="bzStructure">家庭结构</label>
+            <select id="bzStructure" name="structure">
+              <option value="single">单身</option>
+              <option value="married_nochild">已婚无子女</option>
+              <option value="married_child" selected>已婚有子女</option>
+            </select>
+          </div>
+          <div class="bz-dfield">
+            <label for="bzIncome">家庭年收入 <small>元</small></label>
+            <input id="bzIncome" name="annual_income" type="number" min="0" step="1000" inputmode="decimal" placeholder="例如 300000" required>
+          </div>
+          <div class="bz-dfield">
+            <label for="bzYearExpense">家庭年支出 <small>元</small></label>
+            <input id="bzYearExpense" name="annual_expense" type="number" min="0" step="1000" inputmode="decimal" placeholder="例如 144000" required>
+          </div>
+          <div class="bz-dfield">
+            <label for="bzMortgage">房贷余额 <small>元</small></label>
+            <input id="bzMortgage" name="mortgage" type="number" min="0" step="10000" inputmode="decimal" placeholder="没有可填 0">
+          </div>
+          <div class="bz-dfield">
+            <label for="bzAssets">可变现资产 <small>元</small></label>
+            <input id="bzAssets" name="liquid_assets" type="number" min="0" step="10000" inputmode="decimal" placeholder="存款、基金等，不含自住房">
+          </div>
+          <div class="bz-dfield">
+            <label for="bzEdu">子女教育预估 <small>元</small></label>
+            <input id="bzEdu" name="child_education" type="number" min="0" step="10000" inputmode="decimal" placeholder="有子女默认按 30 万估算">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>现有保障</legend>
+        <div class="bz-dgrid">
+          <div class="bz-dfield">
+            <label for="bzLife">寿险保额 <small>元</small></label>
+            <input id="bzLife" name="life" type="number" min="0" step="10000" inputmode="decimal" placeholder="没有可填 0">
+          </div>
+          <div class="bz-dfield">
+            <label for="bzCi">重疾保额 <small>元</small></label>
+            <input id="bzCi" name="ci" type="number" min="0" step="10000" inputmode="decimal" placeholder="没有可填 0">
+          </div>
+          <div class="bz-dfield">
+            <label for="bzMedical">医疗险保额 <small>元</small></label>
+            <input id="bzMedical" name="medical" type="number" min="0" step="10000" inputmode="decimal" placeholder="百万医疗可填 2000000">
+          </div>
+          <div class="bz-dfield">
+            <label for="bzAccident">意外险保额 <small>元</small></label>
+            <input id="bzAccident" name="accident" type="number" min="0" step="10000" inputmode="decimal" placeholder="没有可填 0">
+          </div>
+          <div class="bz-dfield">
+            <label for="bzPremium">年保费支出 <small>元/年</small></label>
+            <input id="bzPremium" name="annual_premium" type="number" min="0" step="100" inputmode="decimal" placeholder="所有保单合计，没有可填 0">
+          </div>
+          <div class="bz-dfield bz-dfield-check">
+            <span class="bz-check-label">已有基础保障</span>
+            <label class="bz-check"><input type="checkbox" id="bzSocial" name="social" checked> 有社保</label>
+            <label class="bz-check"><input type="checkbox" id="bzMillion" name="million_medical"> 有百万医疗</label>
+          </div>
+        </div>
+      </fieldset>
+
+      <button class="btn btn-gold btn-lg bz-submit" type="submit" id="bzDetailSubmit">查看体检结果</button>
+      <p class="bz-err" id="bzDetailErr" role="alert" hidden></p>
+      <p class="bz-privacy">同样不保存输入。体检结果只是估算，不构成投保建议。</p>
+    </form>
+
+    <div class="bz-detail-result" id="bzDetailResult" hidden aria-live="polite">
+      <div class="bz-detail-top">
+        <div class="bz-detail-score"><span>体检分</span><b id="bzDetailScore">—</b><em id="bzDetailLevel"></em></div>
+        <p id="bzDetailConclusion"></p>
+      </div>
+      <div class="bz-mini-row bz-mini-row-3">
+        <div class="bz-mini"><span>家庭责任缺口</span><b id="bzGapTotal">—</b></div>
+        <div class="bz-mini"><span>现有保障覆盖率</span><b id="bzCoverage">—</b></div>
+        <div class="bz-mini"><span>保费杠杆率</span><b id="bzLeverage">—</b></div>
+      </div>
+      <div class="bz-items" id="bzItems"></div>
+      <ul class="bz-notes" id="bzNotes"></ul>
+      <p class="bz-disclaimer" id="bzDetailDisclaimer"></p>
+    </div>
+  </div>
+</section>
+
+<section class="bz-card bz-howto">
+  <h2>怎么用</h2>
+  <ol class="bz-steps">
+    <li><b>先填 4 个数。</b>存款、每月固定支出、收入人数和房贷/房租，都是平时大概知道的数字，不用翻保单。</li>
+    <li><b>看月数和刻度。</b>主结果是「能撑几个月」，下方刻度标出 3 个月、6 个月、12 个月这几个常用参考点。</li>
+    <li><b>需要时再深入。</b>如果想知道缺口在哪，再点「做一次保障体检」；不需要就到此为止，页面不会继续追问。</li>
+  </ol>
+</section>
+
+<section class="bz-card bz-glossary">
+  <h2>名词解释（大白话）</h2>
+  <dl class="bz-terms">
+    <div><dt>可动用资金</dt><dd>急用时能马上拿出来、又不会大亏本金的钱。存款、货币基金算；自住房不算。</dd></div>
+    <div><dt>固定支出</dt><dd>每个月基本都要花的钱：住房、吃饭、水电、交通、教育、还款等。</dd></div>
+    <div><dt>主要收入中断</dt><dd>家里收入最高的那个人暂时没有收入，比如失业、长期病休。不是假设全家都没有收入。</dd></div>
+    <div><dt>应急金</dt><dd>专门用来应对短期收入中断的一笔流动资金。常见参考是覆盖 3–6 个月支出。</dd></div>
+    <div><dt>保费杠杆率</dt><dd>现有总保额 ÷ 年保费支出。用同样的保费撬动的保额越高，这个数字越大。</dd></div>
+    <div><dt>责任年限</dt><dd>家庭责任还需要覆盖多少年。这里按家庭结构和退休年龄估算，最低 5 年。</dd></div>
+  </dl>
+</section>
+
+<details class="bz-card bz-caliber">
+  <summary>计算口径（所有系数都在这里）</summary>
+  <div class="bz-caliber-body">
+    <h3>第一层：能撑几个月</h3>
+    <p class="bz-formula">{{ rc.formula }}</p>
+    <p class="bz-assume"><b>{{ rc.assumption_name }}</b>：1 人收入按 100%；2 人按 {{ (rc.assumed_main_income_share[2] * 100)|int }}%；3 人及以上按 {{ (rc.assumed_main_income_share[3] * 100)|int }}%。{{ rc.assumption_detail }}</p>
+    <ul>
+      <li><b>分档参考：</b>{% for t in rc.tiers %}{{ t.range }}「{{ t.name }}」{% if not loop.last %}、{% endif %}{% endfor %}。这是常见应急金参考区间，不是本站自创的恐吓线。</li>
+      <li><b>住房支出：</b>{{ rc.housing_note }}</li>
+      {% for a in rc.assumptions %}<li>{{ a }}</li>{% endfor %}
+    </ul>
+
+    <h3>第二层：家庭保障体检</h3>
+    <p class="bz-formula">{{ pc.formula }}</p>
+    <ul>
+      <li><b>责任年限：</b>取「家庭结构基准年限（单身 {{ pc.base_years.single }} 年 / 已婚无子女 {{ pc.base_years.married_nochild }} 年 / 已婚有子女 {{ pc.base_years.married_child }} 年）」与「{{ pc.retire_age }} − 年龄」中的较小值，最低 {{ pc.min_years }} 年。</li>
+      <li><b>子女教育：</b>{{ pc.child_education_note }}</li>
+      <li><b>重疾：</b>{{ pc.ci_note }}</li>
+      <li><b>医疗：</b>{{ pc.medical_note }}</li>
+      <li><b>意外：</b>{{ pc.accident_note }}</li>
+      <li><b>杠杆率：</b>{{ pc.leverage_note }}</li>
+      <li><b>评分权重：</b>家庭责任覆盖 {{ (pc.weights.coverage * 100)|int }}%、重疾 {{ (pc.weights.ci * 100)|int }}%、医疗 {{ (pc.weights.medical * 100)|int }}%、意外 {{ (pc.weights.accident * 100)|int }}%、保费杠杆 {{ (pc.weights.leverage * 100)|int }}%。</li>
+      {% for a in pc.assumptions %}<li>{{ a }}</li>{% endfor %}
+    </ul>
+    <p class="bz-formula">结构化接口：<code>POST /api/resilience/calc</code>（第一层）与 <code>POST /api/baozhang/score</code>（第二层），提交前先 <code>GET /api/calc/token</code> 领取令牌并放进 <code>X-CSRF-Token</code> 头；金额只走请求体，GET 会被拒绝（405）。</p>
+  </div>
+</details>
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/baozhang.js') }}?v=20261110p4" defer></script>
+{% endblock %}

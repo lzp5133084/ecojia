@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 {% from "icon_macro.html" import icon %}
 
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}?v=20261110p5">
+{% endblock %}
+
 {% block content %}
 <style>
 .legal-wrap{max-width:900px;margin:0 auto}
-.legal-meta{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 26px}
+.legal-meta{display:flex;gap:10px;flex-wrap:wrap;margin:-12px 0 22px}
 .legal-meta span{font-size:12.5px;color:var(--gold-hi);border:1px solid var(--border);
   background:var(--card);border-radius:20px;padding:5px 13px}
 .legal-body{border:1px solid var(--border);border-radius:var(--radius);
@@ -35,16 +39,16 @@
 </style>
 
 <div class="legal-wrap">
+  <section class="page-head">
+    <h1>{{ icon("filetext") }}{{ self.title() }}</h1>
+    <p>{% block intro %}{% endblock %}</p>
+  </section>
+
   <div class="legal-meta">
     <span>生效日期 2026-11-07</span>
     <span>最近更新 2026-11-07</span>
     <span>适用站点 ecojia.cn 及全部子站</span>
   </div>
-
-  <section class="page-head">
-    <h1>{{ icon("filetext") }}{{ self.title() }}</h1>
-    <p>{% block intro %}{% endblock %}</p>
-  </section>
 
   <article class="legal-body">
     {% block legal %}{% endblock %}

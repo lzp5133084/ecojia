@@ -15,11 +15,11 @@
 <meta property="og:title" content="{{ self.title() }} · ecojia.cn">
 <meta property="og:description" content="{{ self.description() }}">
 <meta property="og:url" content="https://ecojia.cn{{ request.path }}">
-<meta property="og:image" content="https://ecojia.cn/static/img/hero-nebula-opt.jpg">
+<meta property="og:image" content="https://ecojia.cn/static/img/hero-nebula-v2.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ self.title() }} · ecojia.cn">
 <meta name="twitter:description" content="{{ self.description() }}">
-<meta name="twitter:image" content="https://ecojia.cn/static/img/hero-nebula-opt.jpg">
+<meta name="twitter:image" content="https://ecojia.cn/static/img/hero-nebula-v2.jpg">
 <link rel="alternate" type="text/markdown" href="https://ecojia.cn/llms.txt" title="AI 可读站点摘要">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"数字生态家园","alternateName":"ecojia.cn","url":"https://ecojia.cn/","inLanguage":"zh-CN","description":"军哥懂保打造的数字生活门户：一个账号连接全部产品、工具与开放 API，覆盖网页、安卓与电脑三端。","publisher":{"@type":"Organization","name":"军哥懂保","url":"https://ecojia.cn/"}},{"@type":"Organization","name":"军哥懂保","alternateName":"数字生态家园","url":"https://ecojia.cn/","email":"100469004@qq.com","founder":{"@type":"Person","name":"军哥懂保"}}]}</script>
 {% block head_extra %}{% endblock %}
@@ -40,12 +40,16 @@
   });
 })();
 </script>
+<style>.ic-sprite{position:absolute;width:0;height:0;overflow:hidden}</style>
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/static/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261107m">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}?v=20261108c">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/eco-mobile.css') }}?v=20261110p6">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/portal-mobile.css') }}?v=20261108a">
+<script src="{{ url_for('static', filename='js/eco-mobile.js') }}?v=20261110p9" defer></script>
 </head>
-<body>
+<body class="eco-portal">
 <a class="skip-link" href="#main">跳到主要内容</a>
 {% include "icon_sprite.html" %}
 <div class="aurora" aria-hidden="true"></div>
@@ -63,8 +67,12 @@
       <a href="/" class="{{ 'active' if request.path=='/' else '' }}">生态主页</a>
       <a href="/products" class="{{ 'active' if request.path=='/products' else '' }}">产品矩阵</a>
       <a href="/tools" class="{{ 'active' if request.path=='/tools' else '' }}">工具清单</a>
+      <a href="/rank" class="{{ 'active' if request.path.startswith('/rank') else '' }}">AI 动态榜</a>
+      <a href="/baozhang-score" class="{{ 'active' if request.path in ('/baozhang-score','/resilience') else '' }}">抗风险测算</a>
+      <a href="/policy" class="{{ 'active' if request.path.startswith('/policy') or request.path=='/baodan' else '' }}">家庭保单夹</a>
       <a href="/wishes" class="{{ 'active' if request.path=='/wishes' else '' }}">许愿墙</a>
       <a href="/huoxing" class="{{ 'active' if request.path=='/huoxing' else '' }}">火星平面</a>
+      <a href="/weekly" class="{{ 'active' if request.path.startswith('/weekly') else '' }}">周报</a>
       {% if user and user.role == 'admin' %}
       <a href="/admin" class="{{ 'active' if request.path=='/admin' else '' }}">管理后台</a>
       <a href="/console" class="{{ 'active' if request.path=='/console' else '' }}">统一后台</a>
@@ -100,6 +108,7 @@
       <span>微信：xunijiayuan</span>
     </div>
     <div class="foot-slogan">一个账号 · 万物互联 · 服务生活的数字生态</div>
+    <div class="foot-ai">部分配图为 AI 生成示意</div>
     <div class="foot-links">
       <a href="/about">关于我们</a><i>·</i>
       <a href="/privacy">隐私政策</a><i>·</i>
@@ -270,7 +279,8 @@ document.addEventListener('click', function(e){
   if(!el) return;
   var body = JSON.stringify({
     target: el.getAttribute('data-use'),
-    kind: el.getAttribute('data-use-kind') || 'tool'
+    kind: el.getAttribute('data-use-kind') || 'tool',
+    src: location.pathname
   });
   try{
     if(navigator.sendBeacon){
@@ -286,8 +296,9 @@ document.addEventListener('click', function(e){
 <!-- CSP 事件委托绑定器：内联事件属性在 CSP 下会被拦截，统一走 data-act -->
 <script src="{{ url_for("static", filename="js/csp-bind.js") }}?v=20261107e" defer></script>
 <!-- 生态栏：返回首页+登录状态+AI小鸽子 -->
-<script src="{{ url_for("static", filename="js/eco-bar.min.js") }}?v=20261107d" defer></script>
-<script src="{{ url_for("static", filename="js/promote.min.js") }}?v=20261107d" defer></script>
+<script src="{{ url_for("static", filename="js/eco-bar.min.js") }}?v=20261110p9" defer></script>
+<script src="{{ url_for("static", filename="js/promote.min.js") }}?v=20261110p5" defer></script>
+<script src="{{ url_for("static", filename="js/ev.js") }}?v=20261108b" defer></script>
 </body>
 </html>
 

@@ -1,16 +1,17 @@
 {% extends "base.html" %}
 {% from "icon_macro.html" import icon %}
-{% block title %}产品矩阵 · 全部 {{ products|length }} 个产品{% endblock %}
-{% block description %}数字生态家园产品矩阵：全部 {{ products|length }} 个产品的简介、适用环境、作用与电脑端 / 手机端入口，统一三行信息 + 2×2 四按钮卡片，缺端明确标注「暂无」。{% endblock %}
+{% block title %}产品矩阵 · {{ counts.live }} 个已上线 · {{ counts.building }} 个筹备中{% endblock %}
+{% block description %}数字生态家园产品矩阵：{{ counts.total }} 个数字成员，其中 {{ counts.live }} 个已上线、{{ counts.building }} 个筹备中、{{ counts.pending }} 个需求登记中。每个产品标注简介、适用环境、作用与电脑端 / 手机端入口，缺端明确标注「暂无」。{% endblock %}
 {% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}?v=20261110p5">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[
-{"@type":"CollectionPage","name":"产品矩阵","url":"https://ecojia.cn/products","inLanguage":"zh-CN","description":"数字生态家园全部 {{ products|length }} 个产品的简介、适用环境、作用与各端入口。"},
+{"@type":"CollectionPage","name":"产品矩阵","url":"https://ecojia.cn/products","inLanguage":"zh-CN","description":"数字生态家园 {{ counts.total }} 个数字成员：{{ counts.live }} 个已上线、{{ counts.building }} 个筹备中、{{ counts.pending }} 个需求登记中，含各端入口。"},
 {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"数字生态家园","item":"https://ecojia.cn/"},{"@type":"ListItem","position":2,"name":"产品矩阵","item":"https://ecojia.cn/products"}]},
-{"@type":"ItemList","numberOfItems":{{ products|length }},"itemListElement":[
-{% for p in products %}{"@type":"ListItem","position":{{ loop.index }},"name":{{ p.name|tojson }},"url":{{ ((p.links.use if p.links and p.links.use else 'https://ecojia.cn/products#p-' ~ p.no))|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}]},
+{"@type":"ItemList","name":"已上线产品","numberOfItems":{{ counts.live }},"itemListElement":[
+{% for p in products if p.status == '已上线' %}{"@type":"ListItem","position":{{ loop.index }},"name":{{ p.name|tojson }},"url":{{ ((p.links.use if p.links and p.links.use else 'https://ecojia.cn/products#p-' ~ p.no))|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}]},
 {"@type":"FAQPage","mainEntity":[
 {"@type":"Question","name":"产品支持哪些终端？","acceptedAnswer":{"@type":"Answer","text":"每个产品卡都标注网页版、电脑端、手机端入口；暂未提供的端显示「暂无」，不会给无效链接。"}},
-{"@type":"Question","name":"产品按什么排序？","acceptedAnswer":{"@type":"Answer","text":"按「开始使用」点击热度降序，产品速览与完整卡片使用同一份排序数据；同一 IP 或会话对同一产品 1 小时内只计 1 次。"}},
+{"@type":"Question","name":"「筹备中」「需求登记中」是什么状态？","acceptedAnswer":{"@type":"Answer","text":"筹备中包含规划中、开发中、敬请期待，页面已上线可查看介绍但暂未开放使用；需求登记中表示该方向尚未开发，可到许愿墙提交需求。"}},
 {"@type":"Question","name":"产品收费吗？","acceptedAnswer":{"@type":"Answer","text":"基础功能免费，登录一个账号即可使用全部产品；部分高级能力按产品说明提供。"}}]}
 ]}</script>
 {% endblock %}
@@ -18,24 +19,48 @@
 
 <section class="page-head">
   <h1>{{ icon("grid") }}产品矩阵</h1>
-  <p>生态内全部 <b>{{ products|length }}</b> 个数字成员。每张卡片按同一标准呈现：
+  <p>生态内共 <b>{{ counts.total }}</b> 个数字成员：<b>{{ counts.live }}</b> 个已上线、<b>{{ counts.building }}</b> 个筹备中、<b>{{ counts.pending }}</b> 个需求登记中。每张卡片按同一标准呈现：
   <b>简介 · 应用环境 · 作用</b> 三行信息，下方 <b>开始使用 / 产品介绍 / 电脑端 / 手机端</b> 四个入口；
-  尚未提供的端会显示「暂无」并给出提示，不留空位。</p>
+  想看站外新项目，可到 <a href="/rank">AI 工具榜单（GitHub 热门项目排行）</a>，每小时更新一次。</p>
 </section>
 
 <div class="tools-bar">
-  <span class="tl-chip">{{ icon("package") }} 全部 {{ products|length }}</span>
-  <span class="tl-chip tl-on">{{ icon("globe") }} 已上线 {{ live_count }}</span>
-  <span class="tl-chip tl-repo">{{ icon("code") }} 数据来自 ecosystem.json</span>
-  <a class="btn btn-ghost btn-sm" href="/api/ecosystem/products" target="_blank">数据接口 {{ icon("external") }}</a>
+  <div class="tb-search">
+    {{ icon("search") }}
+    <input id="prodSearch" type="search" placeholder="搜索产品名称 / 编号 / 关键词，如「保险箱」「计时」" autocomplete="off" aria-label="搜索产品">
+    <span class="tb-count" data-fab-avoid aria-live="polite">显示 <b id="prodShown">{{ counts.total }}</b> / {{ counts.total }}</span>
+  </div>
+  <div class="tb-filters" role="group" aria-label="按上线状态筛选产品">
+    <button class="tf-chip is-on" type="button" data-filter="all" aria-pressed="true">全部</button>
+    <button class="tf-chip" type="button" data-filter="live" aria-pressed="false">已上线 {{ counts.live }}</button>
+    <button class="tf-chip" type="button" data-filter="building" aria-pressed="false">筹备中 {{ counts.building }}</button>
+    <button class="tf-chip" type="button" data-filter="pending" aria-pressed="false">需求登记 {{ counts.pending }}</button>
+  </div>
 </div>
-<p class="sort-note">{{ icon("chart") }} <b>排序说明</b>：按「开始使用」点击热度动态排序，产品速览与下方完整卡片共用同一份数据；同一 IP / 同一会话对同一产品 1 小时内只计 1 次；统计的是点击行为，不含页面访问，不采集个人身份信息。没有点击数据的产品按现有顺序与人工权重兜底。</p>
 
-<section class="p-rail-wrap" aria-label="产品图标快捷入口">
-  <div class="p-rail-head">
+<div class="tools-stats">
+  <span class="tl-chip">{{ icon("package") }} 全部 {{ counts.total }}</span>
+  <span class="tl-chip tl-on">{{ icon("globe") }} 已上线 {{ counts.live }}</span>
+  <span class="tl-chip">{{ icon("clock") }} 筹备中 {{ counts.building }}</span>
+  <span class="tl-chip">{{ icon("sparkles") }} 需求登记 {{ counts.pending }}</span>
+  <a class="btn btn-ghost btn-sm" href="/api/products" target="_blank">数据接口 {{ icon("external") }}</a>
+</div>
+
+<details class="sort-help">
+  <summary>{{ icon("chart") }}<span class="sh-title"><b>排序说明：常被打开的产品排在前面</b>，新成员不会被埋没</span></summary>
+  <div class="sh-body">
+    {% if sort_mode == 'heat' %}当前按<b>近 30 天点击热度</b>排序（14 天半衰期加权，当前热度分 {{ sort_score }}）。{% else %}当前为<b>默认顺序</b>（近 30 天热度分不足 {{ heat_min }}，暂不启用热度排序）。{% endif %}
+    编号按当前顺序连续显示（01…{{ products|length }}），卡片锚点仍沿用原编号，已分享的 #p-xx 链接不会失效。
+    产品速览与下方完整卡片共用同一份排序结果；同一 IP / 会话对同一产品 1 小时内只计 1 次，不采集个人身份信息。
+    {% if sort_prefer == 'default' %}<a href="/products">切换到热度排序</a>{% else %}<a href="/products?sort=default">切换到默认顺序</a>{% endif %}
+  </div>
+</details>
+
+<details class="p-rail-wrap" id="pRailWrap">
+  <summary class="p-rail-head">
     <span class="prh-title">{{ icon("grid") }} 产品速览</span>
     <span class="prh-hint">悬停暂停 · 手机可左右滑动 · 点图标跳到完整卡片</span>
-  </div>
+  </summary>
   <div class="p-rail" id="pRail" tabindex="0" role="list" aria-label="产品图标列表，可左右滚动">
     {% for p in products %}
     <a class="rail-item" href="#p-{{ p.no }}" role="listitem" data-no="{{ p.no }}"
@@ -46,17 +71,24 @@
     </a>
     {% endfor %}
   </div>
-</section>
+</details>
 
 <div class="pcard-grid">
   {% for p in products %}
   {% set L = p.links or {} %}
-  <article class="pcard" id="p-{{ p.no }}">
-    <div class="pcard-head">
-      <span class="pcard-badge">{{ p.no }}{% if p.main %} · 主打{% endif %} · {{ p.status }}</span>
+  {% set st = 'live' if p.status == '已上线' else ('pending' if p.status in ('未开发·仅登记需求', '虚位以待') else 'building') %}
+  <article class="pcard" id="p-{{ p.no }}" data-status="{{ st }}">
+    <div class="pcard-head" data-fab-avoid>
+      <span class="pcard-badge">{{ p.seq }}{% if p.main %} · 主打{% endif %} · {{ p.status }}</span>
       <span class="pcard-icon">{{ icon(picon(p.icon), "ic-neon") }}</span>
     </div>
     <h2 class="pcard-name">{{ p.name }}{% if p.en %}<em>{{ p.en }}</em>{% endif %}</h2>
+
+    <div class="tool-ends" aria-label="三端支持">
+      <span class="end {{ 'on' if L.use else '' }}">网页版{{ '可用' if L.use else '暂无' }}</span>
+      <span class="end {{ 'on' if L.pc else '' }}">电脑端{{ '可用' if L.pc else '暂无' }}</span>
+      <span class="end {{ 'on' if L.app else '' }}">手机端{{ '可用' if L.app else '暂无' }}</span>
+    </div>
 
     <dl class="pcard-info">
       <div><dt>简介</dt><dd>{{ p.desc }}</dd></div>
@@ -72,7 +104,7 @@
       <button class="pbtn pbtn-main pbtn-off" type="button" data-act="pcNoEnd" data-arg='["soon"]'>开始使用<em>暂无</em></button>
       {% endif %}
 
-      <button class="pbtn" type="button" data-act="pcIntro" aria-expanded="false" aria-controls="more-{{ p.no }}">产品介绍</button>
+      <a class="pbtn" href="/p/{{ p.no }}">产品介绍</a>
 
       {% if L.pc %}
       <a class="pbtn" href="{{ L.pc }}" target="_blank" rel="noopener">电脑端</a>
@@ -91,7 +123,7 @@
       <div class="pmore-sec">
         <span class="pmore-k">三端支持</span>
         <div class="pmore-ends">
-          {% if L.use %}<a href="{{ L.use }}" target="_blank" rel="noopener">网页版 · 可用</a>{% else %}<span class="poff">网页版 · 暂无</span>{% endif %}
+          {% if L.use %}<a href="{{ L.use }}" target="_blank" rel="noopener">{% if 'wishes' in L.use %}网页版 · 需求登记{% else %}网页版 · 可用{% endif %}</a>{% else %}<span class="poff">网页版 · 暂无</span>{% endif %}
           {% if L.pc %}<a href="{{ L.pc }}" target="_blank" rel="noopener">电脑端 · 可下载</a>{% else %}<span class="poff">电脑端 · 暂无</span>{% endif %}
           {% if L.app %}<a href="{{ L.app }}" target="_blank" rel="noopener">手机端 · 可下载</a>{% else %}<span class="poff">手机端 · 暂无</span>{% endif %}
         </div>
@@ -107,15 +139,79 @@
   {% endfor %}
 </div>
 
+<div class="tool-empty" id="prodEmpty" hidden>
+  <p>没有找到匹配的产品。</p>
+  <p>可以换个关键词，或者清空筛选看看全部 <b>{{ counts.total }}</b> 个数字成员。</p>
+  <button class="btn btn-gold btn-sm" type="button" id="prodReset">清空筛选，看全部</button>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
+/* 产品页搜索 + 状态筛选：与工具清单页同一套交互（隐藏用 hidden 属性，避免内联样式触发 CSP） */
+(function () {
+  var grid = document.querySelector('.pcard-grid');
+  if (!grid) return;
+  var cards = Array.prototype.slice.call(grid.querySelectorAll('.pcard'));
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.tf-chip'));
+  var input = document.getElementById('prodSearch');
+  var shownEl = document.getElementById('prodShown');
+  var emptyEl = document.getElementById('prodEmpty');
+  var filter = 'all', kw = '', prevHit = cards.length, timer = null;
+
+  function sync() {
+    var hit = 0;
+    cards.forEach(function (card) {
+      var ok = true;
+      if (filter !== 'all' && card.getAttribute('data-status') !== filter) ok = false;
+      if (ok && kw && (card.textContent || '').toLowerCase().indexOf(kw) === -1) ok = false;
+      card.hidden = !ok;
+      if (ok) hit++;
+    });
+    if (shownEl) shownEl.textContent = hit;
+    if (emptyEl) emptyEl.hidden = hit !== 0;
+    if (hit === 0 && prevHit !== 0 && emptyEl) emptyEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    prevHit = hit;
+  }
+  input.addEventListener('input', function () {
+    var v = input.value;
+    clearTimeout(timer);
+    timer = setTimeout(function () { kw = (v || '').trim().toLowerCase(); sync(); }, 120);
+  });
+  chips.forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      filter = chip.getAttribute('data-filter');
+      chips.forEach(function (c) {
+        var on = c === chip;
+        c.classList.toggle('is-on', on);
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      sync();
+    });
+  });
+  document.getElementById('prodReset').addEventListener('click', function () {
+    filter = 'all';
+    chips.forEach(function (c) {
+      var on = c.getAttribute('data-filter') === 'all';
+      c.classList.toggle('is-on', on);
+      c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    clearTimeout(timer);
+    input.value = ''; kw = '';
+    sync();
+    input.focus();
+  });
+})();
+
 /* 产品图标轮播：慢速自动滚动（约 26px/s），悬停/聚焦/触摸暂停，手机原生惯性滑动。
    「减少动效」或系统 reduce 下不启动自动轮播；数量随数据源自动变化，不写死 17。 */
 (function(){
   var rail = document.getElementById('pRail');
   if(!rail || !rail.children.length) return;
+  // 产品速览在手机上默认收起（把首屏让给完整卡片），宽屏默认展开；用户点一下可随时切换
+  var fold = document.getElementById('pRailWrap');
+  if (fold && window.innerWidth > 640) fold.open = true;
   var hovering = false, visible = true, dir = 1, last = 0, acc = 0;
 
   function reduceOn(){

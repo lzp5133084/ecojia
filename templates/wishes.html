@@ -2,6 +2,9 @@
 {% from "icon_macro.html" import icon %}
 {% block title %}许愿墙{% endblock %}
 {% block description %}数字生态家园许愿墙：写下你希望上线的新产品或功能，我们逐条评估并公示进展（待评估 / 已纳入规划 / 开发中 / 已上线 / 暂不规划），产品由大家共创。{% endblock %}
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}?v=20261110p6">
+{% endblock %}
 {% block content %}
 
 <section class="page-head">
@@ -104,8 +107,8 @@ async function submitWish(){
 function editWish(id){
   const el = document.getElementById('wc-'+id);
   const old = el.textContent;
-  el.innerHTML = `<textarea rows="3" maxlength="300" style="width:100%">${old.replace(/</g,'&lt;')}</textarea>
-    <div style="margin-top:6px;display:flex;gap:8px">
+  el.innerHTML = `<textarea rows="3" maxlength="300" class="wi-ta">${old.replace(/</g,'&lt;')}</textarea>
+    <div class="wi-taops">
     <button class="btn btn-gold btn-sm" data-act="saveWish" data-arg="[${id}]" data-arg-this="@self">保存</button>
     <button class="btn btn-ghost btn-sm" data-act="loadWishes">取消</button></div>`;
   el.querySelector('textarea').focus();

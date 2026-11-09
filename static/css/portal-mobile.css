@@ -1,0 +1,189 @@
+/* 门户（Flask 模板）移动端补充层：只覆盖门户独有类，复用 eco-mobile.css 的令牌 */
+@media (max-width: 820px) {
+  /* 顶栏：品牌 + 账号一行，导航单行横向滚动（原来是两行换行，顶栏 227px） */
+  header.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 900;
+  }
+  header.topbar .topbar-inner {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    height: auto !important;
+    padding: 8px 0 0 !important;
+  }
+  header.topbar .brand {
+    order: 1;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 8px;
+  }
+  header.topbar .brand .brand-mark {
+    width: 32px;
+    height: 32px;
+  }
+  header.topbar .brand .brand-name {
+    font-size: var(--eco-fs3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  header.topbar .brand .brand-domain {
+    display: none !important;
+  }
+  header.topbar .user-area {
+    order: 2;
+    flex: 0 0 auto;
+    margin-left: auto !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  header.topbar .user-area .btn,
+  header.topbar .user-area .user-chip {
+    min-height: var(--eco-tap);
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    font-size: var(--eco-fs2);
+    white-space: nowrap;
+    max-width: 46vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  header.topbar .nav {
+    order: 3;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    height: var(--eco-tap);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    padding-bottom: 2px;
+  }
+  header.topbar .nav::-webkit-scrollbar {
+    display: none;
+  }
+  header.topbar .nav a {
+    flex: 0 0 auto;
+    min-height: var(--eco-tap);
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px !important;
+    border-radius: var(--eco-r2);
+    font-size: var(--eco-fs2);
+    white-space: nowrap;
+    line-height: 1;
+  }
+  header.topbar .nav a.active {
+    box-shadow: inset 0 0 0 1px rgba(240, 199, 94, 0.35);
+  }
+  header.topbar .topbar-inner > .nav + .user-area {
+    margin-left: auto;
+  }
+
+  /* 工具页侧栏按钮：原来是竖排文字 44×102，且压住内容 */
+  .tool-nav-toggle {
+    width: var(--eco-tap) !important;
+    height: var(--eco-tap) !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0 var(--eco-r2) var(--eco-r2) 0;
+    writing-mode: horizontal-tb !important;
+    font-size: 0 !important;
+  }
+  .tool-nav-toggle .tnt-txt {
+    display: none !important;
+  }
+  .tool-nav-toggle .tnt-ic {
+    width: auto !important;
+    font-size: 18px !important;
+    writing-mode: horizontal-tb !important;
+  }
+  aside.tool-nav {
+    width: min(280px, 82vw) !important;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  aside.tool-nav .tn-list {
+    max-height: calc(100dvh - 160px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 首屏区块：压缩上下留白，标题不裁切 */
+  .page-head {
+    padding: 20px 0 12px !important;
+  }
+  .page-head h1,
+  .hero-title {
+    font-size: var(--eco-fs5) !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0 !important;
+    word-break: break-word;
+  }
+  .hero {
+    padding: 24px 0 20px !important;
+  }
+  .hero-badge {
+    font-size: var(--eco-fs1) !important;
+    line-height: 1.5 !important;
+    text-align: left;
+    white-space: normal !important;
+  }
+  .hero-sub,
+  .page-head p {
+    font-size: var(--eco-fs2) !important;
+    line-height: 1.7 !important;
+  }
+
+  /* 卡片网格：窄屏统一单列，间距收紧 */
+  .product-grid,
+  .tool-grid,
+  .api-grid,
+  .hw-grid,
+  .wish-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* 页脚：逐行排列，不再用竖线挤成一行 */
+  .footer-inner {
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 20px 0 24px;
+  }
+  .footer .foot-info {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    font-size: var(--eco-fs1);
+    line-height: 1.6;
+  }
+  .footer .foot-info i {
+    display: none;
+  }
+  .footer .foot-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    line-height: 1.6;
+  }
+  .footer .motion-pref {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}

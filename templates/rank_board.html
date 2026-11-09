@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+{% block title %}AI 工具榜单 · GitHub 热门项目排行{% if period == 'week' %}（本周）{% endif %}{% endblock %}
+{% block description %}AI 工具榜单与 GitHub 热门项目排行，每小时更新：汇总 GitHub 近 7/30/120 天新项目、Hugging Face 热门模型、Hacker News 热议与 HelloGitHub 等资讯，给出当日与本周排名、星标涨幅、在榜天数与人工点评，可直接跳转项目主页。{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rank.css') }}?v=20261110p6">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"CollectionPage","name":"AI 工具榜单与 GitHub 热门项目排行","url":"https://ecojia.cn/rank","inLanguage":"zh-CN","description":"每小时更新的 AI 工具榜单：GitHub 热门项目、Hugging Face 热门模型、Hacker News 热议与技术资讯，含当日与本周排名、星标涨幅与人工点评。","isPartOf":{"@type":"WebSite","name":"数字生态家园","url":"https://ecojia.cn/"},"dateModified":"{{ day }}","publisher":{"@type":"Organization","name":"军哥懂保","url":"https://ecojia.cn/"}},
+{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"数字生态家园","item":"https://ecojia.cn/"},{"@type":"ListItem","position":2,"name":"AI 动态榜","item":"https://ecojia.cn/rank"}]}{% for b in blocks %}{% if not b.hidden and not b.get('collapsed') and b['items'] %},
+{"@type":"ItemList","name":{{ (b.label ~ (('（本周）' if period == 'week' else '（今日）') if b.key != 'news' else ''))|tojson }},"numberOfItems":{{ b['items']|length }},"itemListOrder":"https://schema.org/ItemListOrderDescending","itemListElement":[
+{% for it in b['items'] %}{"@type":"ListItem","position":{{ loop.index }},"name":{{ it.title|tojson }},"url":{{ it.url|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}]}{% endif %}{% endfor %}
+]}
+</script>
+{% endblock %}
+
+{% block content %}
+{%- macro ic(n) -%}<svg class="rk-ic" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false"><use href="#rk-i-{{ n }}"/></svg>{%- endmacro -%}
+
+{% set LANG_CLASS = {'Python':'py','TypeScript':'ts','JavaScript':'js','Go':'go','Rust':'rust',
+                     'C++':'cpp','C':'cpp','Java':'java','Jupyter Notebook':'nb'} %}
+{% set GATE_TEXT = {'免费直接用':'免费直接用，不花钱也不用申请密钥',
+                    '需自备 API Key':'能免费用，但要先去官方申请一个 API Key',
+                    '需付费订阅':'能免费用一部分，核心功能要订阅',
+                    '需显卡 / 本地算力':'要有独立显卡才能跑，普通笔记本会很慢',
+                    '需注册账号':'免费，但要先注册账号才能用'} %}
+{% set GATE_CLASS = {'免费直接用':'free','需自备 API Key':'key','需付费订阅':'pay',
+                     '需显卡 / 本地算力':'gpu','需注册账号':'acct'} %}
+{% set GATE_ICON = {'免费直接用':'ok','需自备 API Key':'key','需付费订阅':'card',
+                    '需显卡 / 本地算力':'gpu','需注册账号':'user'} %}
+
+<svg class="rk-sprite" aria-hidden="true" focusable="false">
+  <symbol id="rk-i-star" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1.2l1.9 4.1 4.5.6-3.3 3.1.8 4.5L8 11.4 4.1 13.5l.8-4.5L1.6 5.9l4.5-.6z"/></symbol>
+  <symbol id="rk-i-up" viewBox="0 0 16 16"><path fill="currentColor" d="M8 2l5 6H9.8v6H6.2V8H3z"/></symbol>
+  <symbol id="rk-i-cal" viewBox="0 0 16 16"><path fill="currentColor" d="M5 1h1.4v1.5h3.2V1H11v1.5h1.6A1.4 1.4 0 0114 3.9v9.2A1.4 1.4 0 0112.6 14.5H3.4A1.4 1.4 0 012 13.1V3.9A1.4 1.4 0 013.4 2.5H5zM3.4 6.4v6.7h9.2V6.4z"/></symbol>
+  <symbol id="rk-i-chat" viewBox="0 0 16 16"><path fill="currentColor" d="M2 3.2h12v7.1H8.6L5 13.2v-2.9H2z"/></symbol>
+  <symbol id="rk-i-dl" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1.8v6.4l2.4-2.4 1 1L8 11.2 4.6 6.8l1-1L8 8.2V1.8zM2 12h12V14H2z"/></symbol>
+  <symbol id="rk-i-fire" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1.5c2.6 3 4.4 4.5 4.4 7.2A4.4 4.4 0 013.6 8.7c0-1.4.6-2.4 1.6-3.4.1 1 .6 1.6 1.2 1.8-.2-2.2.4-3.8 1.6-5.6z"/></symbol>
+  <symbol id="rk-i-chart" viewBox="0 0 16 16"><path fill="currentColor" d="M2 9.6h2.6V14H2zM6.7 6.4h2.6V14H6.7zM11.4 2.4h2.6V14h-2.6z"/></symbol>
+  <symbol id="rk-i-q" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" d="M7.2 8.1a2.9 2.9 0 015.7.7c0 1.7-2.9 2.1-2.9 3.9"/><circle cx="10" cy="14.7" r="1.05" fill="currentColor"/></symbol>
+  <symbol id="rk-i-down" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M3.2 5.6L8 10.4l4.8-4.8"/></symbol>
+  <symbol id="rk-i-ok" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M3.2 8.4l3.2 3.2 6.4-7"/></symbol>
+  <symbol id="rk-i-key" viewBox="0 0 16 16"><circle cx="5.2" cy="8" r="2.7" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="currentColor" d="M8.1 7.2h5.6v1.6h-1.5v1.7h-1.7V8.8H8.1z"/></symbol>
+  <symbol id="rk-i-card" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.7" d="M2.2 4.4h11.6v7.2H2.2z"/><path fill="currentColor" d="M2.2 6.6h11.6v1.5H2.2z"/></symbol>
+  <symbol id="rk-i-gpu" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.7" d="M3.4 4.2h9.2v7.6H3.4z"/><path fill="currentColor" d="M5.4 6.2h1.9v1.9H5.4zM8.7 6.2h1.9v1.9H8.7z"/></symbol>
+  <symbol id="rk-i-user" viewBox="0 0 16 16"><circle cx="8" cy="5.5" r="2.6" fill="currentColor"/><path fill="currentColor" d="M2.9 13.6c0-2.6 2.4-4.2 5.1-4.2s5.1 1.6 5.1 4.2z"/></symbol>
+</svg>
+
+<div class="rk-wrap">
+
+  <div class="rk-head">
+    <div class="rk-h1group">
+      <div class="rk-eyebrow">热度风向 · 每小时采集</div>
+      <h1 class="rk-title">AI 工具榜单与 GitHub 热门项目排行</h1>
+      <p class="rk-lede">
+        只收 <b>近 7 / 30 / 120 天</b>在 GitHub 冒头的新项目，按 <b>24 小时涨星</b>与新鲜度排先后；
+        模型热度、HN 热议、技术资讯各成一栏。页面只读站内缓存，打开即出，不连外网。
+      </p>
+    </div>
+    <div class="rk-tabs">
+      <a class="rk-tab {% if period != 'week' %}on{% endif %}" href="/rank">今天</a>
+      <a class="rk-tab {% if period == 'week' %}on{% endif %}" href="/rank?period=week">本周</a>
+    </div>
+  </div>
+
+  <dl class="rk-facts">
+    <div class="rk-fact"><dt>数据日</dt><dd>{{ day }}</dd></div>
+    <div class="rk-fact"><dt>最近一次采集</dt><dd>{{ generated_at[5:16] }}</dd></div>
+    <div class="rk-fact"><dt>本期收录</dt><dd>{{ total_items }} 条</dd></div>
+    <div class="rk-fact"><dt>更新节奏</dt><dd>每小时一次</dd></div>
+  </dl>
+
+  {% if weekly %}
+  <section class="rk-week">
+    <div class="rk-whead">
+      <h2 class="rk-wtitle">本周编辑总结</h2>
+      <span class="rk-aibadge">AI 生成</span>
+      {% if weekly.trend %}<span class="rk-wtag">{{ weekly.trend }}</span>{% endif %}
+      <span class="rk-wmeta">据 {{ weekly.sample_n }} 条榜单内容 · {{ weekly.updated_at }} 更新</span>
+    </div>
+    {% for line in weekly.lines %}<p class="rk-wline">{{ line }}</p>{% endfor %}
+    <div class="rk-wfoot">机器生成，非作者原话；只依据本周收录条目的简介与 README 写，不补外部信息。</div>
+  </section>
+  {% endif %}
+
+  <details class="rk-how">
+    <summary>这份榜怎么读</summary>
+    <div>
+      <b>综合分</b>：本站按公开热度指标折算的排序分（GitHub 榜单里当日涨星权重最高，其次总星标、项目新鲜度），仅供排序参考，不是官方排名。<br>
+      <b>24 小时增量</b>：相邻两天星标数的差值，第一次入库当天没有历史，故显示「增量待次日」。<br>
+      <b>在榜 N 天</b>：该项目连续出现在本站榜单的天数，越多说明热度越稳，不是项目年龄。
+    </div>
+  </details>
+
+  {% for b in blocks %}
+    {% if b.hidden %}
+      {# 模型源最新一次采集失败 → 整块不渲染，避免半截空列表 #}
+    {% elif b.collapsed %}
+      <section class="rk-block">
+        <div class="rk-bhead">
+          <h2 class="rk-btitle">{{ b.label }}</h2>
+          <span class="rk-state warn">连续 {{ b.state.fail_streak }} 次采集失败 · 已暂停</span>
+        </div>
+        <div class="rk-collapsed rk-collapsed-gap">
+          该数据源暂时不可用（{{ b.state.err or '接口无响应' }}），已自动折叠，恢复后自动重新展示。
+        </div>
+      </section>
+    {% else %}
+      {% set is_news = (b.key == 'news') %}
+      <section class="rk-block">
+        <div class="rk-bhead">
+          <h2 class="rk-btitle">{{ b.label }}</h2>
+          <span class="rk-bdesc">{{ b.desc }}</span>
+          {% if b.state.state == 'delayed' %}
+            <span class="rk-state warn">延迟约 {{ b.state.hours }} 小时 · 展示上次成功结果</span>
+          {% elif b.state.state == 'ok' and b.state.last_ok %}
+            <span class="rk-state">更新于 {{ b.state.last_ok[5:16] }}</span>
+          {% endif %}
+          {% if b.key == 'hf' %}
+            <span class="rk-state">经国内镜像 hf-mirror.com 获取</span>
+          {% endif %}
+        </div>
+
+        {% if b['items'] %}
+        <div class="rk-list">
+          {% for it in b['items'] %}
+          {% set m = it.metric %}
+          {% set stars = m.get('stars') or 0 %}
+          {% set delta = m.get('stars_delta') %}
+          {% set pct = (delta * 100.0 / stars) if (delta and stars) else 0 %}
+          {% set w = (pct * 10) if pct else 0 %}
+          {% set w = 100 if w > 100 else (4 if w < 4 else w) %}
+          {% set rank = 0 if is_news else loop.index %}
+          {% set ai = it.ai %}
+          {% set terms = ai.terms if ai and ai.terms else [] %}
+          <article class="rk-card{% if is_news %} rk-news{% elif rank == 1 %} rk-1{% elif rank == 2 %} rk-2{% elif rank == 3 %} rk-3{% endif %}">
+
+            {% if not is_news %}
+            <div class="rk-medal">
+              <span class="rk-num">{{ '%02d' % rank }}</span>
+              {% if rank == 1 %}<span class="rk-tag">{{ '本周榜首' if period == 'week' else '今日榜首' }}</span>{% endif %}
+            </div>
+            {% endif %}
+
+            <div class="rk-main">
+              <div class="rk-line1">
+                <a class="rk-name" href="{{ it.url }}" target="_blank" rel="nofollow noopener">{{ it.title }}</a>
+                {% if it.lang %}<span class="rk-lang {{ LANG_CLASS.get(it.lang, '') }}">{{ it.lang }}</span>{% endif %}
+                {% if ai and ai.oss and ai.oss.hit %}<span class="rk-oss" title="开源项目 · README 标注 {{ ai.oss.kw|join(' / ') }}（只说明能看源码、能改，不代表免费使用）">开源</span>{% endif %}
+              </div>
+
+              {% if ai and ai.access and ai.access.labels %}
+              <div class="rk-gate">
+                {% for lab in ai.access.labels %}
+                <span class="rk-gate-pill {{ GATE_CLASS.get(lab, 'free') }}" title="{{ lab }}（依 README 判定）">
+                  {{ ic(GATE_ICON.get(lab, 'ok')) }}<span>{{ GATE_TEXT.get(lab, lab) }}</span>
+                </span>
+                {% endfor %}
+              </div>
+              {% endif %}
+
+              {% if terms %}
+              <div class="rk-terms" hidden>
+                <div class="rk-tbar">
+                  <span class="rk-aibadge">AI 术语解释</span>
+                  <span class="rk-aihint">按本项目 README 生成 · 写给不懂技术的人</span>
+                  <button class="rk-tclose" type="button" data-rk-tclose>收起</button>
+                </div>
+                <dl class="rk-tlist">
+                  {% for t in terms %}
+                  <div class="rk-trow"><dt>{{ t.term }}</dt><dd>{{ t.plain }}</dd></div>
+                  {% endfor %}
+                </dl>
+              </div>
+              {% endif %}
+
+              {% if it.summary and not it.summary_cn %}<p class="rk-orig">{{ it.summary }}</p>{% endif %}
+              {% if ai and ai.summary_zh %}
+                <p class="rk-zh">{{ ai.summary_zh }}</p>
+              {% endif %}
+
+              <div class="rk-metrics">
+                {% if stars %}
+                  <span class="rk-m">{{ ic('star') }}<b>{{ '{:,}'.format(stars) }}</b><u>总星标</u></span>
+                {% endif %}
+                {% if delta %}
+                  <span class="rk-m up">{{ ic('up') }}<b>+{{ '{:,}'.format(delta) }}</b><u>24 小时</u></span>
+                {% elif stars %}
+                  <span class="rk-m">{{ ic('up') }}<b>—</b><u>增量待次日</u></span>
+                {% endif %}
+                {% if m.get('trending') %}
+                  <span class="rk-m hot">{{ ic('fire') }}<b>{{ m.get('trending') }}</b><u>trending 分</u></span>
+                {% endif %}
+                {% if m.get('points') %}
+                  <span class="rk-m hot">{{ ic('chart') }}<b>{{ m.get('points') }}</b><u>HN 分</u></span>
+                {% endif %}
+                {% if m.get('comments') %}
+                  <span class="rk-m">{{ ic('chat') }}<b>{{ m.get('comments') }}</b><u>评论</u></span>
+                {% endif %}
+                {% if m.get('downloads') %}
+                  <span class="rk-m">{{ ic('dl') }}<b>{{ '{:,}'.format(m.get('downloads')) }}</b><u>下载</u></span>
+                {% endif %}
+                {% if it.days_on_board %}
+                  <span class="rk-m">{{ ic('cal') }}<b>{{ it.days_on_board }}</b><u>天在榜</u></span>
+                {% endif %}
+                {% if period == 'week' and it.days_in_week %}
+                  <span class="rk-m">{{ ic('cal') }}<b>{{ it.days_in_week }}</b><u>天本周上榜</u></span>
+                {% endif %}
+                {% if not is_news and it.score %}
+                  <span class="rk-m"><b>{{ it.score }}</b><u>本站综合分</u></span>
+                {% endif %}
+              </div>
+
+              {% if delta and stars and pct %}
+              <div class="rk-pace">
+                <div class="rk-bar"><i data-w="{{ '%.0f'|format(w) }}"></i></div>
+                <span>今日新增星标占总量 {{ ('%.1f'|format(pct)) if pct >= 0.1 else '<0.1' }}%</span>
+              </div>
+              {% endif %}
+
+              {% if ai and ai.state == 'ok' and (ai.purpose_zh or ai.fit_zh) %}
+              <div class="rk-ai">
+                <div class="rk-aibar"><span class="rk-aibadge">AI 摘要</span><span class="rk-aihint">据项目 README 生成，非作者原话</span></div>
+                {% if ai.purpose_zh %}
+                  <p class="rk-use"><span class="k">这玩意儿能干什么</span>{{ ai.purpose_zh }}</p>
+                {% endif %}
+                {% if ai.fit_zh %}
+                  <p class="rk-use"><span class="k">什么情况下值得用</span>{{ ai.fit_zh }}</p>
+                {% endif %}
+                {% if ai.env or ai.scene %}
+                <div class="rk-envrow">
+                  {% for e in ai.env %}<span class="rk-env">{{ e }}</span>{% endfor %}
+                  {% if ai.scene %}<span class="rk-env scene">典型场景 · {{ ai.scene }}</span>{% endif %}
+                </div>
+                {% endif %}
+              </div>
+              {% elif ai and ai.summary_zh %}
+              <div class="rk-aibar solo"><span class="rk-aibadge">AI 翻译</span><span class="rk-aihint">项目 README 内容太少，只做翻译</span></div>
+              {% endif %}
+
+              {% if ai and ai.howto %}
+              <div class="rk-howwrap">
+                <button class="rk-howbtn" type="button" data-rk-howto aria-expanded="false">
+                  <svg class="rk-chev" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false"><use href="#rk-i-down"/></svg>
+                  <span class="rk-howlabel">怎么用 · {{ ai.howto|length }} 步上手</span>
+                  <span class="rk-howtag">AI 整理</span>
+                </button>
+                <div class="rk-howto" hidden>
+                  <ol class="rk-steps">
+                    {% for st in ai.howto %}
+                    <li>
+                      <span class="rk-snum">{{ loop.index }}</span>
+                      <div class="rk-sbody">
+                        <b>{{ st.s }}</b>
+                        <span>{% set parts = st.d.split('`') %}{% for part in parts %}{% if loop.index0 % 2 %}<code>{{ part }}</code>{% else %}{{ part }}{% endif %}{% endfor %}</span>
+                      </div>
+                    </li>
+                    {% endfor %}
+                  </ol>
+                  <div class="rk-howfoot">按该项目 README 整理的步骤，AI 生成；命令以仓库当前说明为准。</div>
+                </div>
+              </div>
+              {% endif %}
+
+              {% if it.note %}
+              <div class="rk-note">
+                <div class="rk-nlabel">编辑点评 <em>人工撰写</em></div>
+                <div class="rk-ntext">
+                  {% if it.note.get('why') %}<p><span class="k">解决什么：</span>{{ it.note.get('why') }}</p>{% endif %}
+                  {% if it.note.get('fit') %}<p><span class="k">值不值得上手：</span>{{ it.note.get('fit') }}</p>{% endif %}
+                </div>
+                {% if it.note.get('site_url') %}
+                  <a class="rk-site" href="{{ it.note.get('site_url') }}">站内相关：{{ it.note.get('site_name') or '查看' }} →</a>
+                {% endif %}
+              </div>
+              {% endif %}
+
+              {% if is_news %}
+              <div class="rk-nmeta">
+                <span class="rk-src">{{ b.label }}</span>
+                {% if m.get('published') %}<span>{{ m.get('published')[:16] }}</span>{% endif %}
+              </div>
+              {% endif %}
+
+              <div class="rk-acts">
+                <a class="rk-btn prim" href="{{ it.url }}" target="_blank" rel="nofollow noopener">
+                  {% if is_news %}打开原文{% elif b.key == 'hf' %}打开模型主页{% else %}打开仓库{% endif %}
+                </a>
+                {% if b.key == 'github' or b.key == 'hf' %}
+                  <button class="rk-btn" type="button" data-rk-toggle aria-expanded="false">
+                    {{ '下载 / 使用' if b.key == 'hf' else '获取 / 安装' }}
+                  </button>
+                {% endif %}
+              </div>
+
+              {% if b.key == 'github' %}
+              <div class="rk-get" hidden>
+                <div class="rk-cmd">
+                  <code>git clone https://github.com/{{ it.ext_id }}.git</code>
+                  <button type="button" data-rk-copy="git clone https://github.com/{{ it.ext_id }}.git">复制</button>
+                </div>
+                <div class="rk-getlinks">
+                  <a href="{{ it.url }}/releases" target="_blank" rel="nofollow noopener">Release 下载页</a>
+                  <a href="{{ it.url }}/archive/refs/heads/main.zip" target="_blank" rel="nofollow noopener">ZIP 源码包</a>
+                  <span>命令需到终端手动执行；本站只给入口，不代下载、不会自动安装。</span>
+                </div>
+              </div>
+              {% elif b.key == 'hf' %}
+              <div class="rk-get" hidden>
+                <div class="rk-cmd">
+                  <code>huggingface-cli download {{ it.ext_id }}</code>
+                  <button type="button" data-rk-copy="huggingface-cli download {{ it.ext_id }}">复制</button>
+                </div>
+                <div class="rk-getlinks">
+                  <a href="https://hf-mirror.com/{{ it.ext_id }}/tree/main" target="_blank" rel="nofollow noopener">模型文件列表</a>
+                  <span>需先 pip 安装 huggingface_hub；本站不代下载。</span>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+
+            {% if not is_news %}
+            <div class="rk-aside">
+              {% if terms %}
+              <button class="rk-q" type="button" data-rk-terms aria-expanded="false"
+                      title="看不懂里面的词？点这里看大白话解释" aria-label="术语解释（AI 生成）">
+                <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" focusable="false"><use href="#rk-i-q"/></svg>
+              </button>
+              {% endif %}
+            </div>
+            {% endif %}
+          </article>
+          {% endfor %}
+        </div>
+        {% else %}
+          <div class="rk-empty">该板块暂无数据，下一轮采集后自动出现。</div>
+        {% endif %}
+      </section>
+    {% endif %}
+  {% endfor %}
+
+  <div class="rk-foot">
+    <div>
+      数据来源：GitHub REST API · Hugging Face（经 hf-mirror.com 镜像）· Hacker News（Algolia）·
+      HelloGitHub / 少数派 / 量子位 / InfoQ 官方 RSS。此处仅展示标题、简介与链接等元数据，版权归原作者所有。
+      排行依据为公开热度指标（星标、trendingScore、分数与评论数），每小时采集一次并写入站内缓存，
+      页面只读缓存、不实时请求外部站点。点评为本站编辑部人工撰写。
+    </div>
+    <div class="rk-foot-note">
+      采集异常时保留上次成功数据并标注延迟；连续三次失败自动折叠。作者：军哥懂保（微信 xunijiayuan）·
+      只读接口：<a href="/api/rank">/api/rank</a> · 本次生成耗时 {{ elapsed_ms }} ms
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  /* 进度条宽度原为内联 style，CSP 下改用 CSSOM 赋值，语义不变 */
+  document.querySelectorAll('.rk-bar i[data-w]').forEach(function (el) {
+    var w = parseFloat(el.getAttribute('data-w'));
+    el.style.width = (isNaN(w) ? 0 : w) + '%';
+  });
+  function fallbackCopy(t, done) {
+    var ta = document.createElement('textarea');
+    ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    ta.parentNode.removeChild(ta); done();
+  }
+  document.querySelectorAll('[data-rk-toggle]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var card = b.closest('.rk-card');
+      var box = card && card.querySelector('.rk-get');
+      if (!box) { return; }
+      box.hidden = !box.hidden;
+      b.setAttribute('aria-expanded', box.hidden ? 'false' : 'true');
+      b.classList.toggle('on', !box.hidden);
+    });
+  });
+  document.querySelectorAll('[data-rk-howto]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var card = b.closest('.rk-card');
+      var box = card && card.querySelector('.rk-howto');
+      if (!box) { return; }
+      box.hidden = !box.hidden;
+      b.setAttribute('aria-expanded', box.hidden ? 'false' : 'true');
+      b.classList.toggle('on', !box.hidden);
+    });
+  });
+  document.querySelectorAll('[data-rk-terms]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var card = b.closest('.rk-card');
+      var box = card && card.querySelector('.rk-terms');
+      if (!box) { return; }
+      box.hidden = !box.hidden;
+      b.setAttribute('aria-expanded', box.hidden ? 'false' : 'true');
+      b.classList.toggle('on', !box.hidden);
+    });
+  });
+  document.querySelectorAll('[data-rk-tclose]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var card = b.closest('.rk-card');
+      var box = card && card.querySelector('.rk-terms');
+      var q = card && card.querySelector('[data-rk-terms]');
+      if (!box) { return; }
+      box.hidden = true;
+      if (q) { q.setAttribute('aria-expanded', 'false'); q.classList.remove('on'); }
+    });
+  });
+  document.querySelectorAll('[data-rk-copy]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = b.getAttribute('data-rk-copy');
+      var done = function () {
+        var o = b.textContent; b.textContent = '已复制';
+        setTimeout(function () { b.textContent = o; }, 1400);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t).then(done, function () { fallbackCopy(t, done); });
+      } else {
+        fallbackCopy(t, done);
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

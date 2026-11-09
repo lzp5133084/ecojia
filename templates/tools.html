@@ -1,15 +1,16 @@
 {% extends "base.html" %}
 {% from "icon_macro.html" import icon %}
 {% block title %}工具清单{% endblock %}
-{% block description %}数字生态家园工具清单：{{ total }} 款自研工具的使用说明、运行方式、端口与源码入口，含数字保险箱、悬浮计时器、鼠标画笔、多码集、局域网快传、理赔资料助手等，可按编号速查并直接跳转下载。{% endblock %}
+{% block description %}数字生态家园工具清单：{{ total }} 款自研工具的使用说明、运行方式、端口与源码入口，含数字保险箱、悬浮计时器、鼠标画笔、多码集、局域网快传、理赔资料助手等，可按可用端筛选、按编号速查并直接跳转下载。{% endblock %}
 {% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}?v=20261109t1">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[
 {"@type":"CollectionPage","name":"工具清单","url":"https://ecojia.cn/tools","inLanguage":"zh-CN","description":"{{ total }} 款自研工具的使用说明、运行方式与入口，按「开始使用」点击热度排序。"},
 {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"数字生态家园","item":"https://ecojia.cn/"},{"@type":"ListItem","position":2,"name":"工具清单","item":"https://ecojia.cn/tools"}]},
 {"@type":"ItemList","numberOfItems":{{ tools|length }},"itemListElement":[
 {% for t in tools %}{"@type":"ListItem","position":{{ loop.index }},"name":{{ t.name|tojson }},"url":{{ (t.url or ('https://ecojia.cn/tools#tool-' ~ t.no))|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}]},
 {"@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"工具清单按什么排序？","acceptedAnswer":{"@type":"Answer","text":"按「开始使用」按钮的点击热度降序；同一 IP 或同一会话对同一工具 1 小时内只计 1 次，统计不含页面访问，也不采集个人身份信息。"}},
+{"@type":"Question","name":"工具清单按什么排序？","acceptedAnswer":{"@type":"Answer","text":"默认按数据源顺序展示；近 30 天「开始使用」点击热度达到阈值后，按 14 天半衰期加权的热度降序排列。同一 IP 或会话对同一工具 1 小时内只计 1 次，统计不含页面访问，也不采集个人身份信息。"}},
 {"@type":"Question","name":"这些工具需要安装吗？","acceptedAnswer":{"@type":"Answer","text":"绝大多数是网页版，点「开始使用」即可在浏览器打开，无需安装；部分工具另外提供电脑端或手机端。"}},
 {"@type":"Question","name":"没有点击数据的新工具会排在最后吗？","acceptedAnswer":{"@type":"Answer","text":"不会。没有点击数据时按人工权重与现有顺序兜底，新工具可以正常获得展示位置。"}}]}
 ]}</script>
@@ -17,7 +18,7 @@
 {% block content %}
 
 <!-- 左侧工具速查栏（可拉出/收起） -->
-<button id="toolNavToggle" class="tool-nav-toggle" type="button" aria-label="打开工具列表">
+<button id="toolNavToggle" class="tool-nav-toggle" type="button" aria-label="打开工具列表" aria-expanded="false">
   <span class="tnt-ic">{{ icon("grid") }}</span><span class="tnt-txt">工具列表</span>
 </button>
 <div id="toolNavMask" class="tool-nav-mask"></div>
@@ -26,7 +27,7 @@
     <h2>工具速查</h2>
     <button id="toolNavClose" class="tn-close" type="button" aria-label="收起列表">{{ icon("xmark") }}</button>
   </div>
-  <input id="toolSearch" class="tn-search" type="search" placeholder="搜索名称 / 编号 / 关键词…" autocomplete="off">
+  <input id="toolSearch" class="tn-search" type="search" placeholder="搜索名称 / 编号 / 关键词…" autocomplete="off" aria-label="在速查列表内搜索工具">
   <div class="tn-count">匹配 <b id="tnMatch">{{ total }}</b> / {{ total }} 个工具</div>
   <ul class="tn-list" id="toolNavList">
     {% for t in tools %}
@@ -34,7 +35,7 @@
     <li>
       <a href="#tool-{{ t.no }}" class="tn-item" data-no="{{ t.no }}" data-name="{{ t.name }} {{ t.en }}">
         <span class="tn-dot tn-{{ 'on' if on else 'plan' }}"></span>
-        <span class="tn-no">{{ t.no }}</span>
+        <span class="tn-no">{{ t.seq }}</span>
         <span class="tn-name">{{ t.name }}</span>
       </a>
     </li>
@@ -45,28 +46,69 @@
 
 <section class="page-head tools-hero">
   <h1>{{ icon("grid") }}工具清单与使用说明</h1>
-  <p>这里汇总了生态内全部可用的工具（含电脑端程序与网页工具）。
-  共 <b>{{ total }}</b> 个工具，其中 <b>{{ online }}</b> 个可直接在线打开。
-  数据由生态底座 ecosystem.json 统一维护，一处更新全站生效。</p>
+  <p>生态内全部工具，含网页版、电脑端与手机端。共 <b>{{ total }}</b> 个工具，其中 <b>{{ online }}</b> 个可直接在线打开。
+  站外新项目请到每小时更新的 <a href="/rank">AI 动态榜</a> 查看。</p>
 </section>
 
-<div class="tools-bar">
+<div class="tools-stats">
   <span class="tl-chip">{{ icon("package") }} 全部 {{ total }}</span>
-  <span class="tl-chip tl-on">{{ icon("globe") }} 可直接访问 {{ online }}</span>
-  <span class="tl-chip tl-repo">{{ icon("code") }} 源码托管 GitHub</span>
-  <a class="btn btn-ghost btn-sm" href="/api/tools" target="_blank">数据接口 {{ icon("external") }}</a>
+  <span class="tl-chip tl-on">{{ icon("globe") }} 可直接打开 {{ online }}</span>
+  <a class="btn btn-ghost btn-sm" href="/api/tools" target="_blank" rel="noopener" title="给开发者使用的 JSON 数据接口">数据接口 {{ icon("external") }}</a>
 </div>
-<p class="sort-note">{{ icon("chart") }} <b>排序说明</b>：按「开始使用」点击热度动态排序，左侧速查与右侧卡片共用同一份数据；同一 IP / 同一会话对同一工具 1 小时内只计 1 次；统计的是点击行为，不含页面访问，不采集个人身份信息。没有点击数据的工具按现有顺序与人工权重兜底，不会永远垫底。</p>
 
-<div class="tool-grid">
+<div class="tools-bar">
+  <div class="tb-search">
+    {{ icon("search") }}
+    <input id="toolSearchTop" type="search" placeholder="搜索工具名称 / 编号 / 关键词，如「计时」「二维码」" autocomplete="off" aria-label="搜索工具">
+    <span class="tb-count" data-fab-avoid aria-live="polite">显示 <b id="tbShown">{{ total }}</b> / {{ total }}</span>
+  </div>
+  <div class="tb-filters" role="group" aria-label="按可用端筛选工具">
+    <button class="tf-chip is-on" type="button" data-filter="all" aria-pressed="true">全部</button>
+    <button class="tf-chip" type="button" data-filter="web" aria-pressed="false">网页可用</button>
+    <button class="tf-chip" type="button" data-filter="pc" aria-pressed="false">有电脑端</button>
+    <button class="tf-chip" type="button" data-filter="app" aria-pressed="false">有手机端</button>
+  </div>
+</div>
+
+<details class="sort-help">
+  <summary>{{ icon("chart") }}<span class="sh-title"><b>排序说明：常被打开的工具排在前面</b>，新工具不会被埋没</span></summary>
+  <div class="sh-body">
+    {% if sort_mode == 'heat' %}现在按「最近 30 天被点开多少次」从多到少排，越近的点击分量越重（当前热度分 <b>{{ sort_score }}</b>）。{% else %}现在用<b>默认顺序</b>（近 30 天热度还不到 {{ heat_min }}，先不按热度打乱顺序）。{% endif %}
+    同一个人对同一个工具 1 小时内只算 1 次；这些点击只用来排序，不记录个人信息。
+    编号 T01…T{{ total }} 按当前顺序连续显示，卡片地址仍沿用原编号，已分享的 #tool-xx 链接不会失效。
+    {% if sort_prefer == 'default' %}<a href="/tools">切换为热度排序</a>{% else %}<a href="/tools?sort=default">切换为默认顺序</a>{% endif %}
+  </div>
+</details>
+
+<div class="tool-grid" id="toolGrid">
   {% for t in tools %}
   {% set cls = 'live' if ('可访问' in t.status or '已上线' in t.status or '已运行' in t.status) else 'plan' %}
-  <div class="tool-card" id="tool-{{ t.no }}">
-    <div class="tool-top">
-      <span class="tool-no">{{ t.no }}</span>
-      <span class="p-status s-{{ cls }}">{{ t.status }}</span>
+  {% set has_web = t.url %}
+  {% set has_pc = (t.links.pc if t.links else '') %}
+  {% set has_app = (t.links.app if t.links else '') %}
+  {% set kb = t.size_kb or 0 %}
+  {% set size_txt = ('%.1f MB' % (kb / 1024.0)) if kb >= 1024 else ((kb|int|string) ~ ' KB' if kb else '未统计') %}
+  <div class="tool-card" id="tool-{{ t.no }}"
+       data-web="{{ '1' if has_web else '0' }}"
+       data-pc="{{ '1' if has_pc else '0' }}"
+       data-app="{{ '1' if has_app else '0' }}">
+    <div class="tool-top" data-fab-avoid>
+      <span class="tool-no">{{ t.seq }}</span>
+      <span class="p-status s-{{ cls }}" title="{{ t.status }}">{{ '已上线' if cls == 'live' else t.status }}</span>
     </div>
     <h3 class="tool-name">{{ t.name }}{% if t.en %}<em class="tool-en">{{ t.en }}</em>{% endif %}</h3>
+
+    <div class="tool-facts">
+      <span>{{ icon("clock") }} 更新 {{ t.updated }}</span>
+      <span>{{ icon("disk") }} {{ size_txt }}</span>
+      {% if t.port %}<span>{{ icon("plug") }} 端口 {{ t.port }}</span>{% endif %}
+    </div>
+
+    <div class="tool-ends" aria-label="可用端">
+      <span class="end {{ 'on' if has_web else '' }}">网页版{{ '可用' if has_web else '暂无' }}</span>
+      <span class="end {{ 'on' if has_pc else '' }}">电脑端{{ '可用' if has_pc else '暂无' }}</span>
+      <span class="end {{ 'on' if has_app else '' }}">手机端{{ '可用' if has_app else '暂无' }}</span>
+    </div>
 
     <dl class="pcard-info tinfo">
       <div><dt>简介</dt><dd>{{ t.desc }}</dd></div>
@@ -82,13 +124,13 @@
       <button class="pbtn pbtn-main pbtn-off" type="button" data-act="pcNoEnd" data-arg='["soon"]'>开始使用<em>暂无</em></button>
       {% endif %}
       <button class="pbtn" type="button" data-act="pcIntro" aria-expanded="false" aria-controls="tmore-{{ t.no }}">产品介绍</button>
-      {% if t.links and t.links.pc %}
-      <a class="pbtn" href="{{ t.links.pc }}" target="_blank" rel="noopener">电脑端</a>
+      {% if has_pc %}
+      <a class="pbtn" href="{{ has_pc }}" target="_blank" rel="noopener">电脑端</a>
       {% else %}
       <button class="pbtn pbtn-off" type="button" data-act="pcNoEnd" data-arg='["pc"]'>电脑端<em>暂无</em></button>
       {% endif %}
-      {% if t.links and t.links.app %}
-      <a class="pbtn" href="{{ t.links.app }}" target="_blank" rel="noopener">手机端</a>
+      {% if has_app %}
+      <a class="pbtn" href="{{ has_app }}" target="_blank" rel="noopener">手机端</a>
       {% else %}
       <button class="pbtn pbtn-off" type="button" data-act="pcNoEnd" data-arg='["app"]'>手机端<em>暂无</em></button>
       {% endif %}
@@ -103,12 +145,18 @@
         <span class="pmore-k">技术信息</span>
         <div class="pmore-meta">
           <span>{{ icon("package") }} {{ t.type }}</span>
-          <span>{{ icon("clock") }} {{ t.updated }}</span>
-          <span>{{ icon("disk") }} {{ t.size_kb }} KB</span>
+          <span>{{ icon("clock") }} 更新于 {{ t.updated }}</span>
+          <span>{{ icon("disk") }} {{ size_txt }}</span>
           {% if t.port %}<span>{{ icon("plug") }} 端口 {{ t.port }}</span>{% endif %}
+          <span>状态 {{ t.status }}</span>
         </div>
       </div>
       {% if t.note %}<p class="tool-note">{{ icon("alert") }} {{ t.note }}</p>{% endif %}
+      <div class="pmore-author">
+        <span>作者：军哥懂保</span>
+        <span>微信：xunijiayuan</span>
+        <span>遇到问题可在 <a href="/contact">联系我们</a> 留言</span>
+      </div>
       <div class="pmore-ends">
         {% if t.repo %}<a href="https://github.com/lzp5133084/{{ t.repo }}" target="_blank" rel="noopener">源码仓库</a>{% endif %}
         {% if t.url %}<a href="{{ t.url }}" target="_blank" rel="noopener">打开工具</a>{% endif %}
@@ -118,72 +166,116 @@
   {% endfor %}
 </div>
 
+<div class="tool-empty" id="toolEmpty" hidden>
+  <p>没有找到匹配的工具。</p>
+  <p>可以换个关键词，或者清空筛选看看全部 <b>{{ total }}</b> 个工具。</p>
+  <button class="btn btn-gold btn-sm" type="button" id="toolReset">清空筛选，看全部</button>
+</div>
+
 <script>
 (function () {
-  var nav = document.getElementById('toolNav');
-  var toggle = document.getElementById('toolNavToggle');
-  var closeBtn = document.getElementById('toolNavClose');
-  var mask = document.getElementById('toolNavMask');
-  var search = document.getElementById('toolSearch');
-  var list = document.getElementById('toolNavList');
-  var matchEl = document.getElementById('tnMatch');
-  var emptyEl = document.getElementById('tnEmpty');
+  var $ = function (id) { return document.getElementById(id); };
+  var nav = $('toolNav'), toggle = $('toolNavToggle'), closeBtn = $('toolNavClose'), mask = $('toolNavMask');
+  var searchTop = $('toolSearchTop'), searchNav = $('toolSearch');
+  var shownEl = $('tbShown'), tnMatch = $('tnMatch'), emptyEl = $('toolEmpty'), tnEmpty = $('tnEmpty');
+  var grid = $('toolGrid');
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.tool-card'));
+  var items = Array.prototype.slice.call(document.querySelectorAll('#toolNavList .tn-item'));
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.tf-chip'));
 
   function openNav() {
-    nav.classList.add('open');
-    mask.classList.add('show');
-    toggle.classList.add('hidden');
-    setTimeout(function () { search.focus(); }, 250);
+    nav.classList.add('open'); mask.classList.add('show');
+    toggle.classList.add('hidden'); toggle.setAttribute('aria-expanded', 'true');
+    setTimeout(function () { searchNav.focus(); }, 250);
   }
   function closeNav() {
-    nav.classList.remove('open');
-    mask.classList.remove('show');
-    toggle.classList.remove('hidden');
+    nav.classList.remove('open'); mask.classList.remove('show');
+    toggle.classList.remove('hidden'); toggle.setAttribute('aria-expanded', 'false');
   }
   toggle.addEventListener('click', openNav);
   closeBtn.addEventListener('click', closeNav);
   mask.addEventListener('click', closeNav);
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeNav();
-  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNav(); });
 
-  /* 搜索：同时过滤左侧列表与右侧卡片 */
-  var cards = Array.prototype.slice.call(document.querySelectorAll('.tool-card'));
-  var items = Array.prototype.slice.call(list.querySelectorAll('.tn-item'));
-  var total = cards.length;
-
-  function applyFilter(kw) {
-    kw = kw.trim().toLowerCase();
+  var filter = 'all', kw = '';
+  var prevHit = cards.length;
+  function sync() {
     var hit = 0;
     cards.forEach(function (card) {
-      var text = (card.textContent || '').toLowerCase();
-      var ok = !kw || text.indexOf(kw) !== -1;
-      card.style.display = ok ? '' : 'none';
+      var ok = true;
+      if (filter === 'web' && card.getAttribute('data-web') !== '1') ok = false;
+      if (filter === 'pc' && card.getAttribute('data-pc') !== '1') ok = false;
+      if (filter === 'app' && card.getAttribute('data-app') !== '1') ok = false;
+      if (ok && kw && (card.textContent || '').toLowerCase().indexOf(kw) === -1) ok = false;
+      card.hidden = !ok;
       if (ok) hit++;
     });
-    items.forEach(function (item) {
-      var text = (item.getAttribute('data-no') + ' ' + item.getAttribute('data-name') + ' ' + (item.textContent || '')).toLowerCase();
-      var ok = !kw || text.indexOf(kw) !== -1;
-      item.parentElement.style.display = ok ? '' : 'none';
+    items.forEach(function (it) {
+      var card = document.getElementById('tool-' + it.getAttribute('data-no'));
+      it.parentElement.hidden = card ? card.hidden : false;
     });
-    matchEl.textContent = hit;
+    shownEl.textContent = hit;
+    tnMatch.textContent = hit;
     emptyEl.hidden = hit !== 0;
+    tnEmpty.hidden = hit !== 0;
+    /* 小屏上无结果时把空状态（含「清空筛选」按钮）滚进视口，避免按钮落在屏幕外 */
+    if (hit === 0 && prevHit !== 0) emptyEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    prevHit = hit;
   }
-  search.addEventListener('input', function () { applyFilter(search.value); });
+  function setKw(v) {
+    kw = (v || '').trim().toLowerCase();
+    if (searchTop.value !== v) searchTop.value = v;
+    if (searchNav.value !== v) searchNav.value = v;
+    sync();
+  }
+  var timer = null;
+  function onInput(e) {
+    var v = e.target.value;
+    clearTimeout(timer);
+    timer = setTimeout(function () { setKw(v); }, 120);
+  }
+  searchTop.addEventListener('input', onInput);
+  searchNav.addEventListener('input', onInput);
 
-  /* 点击列表项：滚动定位 + 高亮闪烁 */
-  list.addEventListener('click', function (e) {
+  chips.forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      filter = chip.getAttribute('data-filter');
+      chips.forEach(function (c) {
+        var on = c === chip;
+        c.classList.toggle('is-on', on);
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      sync();
+      if (kw === '') grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  function resetAll() {
+    filter = 'all';
+    chips.forEach(function (c) {
+      var on = c.getAttribute('data-filter') === 'all';
+      c.classList.toggle('is-on', on);
+      c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    clearTimeout(timer);
+    setKw('');
+    searchTop.focus();
+  }
+  $('toolReset').addEventListener('click', resetAll);
+
+  /* 点击速查列表项：滚动定位 + 高亮闪烁 */
+  document.getElementById('toolNavList').addEventListener('click', function (e) {
     var a = e.target.closest('a.tn-item');
     if (!a) return;
     e.preventDefault();
     var card = document.getElementById('tool-' + a.getAttribute('data-no'));
     if (!card) return;
-    if (card.style.display === 'none') { /* 被过滤掉的卡片先恢复 */ search.value = ''; applyFilter(''); }
+    if (card.hidden) resetAll();
     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
     card.classList.remove('flash');
-    void card.offsetWidth; /* 重启动画 */
+    void card.offsetWidth;
     card.classList.add('flash');
-    if (window.innerWidth < 900) closeNav(); /* 窄屏自动收起 */
+    if (window.innerWidth < 900) closeNav();
   });
 })();
 </script>

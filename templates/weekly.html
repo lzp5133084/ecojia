@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block title %}{% if empty %}本周速报{% else %}本周速报 第 {{ seq }} 期 · {{ week_label }}{% endif %}{% endblock %}
+{% block description %}{% if empty %}数字生态家园本周速报：每周一期，记录站内新上线的工具与页面、改了什么、修了什么，以及榜单热点和下周计划。{% else %}{{ lede }}{% endif %}{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/weekly.css') }}?v=20261110p4">
+{% if not empty %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"Article","headline":{{ ('本周速报 第 %d 期：'|format(seq) ~ week_label)|tojson }},"description":{{ lede|tojson }},"inLanguage":"zh-CN","url":"https://ecojia.cn/weekly/{{ issue }}","datePublished":"{{ week_end }}","dateModified":"{{ updated_at[:10] }}","author":{"@type":"Person","name":"军哥懂保"},"publisher":{"@type":"Organization","name":"数字生态家园","url":"https://ecojia.cn/"},"isPartOf":{"@type":"WebSite","name":"数字生态家园","url":"https://ecojia.cn/"}},
+{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"数字生态家园","item":"https://ecojia.cn/"},{"@type":"ListItem","position":2,"name":"本周速报","item":"https://ecojia.cn/weekly"},{"@type":"ListItem","position":3,"name":"第 {{ seq }} 期","item":"https://ecojia.cn/weekly/{{ issue }}"}]}
+]}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{%- set ns = namespace(no=0) -%}
+<div class="wk-wrap">
+
+  <header class="wk-head">
+    <div class="wk-eyebrow">每周速报 · {% if empty %}准备中{% else %}第 {{ seq }} 期{% endif %}</div>
+    <h1 class="wk-title">这周，站里发生了什么</h1>
+    <p class="wk-range">
+      {% if empty %}每周一早上出一期，这周的第一期正在生成。
+      {% else %}{{ week_label }} · 每周一出一期{% endif %}
+    </p>
+    <div class="wk-headacts">
+      {% if not empty and not is_latest %}<a class="wk-btn" href="/weekly">看最新一期 →</a>{% endif %}
+      <a class="wk-btn" href="/rank?period=week">AI 动态榜本周榜 →</a>
+    </div>
+  </header>
+
+  {% if empty %}
+  <div class="wk-empty">
+    <b>第一期还没生成。</b>
+    <p>速报每周一自动生成，内容全部来自站内真实数据。生成完刷新这一页就能看到。</p>
+  </div>
+  {% else %}
+
+  <div class="wk-lede">
+    <span class="wk-ledetag">这周一句话</span>
+    <p>{{ lede }}</p>
+  </div>
+
+  {% if changes %}
+  {% set ns.no = ns.no + 1 %}
+  <section class="wk-sec">
+    <div class="wk-sh">
+      <div class="wk-sht">
+        <span class="wk-no">{{ '%02d'|format(ns.no) }}</span>
+        <h2>站内动态</h2>
+      </div>
+      <details class="wk-q">
+        <summary title="点开看这栏是怎么来的">?</summary>
+        <p>这栏写你现在能干什么、什么麻烦没了，每条都能对上具体页面，不写“优化了体验”这种总结词。</p>
+      </details>
+    </div>
+    <ol class="wk-list">
+      {% for c in changes %}
+      <li><b>{{ c.what }}</b><span>{{ c.detail }}</span></li>
+      {% endfor %}
+    </ol>
+  </section>
+  {% endif %}
+
+  {% if try_item %}
+  {% set ns.no = ns.no + 1 %}
+  <section class="wk-sec wk-trysec">
+    <div class="wk-sh">
+      <div class="wk-sht">
+        <span class="wk-no">{{ '%02d'|format(ns.no) }}</span>
+        <h2>这周你可以试试</h2>
+      </div>
+      <details class="wk-q">
+        <summary title="点开看这栏是怎么来的">?</summary>
+        <p>从本期榜单里挑一条最值得动手的，只挑一条。挑的原则是：十分钟内能试出结果，试完对你有用，不是看个热闹。</p>
+      </details>
+    </div>
+    <div class="wk-try">
+      <div class="wk-trytop">
+        <a class="wk-tryname" href="{{ try_item.url }}" target="_blank" rel="nofollow noopener">{{ try_item.title }}</a>
+        <span class="wk-src">{{ try_item.source_label }}</span>
+      </div>
+      <p class="wk-trywhat">{{ try_item.what }}</p>
+      <p class="wk-trywhy">{{ try_item.why }}</p>
+      <p class="wk-trystep"><b>第一步</b>{{ try_item.first_step }}</p>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if rank %}
+  {% set ns.no = ns.no + 1 %}
+  <section class="wk-sec">
+    <div class="wk-sh">
+      <div class="wk-sht">
+        <span class="wk-no">{{ '%02d'|format(ns.no) }}</span>
+        <h2>榜单热点</h2>
+      </div>
+      <details class="wk-q">
+        <summary title="点开看这栏是怎么来的">?</summary>
+        <p>快照＝每天把榜单数据存一份。这里只挑本周最好的一天，指标就是那天的真实值。综合分是本站按公开热度折算的排序分，不是官方排名。</p>
+      </details>
+    </div>
+    {% if rank_days and rank_days < 3 %}
+    <p class="wk-meta">榜单从 {{ rank_day }} 开始记快照，涨跌要等攒够几天才看得出来</p>
+    {% endif %}
+    <ul class="wk-rank">
+      {% for r in rank %}
+      <li>
+        <div class="wk-rtop">
+          <a class="wk-rname" href="{{ r.url }}" target="_blank" rel="nofollow noopener">{{ r.title }}</a>
+          <span class="wk-src">{{ r.source_label }}</span>
+        </div>
+        <p class="wk-rwhy">{{ r.why }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if wishes %}
+  {% set ns.no = ns.no + 1 %}
+  <section class="wk-sec">
+    <div class="wk-sh">
+      <div class="wk-sht">
+        <span class="wk-no">{{ '%02d'|format(ns.no) }}</span>
+        <h2>许愿墙进展</h2>
+      </div>
+      <details class="wk-q">
+        <summary title="点开看这栏是怎么来的">?</summary>
+        <p>只显示昵称，不显示联系方式；带测试性质的留言不进周报。</p>
+      </details>
+    </div>
+    <ul class="wk-wish">
+      {% for w in wishes %}
+      <li>
+        <span class="wk-who">{{ w.who }}</span>
+        <p>想要「{{ w.what }}」<em>{{ w.state }}</em></p>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if numbers %}
+  {% set ns.no = ns.no + 1 %}
+  <section class="wk-sec">
+    <div class="wk-sh">
+      <div class="wk-sht">
+        <span class="wk-no">{{ '%02d'|format(ns.no) }}</span>
+        <h2>这周数字</h2>
+      </div>
+      <details class="wk-q">
+        <summary title="点开看这些数字怎么来的">?</summary>
+        <p>全部是数据库里的真实计数，查不到的就不写。埋点＝页面里的一个小计数器，只记发生了什么，不记你是谁；加盐哈希＝把 IP 打成一串无法还原的乱码，只用于去重。</p>
+      </details>
+    </div>
+    <div class="wk-stats">
+      {% for n in numbers %}
+      <div class="wk-stat">
+        <span class="wk-slabel">{{ n.label }}</span>
+        <b class="wk-sval">{{ n.value }}</b>
+        {% if n.note %}<span class="wk-snote">{{ n.note }}</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% if numbers_note %}<p class="wk-meta">{{ numbers_note }}</p>{% endif %}
+  </section>
+  {% endif %}
+
+  {% if plan %}
+  {% set ns.no = ns.no + 1 %}
+  <section class="wk-sec">
+    <div class="wk-sh">
+      <div class="wk-sht">
+        <span class="wk-no">{{ '%02d'|format(ns.no) }}</span>
+        <h2>下周计划</h2>
+      </div>
+      <details class="wk-q">
+        <summary title="点开看这栏是怎么来的">?</summary>
+        <p>只从站里真实的欠账里挑，做到哪条下期就交代哪条，没做到也照样写。</p>
+      </details>
+    </div>
+    <ol class="wk-plan">
+      {% for p in plan %}<li>{{ p }}</li>{% endfor %}
+    </ol>
+  </section>
+  {% endif %}
+
+  {% if closing %}<p class="wk-closing">{{ closing }}</p>{% endif %}
+  {% endif %}
+
+  <section class="wk-arch">
+    <h2 class="wk-atitle">往期</h2>
+    {% if archive %}
+    <ul class="wk-alist">
+      {% for a in archive %}
+      <li>
+        <a href="/weekly/{{ a.issue }}">
+          <span class="wk-ano">第 {{ a.seq }} 期</span>
+          <span class="wk-adate">{{ a.week_start[5:] }} — {{ a.week_end[5:] }}</span>
+          <span class="wk-alede">{{ a.lede }}</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if not empty %}<p class="wk-amore">本期是第 {{ seq }} 期，更早的期数会一直留在这里，链接不会失效。</p>{% endif %}
+    {% else %}
+    <p class="wk-amore">{% if empty %}还没有往期。{% else %}这是第一期，从下周一起每周新出一期，旧的都留在本页。{% endif %}</p>
+    {% endif %}
+  </section>
+
+  <footer class="wk-foot">
+    <p>
+      数据来源：站内数据库（页面事件、工具点击、账号、许愿墙、操作日志、榜单快照）与代码提交记录；
+      文字由方舟模型生成后入库，页面只读本地，不实时调模型。
+    </p>
+    {% if not empty %}
+    <p class="wk-gen">
+      本期生成于 {{ updated_at[:16] }} · 模型 {{ model }} · 输入 {{ tokens_in }} tokens / 输出 {{ tokens_out }} tokens · 耗时 {{ gen_ms }} ms ·
+      作者：军哥懂保（微信 xunijiayuan） · 只读接口：<a href="/api/weekly/{{ issue }}">/api/weekly/{{ issue }}</a>
+    </p>
+    {% endif %}
+  </footer>
+
+</div>
+{% endblock %}

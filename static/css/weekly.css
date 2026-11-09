@@ -1,0 +1,265 @@
+/* 每周速报 /weekly —— 沿用站点深色粉紫金变量，只做本页 */
+.wk-wrap{
+  --wk-line:rgba(192,132,252,.20);
+  --wk-line-hi:rgba(244,114,182,.45);
+  --wk-dim:#8f81a8;
+  width:min(900px,100%);
+  margin:0 auto;
+  padding:34px 0 64px;
+}
+
+/* ── 页头 ── */
+.wk-head{margin-bottom:22px}
+.wk-eyebrow{
+  display:inline-block;font-size:12px;letter-spacing:.18em;
+  color:var(--gold-hi);border:1px solid var(--border);
+  background:rgba(244,114,182,.08);border-radius:999px;padding:5px 12px;
+}
+.wk-title{
+  font-size:36px;line-height:1.25;margin:14px 0 8px;font-weight:800;letter-spacing:-.5px;
+  background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.wk-range{color:var(--muted);font-size:14px}
+.wk-headacts{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.wk-btn{
+  font-size:13px;color:var(--text);border:1px solid var(--border);
+  background:var(--card);border-radius:10px;padding:8px 14px;
+  transition:border-color .2s,transform .2s;
+}
+.wk-btn:hover{border-color:var(--border-hi);transform:translateY(-1px)}
+
+/* ── 定调 ── */
+.wk-lede{
+  position:relative;margin:26px 0 34px;padding:22px 24px 22px 26px;
+  background:linear-gradient(100deg,rgba(244,114,182,.13),rgba(192,132,252,.06) 60%,transparent);
+  border:1px solid var(--wk-line);border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+.wk-lede::before{
+  content:"";position:absolute;left:0;top:16px;bottom:16px;width:3px;border-radius:3px;
+  background:var(--gold-grad);
+}
+.wk-ledetag{
+  display:block;font-size:11.5px;letter-spacing:.12em;color:var(--gold-hi);margin-bottom:10px;
+}
+.wk-lede p{font-size:19px;line-height:1.85;font-weight:600;letter-spacing:.2px}
+
+/* ── 板块 ── */
+.wk-sec{margin:0 0 38px;padding-top:6px}
+.wk-sh{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-bottom:12px;margin-bottom:18px;border-bottom:1px solid var(--wk-line);
+  position:relative;
+}
+.wk-sht{display:flex;align-items:baseline;gap:12px;min-width:0}
+.wk-no{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:13px;color:var(--gold-deep);letter-spacing:.1em;
+}
+.wk-sh h2{font-size:20px;font-weight:700;letter-spacing:.3px}
+.wk-q{position:relative;flex:none}
+.wk-q summary{
+  list-style:none;width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:var(--muted);cursor:pointer;
+  border:1px solid var(--wk-line);background:rgba(255,255,255,.03);
+  transition:.2s;user-select:none;
+}
+.wk-q summary::-webkit-details-marker{display:none}
+.wk-q summary:hover{color:var(--gold-hi);border-color:var(--border-hi)}
+.wk-q[open] summary{color:var(--gold-hi);border-color:var(--border-hi)}
+.wk-q p{
+  position:absolute;right:0;top:29px;z-index:9;width:min(320px,72vw);
+  font-size:12.5px;line-height:1.75;color:var(--muted);
+  background:#241636;border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;box-shadow:0 14px 40px rgba(8,2,20,.8);
+}
+.wk-meta{font-size:12.5px;color:var(--wk-dim);margin:-6px 0 14px}
+
+/* ── 站内动态 ── */
+.wk-list{list-style:none}
+.wk-list li{
+  position:relative;padding:0 0 16px 18px;margin-bottom:14px;
+  border-left:1px solid var(--wk-line);
+}
+.wk-list li:last-child{margin-bottom:0;padding-bottom:2px}
+.wk-list li::before{
+  content:"";position:absolute;left:-4px;top:8px;width:7px;height:7px;border-radius:50%;
+  background:var(--gold-hi);box-shadow:0 0 10px rgba(249,168,212,.6);
+}
+.wk-list b{display:block;font-size:15.5px;color:var(--text);margin-bottom:5px;font-weight:600}
+.wk-list span{font-size:14.5px;line-height:1.8;color:var(--muted)}
+
+/* ── 榜单热点 ── */
+.wk-rank{list-style:none;display:grid;gap:12px}
+.wk-rank li{
+  background:var(--card);border:1px solid var(--wk-line);border-radius:14px;
+  padding:15px 17px;transition:border-color .2s,background .2s;
+}
+.wk-rank li:hover{border-color:var(--border-hi);background:var(--card-hi)}
+.wk-rtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.wk-rname{
+  font-size:15.5px;font-weight:600;color:var(--text);word-break:break-word;
+  border-bottom:1px solid transparent;transition:color .2s,border-color .2s;
+}
+.wk-rname:hover{color:var(--gold-hi);border-color:var(--border-hi)}
+.wk-src{
+  flex:none;font-size:11px;color:var(--gold-hi);
+  border:1px solid var(--border);border-radius:999px;padding:2px 9px;
+  background:rgba(192,132,252,.10);
+}
+.wk-rwhy{margin-top:8px;font-size:13.5px;line-height:1.75;color:var(--muted)}
+
+/* ── 许愿墙 ── */
+.wk-wish{list-style:none;display:grid;gap:10px}
+.wk-wish li{
+  display:flex;gap:12px;align-items:flex-start;
+  background:var(--card);border:1px solid var(--wk-line);border-radius:12px;padding:13px 15px;
+}
+.wk-who{
+  flex:none;font-size:12px;color:var(--gold-hi);border:1px solid var(--border);
+  border-radius:8px;padding:2px 8px;margin-top:2px;
+}
+.wk-wish p{font-size:14px;line-height:1.7}
+.wk-wish em{display:block;font-style:normal;font-size:12px;color:var(--wk-dim);margin-top:4px}
+
+/* ── 数字 ── */
+.wk-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px}
+.wk-stat{
+  background:var(--card);border:1px solid var(--wk-line);border-radius:14px;
+  padding:15px 16px;display:flex;flex-direction:column;gap:6px;
+}
+.wk-slabel{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.wk-sval{
+  font-size:24px;font-weight:800;line-height:1.2;
+  background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.wk-snote{font-size:11.5px;line-height:1.6;color:var(--wk-dim)}
+
+/* ── 下周计划 ── */
+.wk-plan{list-style:none;counter-reset:p}
+.wk-plan li{
+  counter-increment:p;position:relative;padding:11px 0 11px 34px;
+  font-size:14.5px;line-height:1.7;border-bottom:1px dashed var(--wk-line);
+}
+.wk-plan li:last-child{border-bottom:0}
+.wk-plan li::before{
+  content:counter(p);position:absolute;left:0;top:12px;
+  width:20px;height:20px;border-radius:6px;font-size:11px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--gold-hi);border:1px solid var(--border);background:rgba(244,114,182,.08);
+}
+
+.wk-closing{
+  margin:6px 0 40px;padding:16px 20px;border-radius:12px;
+  font-size:14.5px;color:var(--text);line-height:1.8;
+  background:rgba(192,132,252,.07);border:1px solid var(--wk-line);
+}
+
+/* ── 这周你可以试试 ── */
+.wk-try{
+  position:relative;padding:20px 22px;border-radius:var(--radius);
+  background:linear-gradient(120deg,rgba(249,168,212,.14),rgba(147,96,246,.10) 55%,rgba(24,12,42,.5));
+  border:1px solid var(--border-hi);box-shadow:var(--shadow);
+}
+.wk-try::after{
+  content:"";position:absolute;right:18px;top:16px;width:34px;height:34px;border-radius:50%;
+  background:radial-gradient(circle,rgba(249,168,212,.55),transparent 70%);pointer-events:none;
+}
+.wk-trytop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.wk-tryname{
+  font-size:19px;font-weight:800;color:var(--text);word-break:break-word;
+  border-bottom:1px solid transparent;transition:.2s;
+}
+.wk-tryname:hover{color:var(--gold-hi);border-color:var(--border-hi)}
+.wk-trywhat{font-size:14.5px;line-height:1.8;color:var(--text)}
+.wk-trywhy{margin-top:8px;font-size:14px;line-height:1.85;color:var(--muted)}
+.wk-trystep{
+  margin-top:14px;padding:10px 13px;border-radius:10px;font-size:13.5px;line-height:1.7;
+  color:var(--text);background:rgba(8,3,18,.45);border:1px dashed var(--border);
+}
+.wk-trystep b{
+  display:inline-block;margin-right:9px;padding:1px 8px;border-radius:6px;font-size:11px;
+  color:var(--gold-hi);border:1px solid var(--border);background:rgba(244,114,182,.10);
+}
+
+/* ── 往期 ── */
+.wk-arch{margin-top:46px;border-top:1px solid var(--wk-line);padding-top:28px}
+.wk-atitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--gold-hi);letter-spacing:.05em}
+.wk-alist{list-style:none;display:grid;gap:8px}
+.wk-alist a{
+  display:grid;grid-template-columns:74px 116px 1fr;gap:12px;align-items:center;
+  padding:12px 14px;border:1px solid var(--wk-line);border-radius:12px;
+  background:var(--card);transition:border-color .2s,background .2s;
+}
+.wk-alist a:hover{border-color:var(--border-hi);background:var(--card-hi)}
+.wk-ano{font-size:13px;color:var(--gold-hi);font-weight:600}
+.wk-adate{font-size:12.5px;color:var(--wk-dim);font-variant-numeric:tabular-nums}
+.wk-alede{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wk-amore{margin-top:12px;font-size:12.5px;color:var(--wk-dim);line-height:1.7}
+
+.wk-empty{
+  padding:26px;border-radius:var(--radius);border:1px dashed var(--wk-line);
+  background:var(--card);color:var(--muted);font-size:14px;line-height:1.9;
+}
+.wk-empty b{display:block;color:var(--text);font-size:15.5px;margin-bottom:6px}
+
+/* ── 页脚 ── */
+.wk-foot{
+  margin-top:34px;padding-top:18px;border-top:1px solid var(--wk-line);
+  font-size:12px;line-height:1.9;color:var(--wk-dim);
+}
+.wk-foot .wk-gen{margin-top:8px}
+.wk-foot a{color:var(--muted);border-bottom:1px dotted var(--border)}
+.wk-foot a:hover{color:var(--gold-hi)}
+
+/* ── 手机 ── */
+@media (max-width:760px){
+  .wk-wrap{padding:20px 0 48px}
+  .wk-title{font-size:25px;letter-spacing:-.2px}
+  .wk-lede{padding:18px 17px 18px 19px;margin:20px 0 28px}
+  .wk-lede p{font-size:16.5px;line-height:1.85}
+  .wk-sh h2{font-size:17px}
+  .wk-no{font-size:12px}
+  .wk-list b{font-size:15px}
+  .wk-list span{font-size:14px}
+  .wk-rname{font-size:14.5px}
+  .wk-try{padding:16px 15px}
+  .wk-tryname{font-size:16.5px}
+  .wk-trywhat{font-size:14px}
+  .wk-trywhy{font-size:13.5px}
+  .wk-sval{font-size:21px}
+  .wk-stats{grid-template-columns:repeat(auto-fit,minmax(136px,1fr));gap:10px}
+  .wk-alist a{grid-template-columns:1fr auto;gap:4px 10px;padding:11px 13px}
+  .wk-alede{grid-column:1/-1;white-space:normal;line-height:1.6}
+  .wk-plan li{font-size:14px;padding-left:30px}
+  .wk-q p{width:min(280px,78vw)}
+}
+@media (max-width:400px){
+  .wk-stats{grid-template-columns:1fr 1fr}
+  .wk-sval{font-size:19px}
+}
+
+/* ---------- 2026-11-10 p4：与 /tools 清单页统一视觉语言（卡片化 hero） ---------- */
+.wk-head{
+  padding:28px 30px 26px;border:1px solid rgba(251,191,36,.14);border-radius:24px;
+  background:linear-gradient(135deg,rgba(56,34,80,.92),rgba(26,16,37,.88) 62%,rgba(38,22,56,.9));
+  box-shadow:0 18px 44px rgba(0,0,0,.26);
+}
+.wk-head::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(680px 220px at 12% -10%,rgba(244,114,182,.16),transparent 62%),
+             radial-gradient(520px 200px at 92% 110%,rgba(192,132,252,.14),transparent 60%)}
+
+.wk-head{position:relative;overflow:hidden;margin-bottom:22px}
+.wk-title{font-size:34px;letter-spacing:-.4px}
+@media (max-width:820px){
+  .wk-head{padding:22px 20px 20px;border-radius:20px}
+  .wk-title{font-size:24px}
+}
+@media (max-width:420px){
+  .wk-head{padding:18px 16px 16px;border-radius:18px}
+  .wk-title{font-size:22px;letter-spacing:0}
+  .wk-range{font-size:13px}
+}
