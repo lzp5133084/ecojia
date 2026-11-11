@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a1025">
+<meta name="description" content="钞能力检测：目标倒推核算 + 时间成本可视化工具。纯前端，双击即用。">
+<title>钞能力检测 · 目标倒推与时间成本可视化</title>
+<style>
+:root{
+  /* ——— 以下 token 取自 https://ecojia.cn 首页实际渲染值（2026-11-11 实测） ——— */
+  --bg:#1a1025;                                    /* 站点 --eco-bg */
+  --bg-soft:#221536;                               /* 站点 --bg-soft */
+  --panel:rgba(53,32,69,.50);                      /* 站点 --card */
+  --panel-2:linear-gradient(165deg,rgba(58,35,78,.60),rgba(24,14,36,.52)); /* 站点 .pv-card */
+  --card-hi:rgba(120,60,160,.16);                  /* 站点 --card-hi */
+  --line:rgba(192,132,252,.22);                    /* 站点 --border */
+  --line-hi:rgba(244,114,182,.55);                 /* 站点 --border-hi */
+  --line-soft:rgba(255,255,255,.10);               /* 站点 --eco-line（分割线） */
+  --text:#f3edfa;                                  /* 站点 --eco-text */
+  --sub:#b9aec9;                                   /* 站点 --eco-muted */
+  --dim:#a99bc0;                                   /* 站点 --muted */
+  --dim-2:#8f83a8;                                 /* 站点弱化文字 */
+  --pink:#f472b6;                                  /* 站点 --gold */
+  --pink-hi:#f9a8d4;                               /* 站点 --gold-hi */
+  --purple:#c084fc;                                /* 站点 --gold-deep */
+  --accent:#f0c75e;                                /* 站点 --eco-accent（关键数字金） */
+  --grad:linear-gradient(135deg,#f472b6 0%,#c084fc 50%,#fbbf24 100%);  /* 站点 --gold-grad */
+  --grad-soft:linear-gradient(135deg,rgba(244,114,182,.92),rgba(192,132,252,.92) 62%,rgba(251,191,36,.88));
+  --gold:#f472b6;
+  --gold-d:#c084fc;
+  --gold-soft:rgba(244,114,182,.12);
+  --cyan:#f9a8d4;
+  --ok:#6ee7b7;
+  --danger:#fb7185;
+  --r:16px;                                        /* 站点 --radius */
+  --r2:12px;                                       /* 站点 --eco-r2 */
+  --shadow:0 10px 40px rgba(10,4,22,.6);           /* 站点 --shadow */
+  --font:"HarmonyOS Sans SC",MiSans,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  --mono:"Bahnschrift","DIN Alternate","Roboto Mono",Consolas,ui-monospace,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(60% 40% at 50% -5%, rgba(244,114,182,.20), rgba(0,0,0,0) 60%),
+    radial-gradient(40% 30% at 85% 20%, rgba(147,51,234,.16), rgba(0,0,0,0) 65%),
+    radial-gradient(35% 30% at 10% 30%, rgba(251,191,36,.09), rgba(0,0,0,0) 60%),
+    #1a1025;
+  background-attachment:fixed;
+  color:var(--text);
+  font-family:var(--font);
+  font-size:16px;
+  line-height:1.75;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(192,132,252,.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(244,114,182,.07) 1px, transparent 1px);
+  background-size:52px 52px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, #000 35%, transparent 78%);
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, #000 35%, transparent 78%);
+}
+.wrap{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:22px 20px 40px}
+h1,h2,h3,h4{margin:0;font-weight:800;letter-spacing:.2px}
+p{margin:0}
+button,input{font-family:inherit;font-size:14px;color:inherit}
+button{cursor:pointer;border:none;background:none}
+input{outline:none}
+::selection{background:rgba(244,114,182,.28)}
+
+/* ============ 顶部 ============ */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  flex-wrap:wrap;padding:2px 2px 18px;border-bottom:1px solid var(--line-soft);margin-bottom:16px;
+}
+.brand{display:flex;align-items:center;gap:13px;min-width:0}
+.logo{
+  width:46px;height:46px;border-radius:14px;flex:0 0 auto;position:relative;
+  background:linear-gradient(145deg,rgba(244,114,182,.26),rgba(192,132,252,.10));
+  border:1px solid rgba(244,114,182,.45);
+  display:grid;place-items:center;color:var(--pink-hi);
+  font-family:var(--mono);font-size:19px;font-weight:700;
+  box-shadow:inset 0 0 22px rgba(192,132,252,.22),0 8px 24px rgba(10,4,22,.5);
+}
+.logo::after{
+  content:"";position:absolute;inset:-1px;border-radius:14px;
+  background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.35),transparent 70%);
+  opacity:.5;-webkit-mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);
+  -webkit-mask-composite:xor;mask-composite:exclude;padding:1px;
+  animation:sheen 5.2s linear infinite;
+}
+@keyframes sheen{0%{transform:translateX(-40%) rotate(8deg);opacity:0}14%{opacity:.55}40%{opacity:0}100%{opacity:0}}
+.brand h1{font-size:22px;line-height:1.25;letter-spacing:.5px;font-weight:800}
+.brand h1 em{
+  font-style:normal;
+  background:linear-gradient(100deg,#fff 6%,var(--pink-hi) 44%,var(--purple) 84%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.brand .sub{font-size:12px;color:var(--dim);letter-spacing:2.4px;margin-top:3px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;min-width:0}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 11px;border-radius:999px;font-size:12px;color:var(--sub);
+  background:rgba(255,255,255,.05);border:1px solid var(--line);white-space:nowrap;
+}
+.chip b{color:var(--text);font-weight:600}
+.chip .dot{width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.chip.mono b{font-family:var(--mono);letter-spacing:.3px}
+
+/* ============ 布局 ============ */
+.grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:18px;align-items:start}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.panel{
+  position:relative;background:
+    radial-gradient(90% 110% at 100% 0, rgba(244,114,182,.10), rgba(0,0,0,0) 62%),
+    var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--r);padding:18px;box-shadow:var(--shadow);
+  backdrop-filter:blur(14px);min-width:0;
+}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.panel-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;letter-spacing:.4px}
+.panel-title .bar{width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--gold),var(--gold-d))}
+.panel-title small{font-size:11px;color:var(--dim);font-weight:400;letter-spacing:0}
+
+/* ============ 表单 ============ */
+.field{margin-bottom:15px}
+.label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sub);margin-bottom:7px}
+.q{
+  width:17px;height:17px;border-radius:50%;flex:0 0 auto;
+  border:1px solid rgba(255,255,255,.22);color:var(--dim);
+  font-size:10.5px;line-height:15px;text-align:center;cursor:pointer;
+  transition:.2s;position:relative;user-select:none;
+}
+.q::after{content:"";position:absolute;inset:-9px;}
+.q:hover,.q.on{border-color:var(--gold);color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
+.input-shell{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(192,132,252,.28);
+  border-radius:12px;padding:0 12px;transition:.2s;min-height:46px;
+}
+.input-shell:focus-within{border-color:rgba(244,114,182,.65);box-shadow:0 0 0 3px rgba(244,114,182,.12);background:rgba(255,255,255,.08)}
+.input-shell .unit{font-size:12px;color:var(--dim);flex:0 0 auto}
+.input-shell .prefix{font-size:13px;color:var(--gold);font-family:var(--mono);flex:0 0 auto}
+.input-shell input{
+  flex:1 1 auto;min-width:0;width:100%;background:none;border:none;
+  padding:12px 0;font-size:15px;font-family:var(--mono);letter-spacing:.4px;color:var(--text);
+}
+.input-shell input::placeholder{color:#8f83a8;font-family:var(--font);letter-spacing:0}
+.seg{
+  display:flex;gap:4px;padding:4px;border-radius:12px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(192,132,252,.24);
+}
+.seg button{
+  flex:1;min-height:34px;border-radius:9px;font-size:13px;color:var(--sub);transition:.18s;
+}
+.seg button.on{
+  background:linear-gradient(135deg,#f472b6,#c084fc 62%,#a78bfa);
+  color:#2a1035;font-weight:700;box-shadow:0 6px 16px rgba(192,132,252,.28);
+}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.presets{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.presets button{
+  padding:7px 11px;border-radius:999px;font-size:12px;color:var(--sub);
+  border:1px solid rgba(192,132,252,.26);background:rgba(255,255,255,.05);transition:.18s;min-height:32px;
+}
+.presets button:hover{color:var(--pink-hi);border-color:rgba(244,114,182,.5);background:var(--gold-soft)}
+.hint{font-size:11.5px;color:var(--dim);margin-top:7px;line-height:1.55}
+.warn{color:#fbbf24}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:44px;padding:0 18px;border-radius:14px;font-size:14px;font-weight:600;
+  transition:.18s;white-space:nowrap;
+}
+.btn:active{transform:translateY(1px)}
+.btn-gold{
+  background:var(--grad);
+  color:#2a1035;box-shadow:0 8px 24px rgba(244,114,182,.28),inset 0 1px 0 rgba(255,255,255,.35);
+}
+.btn-gold:hover{box-shadow:0 12px 30px rgba(244,114,182,.4),inset 0 1px 0 rgba(255,255,255,.45)}
+.btn-ghost{background:rgba(255,255,255,.05);border:1px solid rgba(192,132,252,.26);color:#e6d9f7}
+.btn-ghost:hover{color:#fff;border-color:rgba(244,114,182,.5);background:rgba(192,132,252,.16)}
+.btn-line{border:1px solid rgba(244,114,182,.45);color:var(--pink-hi);background:rgba(244,114,182,.10)}
+.btn-line:hover{background:rgba(244,114,182,.2)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn-sm{min-height:36px;padding:0 12px;font-size:12px;border-radius:9px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:6px}
+.actions .btn{flex:1 1 auto}
+
+/* ============ 指标卡 ============ */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(154px,1fr));gap:10px}
+.metric{
+  position:relative;padding:14px 15px 15px;border-radius:14px;min-width:0;
+  background:var(--panel-2);
+  border:1px solid rgba(192,132,252,.24);transition:.22s;overflow:hidden;
+}
+.metric::before{
+  content:"";position:absolute;left:0;top:12px;bottom:12px;width:2px;border-radius:2px;
+  background:linear-gradient(180deg,transparent,rgba(244,114,182,.55),transparent);opacity:.55;
+}
+.metric:hover{border-color:rgba(244,114,182,.55);background:linear-gradient(165deg,rgba(80,44,104,.66),rgba(30,16,44,.58));transform:translateY(-1px)}
+.metric .m-label{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--dim);letter-spacing:.3px}
+.metric .m-val{
+  font-family:var(--mono);font-size:clamp(19px,2.2vw,24px);font-weight:700;
+  letter-spacing:.4px;line-height:1.35;margin-top:5px;color:var(--text);
+  word-break:break-all;
+}
+.metric .m-val i{font-style:normal;font-size:12px;color:var(--sub);font-family:var(--font);font-weight:400;margin-left:3px}
+.metric.key{border-color:rgba(240,199,94,.45);background:linear-gradient(160deg,rgba(240,199,94,.14),rgba(120,60,160,.10))}
+.metric.key .m-val{color:var(--accent);text-shadow:0 0 24px rgba(240,199,94,.28)}
+
+/* ============ 计时器 ============ */
+.timer-panel{overflow:hidden}
+.timer-panel::after{
+  content:"";position:absolute;top:0;left:-40%;width:40%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  animation:sweep 4.6s ease-in-out infinite;
+}
+@keyframes sweep{0%{left:-40%;opacity:0}20%{opacity:1}60%{left:100%;opacity:1}100%{left:100%;opacity:0}}
+.timer-body{display:flex;gap:22px;align-items:center}
+.ring-box{position:relative;flex:0 0 auto;width:168px;height:168px}
+.ring-box svg{transform:rotate(-90deg);display:block}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:8}
+.ring-fg{
+  fill:none;stroke:url(#ringGrad);stroke-width:8;stroke-linecap:round;
+  transition:stroke-dashoffset .1s linear;
+  filter:drop-shadow(0 0 6px rgba(244,114,182,.55));
+}
+.ring-core{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;text-align:center;padding:14px;
+}
+.ring-core .rc-l{font-size:10px;color:var(--dim);letter-spacing:1px}
+.ring-core .rc-v{font-family:var(--mono);font-size:15px;color:var(--gold);font-weight:700;letter-spacing:.5px}
+.ring-core .rc-s{font-size:9.5px;color:var(--dim-2);letter-spacing:.5px}
+.money-box{flex:1 1 auto;min-width:0}
+.money-label{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:2px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:rgba(169,155,192,.55);transition:.3s}
+.status-running .live-dot{background:var(--danger);box-shadow:0 0 0 0 rgba(251,113,133,.6);animation:pulseDot 1.6s infinite}
+.status-paused .live-dot{background:#fbbf24}
+@keyframes pulseDot{0%{box-shadow:0 0 0 0 rgba(251,113,133,.55)}70%{box-shadow:0 0 0 9px rgba(251,113,133,0)}100%{box-shadow:0 0 0 0 rgba(251,113,133,0)}}
+.money-value{
+  display:flex;align-items:flex-end;gap:6px;
+  font-family:var(--mono);color:var(--accent);
+  font-size:clamp(30px,6.4vw,54px);font-weight:700;line-height:1.12;letter-spacing:.5px;
+  padding:2px 0;transition:filter .35s;
+}
+.money-value .cur{font-size:.44em;color:var(--pink-hi);font-weight:600;opacity:.95;padding-bottom:.32em}
+.money-value.flash{filter:drop-shadow(0 0 16px rgba(240,199,94,.42))}
+.money-value.flash .dg,.money-value.flash .dgx,.money-value.flash .dgs>span{text-shadow:none}
+.money-value.small{font-size:clamp(22px,4.6vw,34px)}
+.money-sub{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:8px;font-size:12px;color:var(--sub)}
+.money-sub b{font-family:var(--mono);color:#efe6ff;font-weight:700}
+.money-sub .sep{color:rgba(169,155,192,.45)}
+.timer-ctrl{display:flex;gap:9px;margin-top:15px;flex-wrap:wrap}
+.timer-ctrl .btn{flex:1 1 118px}
+.timer-note{margin-top:11px;font-size:11.5px;color:var(--dim);line-height:1.6}
+
+/* 滚动数字 */
+.rollwrap{display:inline-flex;align-items:center;height:1.12em;overflow:hidden}
+.dg,.dgx{display:inline-flex;align-items:center;justify-content:center;height:1em;line-height:1;font-variant-numeric:tabular-nums}
+.dg{position:relative;width:.60em;overflow:hidden}
+.dgx{width:.26em;color:var(--dim)}
+.dgs{
+  position:absolute;top:0;left:0;width:100%;height:1000%;
+  display:flex;flex-direction:column;
+  transition:transform .42s cubic-bezier(.2,.9,.25,1);
+  will-change:transform;
+}
+.dgs>span{display:flex;align-items:center;justify-content:center;height:10%;flex:0 0 10%}
+
+/* ============ 对比 ============ */
+.compare-list{display:grid;gap:9px}
+.compare-item{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(192,132,252,.18);min-width:0;flex-wrap:wrap;
+}
+.compare-item .ci-ico{
+  width:30px;height:30px;flex:0 0 auto;border-radius:9px;display:grid;place-items:center;
+  background:rgba(244,114,182,.12);border:1px solid rgba(244,114,182,.28);color:var(--pink-hi);font-size:13px;
+}
+.compare-item .ci-txt{flex:1 1 160px;min-width:0;font-size:13px;color:var(--sub)}
+.compare-item .ci-txt b{color:var(--text);font-weight:600}
+.compare-item .ci-num{
+  font-family:var(--mono);font-size:16px;font-weight:700;color:var(--accent);white-space:nowrap;
+}
+.compare-foot{margin-top:12px;font-size:12.5px;color:var(--dim);line-height:1.7}
+.compare-foot b{color:#efe6ff}
+
+/* ============ VIP ============ */
+.badge{
+  display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:6px;
+  font-size:11px;letter-spacing:.5px;font-weight:600;
+}
+.badge.vip{background:linear-gradient(100deg,rgba(244,114,182,.22),rgba(192,132,252,.10));color:var(--pink-hi);border:1px solid rgba(244,114,182,.38)}
+.badge.off{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid var(--line)}
+.badge.on{background:rgba(110,231,183,.12);color:var(--ok);border:1px solid rgba(110,231,183,.32)}
+.vip-note{
+  padding:13px 15px;border-radius:12px;font-size:12.5px;line-height:1.75;color:var(--sub);
+  background:rgba(192,132,252,.10);border:1px solid rgba(192,132,252,.24);
+}
+.vip-note b{color:var(--pink-hi)}
+.career-head,.career-row{
+  display:grid;grid-template-columns:1.3fr .85fr 1.1fr 40px;gap:8px;align-items:center;
+}
+.career-head{font-size:11px;color:var(--dim);padding:0 4px 6px;letter-spacing:.4px}
+.career-rows{display:flex;flex-direction:column;gap:8px}
+.career-row{padding:4px;border-radius:11px;background:rgba(255,255,255,.04);border:1px solid rgba(192,132,252,.18)}
+.career-row .cell{padding:0 8px;min-width:0;display:flex;align-items:center;gap:4px;min-height:40px}
+.career-row input{
+  width:100%;min-width:0;background:none;border:none;font-size:13px;padding:8px 0;color:var(--text);
+}
+.career-row input.num{font-family:var(--mono);letter-spacing:.3px}
+.career-row input::placeholder{color:#8f83a8}
+.career-row .u{font-size:11px;color:var(--dim-2);flex:0 0 auto}
+.del{
+  width:36px;height:36px;border-radius:10px;color:var(--dim-2);font-size:16px;line-height:1;
+  display:grid;place-items:center;transition:.18s;justify-self:center;
+}
+.del:hover{background:rgba(251,113,133,.14);color:var(--danger)}
+.ai-out{margin-top:14px;display:grid;gap:10px}
+.ai-card{
+  padding:14px 15px;border-radius:12px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(192,132,252,.18);font-size:13px;line-height:1.75;color:var(--sub);
+  white-space:pre-wrap;word-break:break-word;
+}
+.ai-card h4{font-size:12px;color:var(--pink-hi);letter-spacing:.6px;margin-bottom:6px;font-weight:600}
+.ai-card ul{margin:0;padding-left:18px}
+.ai-card li{margin:3px 0}
+.empty-state{
+  text-align:center;padding:26px 16px;border-radius:14px;
+  border:1px dashed rgba(192,132,252,.3);color:var(--dim);font-size:12.5px;line-height:1.8;
+}
+.empty-state .es-t{color:var(--sub);font-size:13px;font-weight:600;margin-bottom:4px}
+details.fmt{margin-top:12px;border:1px solid var(--line-soft);border-radius:11px;overflow:hidden}
+details.fmt>summary{
+  padding:11px 14px;font-size:12.5px;color:var(--sub);cursor:pointer;list-style:none;
+  display:flex;align-items:center;justify-content:space-between;min-height:44px;
+}
+details.fmt>summary::-webkit-details-marker{display:none}
+details.fmt>summary::after{content:"＋";color:var(--dim);font-size:13px}
+details.fmt[open]>summary::after{content:"－"}
+details.fmt pre{
+  margin:0;padding:13px 14px;background:rgba(0,0,0,.4);border-top:1px solid var(--line-soft);
+  font-family:var(--mono);font-size:11.5px;line-height:1.65;color:#d6c3ef;
+  overflow-x:auto;white-space:pre;
+}
+details.fmt pre .k{color:var(--gold)}
+details.fmt pre .s{color:var(--ok)}
+.cfg-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.cfg-row .input-shell{flex:1 1 220px;min-height:42px}
+.cfg-row .input-shell input{font-size:12.5px;font-family:var(--mono)}
+
+/* ============ 历史 ============ */
+.rec-list{display:grid;gap:9px}
+.rec{
+  display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;
+  padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(192,132,252,.18);min-width:0;
+}
+.rec:hover{border-color:rgba(244,114,182,.5)}
+.rec-main{min-width:0}
+.rec-t{display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap}
+.rec-t b{font-family:var(--mono);color:var(--text);letter-spacing:.3px}
+.rec-t .time{font-size:11px;color:var(--dim);font-family:var(--mono)}
+.rec-d{font-size:11.5px;color:var(--dim);margin-top:2px;display:flex;flex-wrap:wrap;gap:4px 12px}
+.rec-d span{font-family:var(--mono);color:var(--sub)}
+.rec-ops{display:flex;gap:5px;flex-wrap:wrap}
+.rec-note{
+  grid-column:1/-1;margin-top:2px;display:flex;align-items:center;gap:8px;
+}
+.rec-note input{
+  flex:1 1 auto;min-width:0;background:rgba(0,0,0,.22);border:1px solid rgba(192,132,252,.22);
+  border-radius:9px;padding:9px 10px;font-size:12px;color:var(--sub);min-height:38px;
+}
+.rec-note input:focus{border-color:rgba(244,114,182,.6);color:var(--text)}
+.rec-note input::placeholder{color:var(--dim-2)}
+
+/* ============ 说明 ============ */
+.guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:11px}
+.guide-item{padding:13px 14px;border-radius:12px;background:rgba(255,255,255,.045);border:1px solid rgba(192,132,252,.18)}
+.guide-item .gi-n{
+  display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;
+  background:rgba(244,114,182,.14);color:var(--pink-hi);font-family:var(--mono);font-size:11px;font-weight:700;
+  margin-bottom:7px;
+}
+.guide-item .gi-t{font-size:13px;font-weight:600;margin-bottom:3px}
+.guide-item .gi-d{font-size:12px;color:var(--dim);line-height:1.7}
+.terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:9px;margin-top:12px}
+.term{font-size:12px;color:var(--dim);line-height:1.7;padding:10px 12px;border-left:2px solid rgba(244,114,182,.45);background:rgba(120,60,160,.12);border-radius:0 9px 9px 0}
+.term b{color:var(--sub);display:block;margin-bottom:1px;font-size:12.5px}
+
+/* ============ 页脚/提示 ============ */
+.footer{
+  margin-top:22px;padding-top:16px;border-top:1px solid var(--line-soft);
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  font-size:11.5px;color:var(--dim-2);line-height:1.8;
+}
+.footer b{color:var(--sub);font-weight:600}
+.footer .disc{max-width:640px}
+.footer .disc em{font-style:normal;color:var(--pink-hi)}
+
+#tip{
+  position:fixed;z-index:90;max-width:min(280px,calc(100vw - 24px));
+  padding:11px 13px;border-radius:12px;font-size:12px;line-height:1.7;color:var(--text);
+  background:#241433;border:1px solid rgba(244,114,182,.35);
+  box-shadow:0 18px 40px rgba(10,4,22,.65);
+  opacity:0;transform:translateY(6px);pointer-events:none;transition:.18s;
+}
+#tip.show{opacity:1;transform:translateY(0)}
+#tip b{color:var(--pink-hi);display:block;margin-bottom:3px;font-size:12px}
+
+#toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);z-index:100;
+  max-width:calc(100vw - 32px);padding:12px 18px;border-radius:12px;
+  background:#241433;border:1px solid rgba(244,114,182,.35);color:var(--text);
+  font-size:13px;box-shadow:0 18px 44px rgba(10,4,22,.6);
+  opacity:0;pointer-events:none;transition:.24s;text-align:center;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ============ 折叠区块 ============ */
+.fold-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  width:100%;min-height:52px;padding:0;margin:0;text-align:left;
+  background:none;border:none;color:var(--text);cursor:pointer;border-radius:10px;
+}
+.fold-title{
+  display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;
+  font-size:14.5px;font-weight:800;letter-spacing:.4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.fold-title .bar{
+  width:3px;height:14px;border-radius:2px;flex:0 0 auto;
+  background:linear-gradient(180deg,var(--pink),var(--purple));
+}
+.fold-sub{
+  font-size:11.5px;font-weight:400;color:var(--dim);letter-spacing:0;
+  min-width:0;overflow:hidden;text-overflow:ellipsis;
+}
+.fold-side{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.fold-arrow{
+  width:8px;height:8px;flex:0 0 auto;
+  border-right:1.6px solid var(--purple);border-bottom:1.6px solid var(--purple);
+  transform:rotate(45deg);margin:0 4px 4px;
+  transition:transform .22s ease,margin .22s ease,border-color .22s;
+}
+.fold-head:hover .fold-arrow{border-color:var(--pink-hi)}
+.fold-head.open .fold-arrow{transform:rotate(225deg);margin:4px 4px 0}
+.fold-head:focus-visible{outline:2px solid rgba(244,114,182,.55);outline-offset:3px}
+.fold-body[hidden]{display:none !important}
+.fold-body{padding-top:4px}
+.panel.is-collapsed{padding-top:4px;padding-bottom:4px}
+.fold-head.sm{min-height:46px;font-size:13px;font-weight:600}
+.fold-block{border-top:1px solid var(--line-soft);margin-top:12px;padding-top:2px}
+.fold-block:first-child{border-top:none;margin-top:0}
+.fold-pre{
+  margin:10px 0 0;padding:13px 14px;border:1px solid rgba(192,132,252,.24);border-radius:12px;
+  background:rgba(0,0,0,.35);font-family:var(--mono);font-size:11.5px;line-height:1.65;
+  color:#d6c3ef;overflow-x:auto;white-space:pre;
+}
+.fold-tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.fold-tool{
+  min-height:44px;padding:0 14px;border-radius:12px;font-size:12.5px;
+  border:1px solid rgba(192,132,252,.26);background:rgba(255,255,255,.05);color:#e6d9f7;transition:.18s;
+}
+.fold-tool:hover{color:#fff;border-color:rgba(244,114,182,.5);background:rgba(192,132,252,.16)}
+.fold-tool:active{transform:translateY(1px)}
+.info-strip{
+  background:
+    radial-gradient(90% 110% at 100% 0, rgba(244,114,182,.10), rgba(0,0,0,0) 62%),
+    var(--panel);
+  border:1px solid var(--line);border-radius:var(--r);
+  padding:0 16px;box-shadow:var(--shadow);margin-bottom:18px;
+}
+.info-strip.is-collapsed{padding-bottom:0}
+.info-strip .meta{padding:0 2px 14px;justify-content:flex-start}
+
+/* ============ 动效降级 ============ */
+body.lite .logo::after,
+body.lite .timer-panel::after,
+body.lite .status-running .live-dot{animation:none !important}
+body.lite .dgs{transition:none !important}
+body.lite .money-value.flash{filter:none}
+body.lite .metric:hover{transform:none}
+
+/* ============ 响应式 ============ */
+@media (max-width:1040px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .meta{justify-content:flex-start}
+}
+@media (max-width:640px){
+  .wrap{padding:16px 13px 30px}
+  .panel{padding:15px;border-radius:14px}
+  .brand h1{font-size:19px}
+  .brand .sub{letter-spacing:1.6px;font-size:11px}
+  .logo{width:40px;height:40px;border-radius:12px;font-size:17px}
+  .btn-sm{min-height:44px;padding:0 14px}
+  .del{width:44px;height:44px}
+  .presets button{min-height:40px}
+  .fold-side .chip{display:none}
+  .fold-head{min-height:52px}
+  .fold-tools{flex:1 1 100%;justify-content:space-between}
+  .fold-tools .fold-tool{flex:1 1 0}
+  .timer-body{flex-direction:column;gap:14px;align-items:stretch}
+  .ring-box{width:132px;height:132px;margin:0 auto}
+  .money-box{text-align:center}
+  .money-label{justify-content:center}
+  .money-value{justify-content:center}
+  .money-sub{justify-content:center}
+  .career-head{display:none}
+  .career-row{grid-template-columns:1fr 1fr 44px;grid-template-areas:"name name del" "hour income income";padding:8px;gap:6px;background:rgba(255,255,255,.035)}
+  .career-row .cell:nth-child(1){grid-area:name}
+  .career-row .cell:nth-child(2){grid-area:hour}
+  .career-row .cell:nth-child(3){grid-area:income}
+  .career-row .del{grid-area:del;align-self:start}
+  .career-row .cell{position:relative;padding:17px 8px 0;min-height:58px;border-bottom:1px solid var(--line-soft)}
+  .career-row .cell::before{
+    content:attr(data-l);position:absolute;left:9px;top:4px;
+    font-size:9.5px;color:var(--dim-2);letter-spacing:.4px;
+  }
+  .career-row .cell:nth-child(3){border-bottom:none}
+  .career-row input,.input-shell input,.rec-note input{font-size:16px}
+  .rec{grid-template-columns:1fr}
+  .rec-ops{justify-content:flex-start}
+}
+@media (max-width:400px){
+  .wrap{padding:13px 10px 28px}
+  .panel{padding:13px 12px}
+  .metrics{grid-template-columns:1fr}
+  .chip{font-size:10.5px;padding:4px 8px;gap:4px}
+  .fold-sub{display:none}
+  .fold-title{font-size:13.5px;gap:6px}
+  .fold-title .bar{height:12px}
+  .fold-title .badge{display:none}
+  .fold-tool{flex:1 1 0;padding:0 8px;font-size:12px}
+  .money-value{font-size:clamp(26px,9vw,36px)}
+  .row-2{grid-template-columns:1fr}
+  .timer-ctrl .btn{flex:1 1 100%}
+  .terms{grid-template-columns:1fr}
+  .guide-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= 顶部 ================= -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">¥</div>
+      <div>
+        <h1><em>钞能力检测</em></h1>
+        <div class="sub">目标倒推 · 时间成本可视化</div>
+      </div>
+    </div>
+    <div class="fold-tools">
+      <button class="fold-tool" id="foldAllOpen" type="button">全部展开</button>
+      <button class="fold-tool" id="foldAllClose" type="button">全部收起</button>
+    </div>
+  </header>
+
+  <!-- ================= 程序信息（默认收起） ================= -->
+  <div class="info-strip" id="infoStrip">
+    <button class="fold-head" type="button" data-fold="info" data-default="0" aria-expanded="false" aria-controls="body-info">
+      <span class="fold-title"><span class="bar"></span>程序信息<span class="fold-sub">作者 军哥懂保 · 微信 xunijiayuan</span></span>
+      <span class="fold-side"><span class="fold-arrow"></span></span>
+    </button>
+    <div class="fold-body meta" id="body-info">
+      <span class="chip mono" title="程序文件大小">体积 <b id="metaSize">计算中</b></span>
+      <span class="chip mono" title="最近更新时间">更新 <b id="metaTime">—</b></span>
+      <span class="chip" title="作者">作者 <b>军哥懂保</b></span>
+      <span class="chip" title="微信号">微信 <b>xunijiayuan</b></span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- ================= 左：输入 ================= -->
+    <div class="col">
+      <section class="panel">
+        <button class="fold-head" type="button" data-fold="target" data-default="1" aria-expanded="true" aria-controls="body-target">
+          <span class="fold-title"><span class="bar"></span>设定你的目标</span>
+          <span class="fold-side"><span class="fold-arrow"></span></span>
+        </button>
+        <div class="fold-body" id="body-target">
+        <div class="field">
+          <div class="label">
+            <span>目标金额</span>
+            <span class="q" data-tip="倒推核算" data-txt="先定死要拿到多少钱，再倒着算每年、每月、每天、每小时甚至每秒得赚多少。目标越具体，算出来的数字越扎心。">?</span>
+          </div>
+          <div class="input-shell">
+            <span class="prefix">¥</span>
+            <input id="inTarget" type="text" inputmode="decimal" value="1,000,000" placeholder="例如 1000000" autocomplete="off">
+            <span class="unit">元</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">
+            <span>实现期限</span>
+            <span class="q" data-tip="期限换算" data-txt="选「年」按 365 天算，选「月」按 30.4 天算（一年 12 个月平摊），选「日」就是自然日。换算出来的总天数会显示在下面。">?</span>
+          </div>
+          <div class="row-2">
+            <div class="input-shell">
+              <input id="inDeadline" type="text" inputmode="decimal" value="1" placeholder="1" autocomplete="off">
+            </div>
+            <div class="seg" id="segUnit">
+              <button data-unit="year" class="on">年</button>
+              <button data-unit="month">月</button>
+              <button data-unit="day">日</button>
+            </div>
+          </div>
+          <div class="hint" id="deadlineHint">折算为 365 天</div>
+        </div>
+
+        <div class="field">
+          <div class="label">
+            <span>每天实际工作小时</span>
+            <span class="q" data-tip="每工时" data-txt="只算你真正在干活的时间，用来算「工作时段内的时薪」。刷手机、发呆、通勤不算。">?</span>
+          </div>
+          <div class="input-shell">
+            <input id="inHours" type="text" inputmode="decimal" value="8" placeholder="8" autocomplete="off">
+            <span class="unit">小时 / 天</span>
+          </div>
+        </div>
+
+        <div class="presets">
+          <button data-t="100000" data-v="1" data-u="year">10 万 · 1 年</button>
+          <button data-t="500000" data-v="1" data-u="year">50 万 · 1 年</button>
+          <button data-t="1000000" data-v="3" data-u="year">100 万 · 3 年</button>
+          <button data-t="300000" data-v="6" data-u="month">30 万 · 6 个月</button>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-gold" id="btnApply">应用并开始计时</button>
+          <button class="btn btn-ghost" id="btnSave">保存记录</button>
+        </div>
+        <div class="hint" id="validHint">改动参数会自动重算；若计时器正在运行，会被重置以保证数字一致。</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <button class="fold-head" type="button" data-fold="read" data-default="1" aria-expanded="true" aria-controls="body-read">
+          <span class="fold-title"><span class="bar"></span>这组数字怎么读</span>
+          <span class="fold-side"><span class="fold-arrow"></span></span>
+        </button>
+        <div class="fold-body" id="body-read">
+        <div class="hint" style="margin-top:-2px">
+          这些数不是预测你能赚多少，而是把你定的目标摊到时间轴上。<br>
+          数字越大，说明你的目标与当前时间分配之间的缺口越大。<br>
+          想改结果，只有两条路：<b style="color:var(--pink-hi)">拉长期限</b>，或<b style="color:var(--pink-hi)">提高单位时间产出</b>。
+        </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= 右：结果 ================= -->
+    <div class="col">
+      <section class="panel">
+        <button class="fold-head" type="button" data-fold="metrics" data-default="1" aria-expanded="true" aria-controls="body-metrics">
+          <span class="fold-title"><span class="bar"></span>倒推核算结果</span>
+          <span class="fold-side"><span class="chip mono" id="chipGoal">目标 ¥1,000,000 / 365 天</span><span class="fold-arrow"></span></span>
+        </button>
+        <div class="fold-body" id="body-metrics">
+        <div class="metrics" id="metrics">
+          <div class="metric">
+            <div class="m-label">每年需赚
+              <span class="q" data-tip="每年需赚" data-txt="把总目标摊到每一年，一年要净进账多少。">?</span>
+            </div>
+            <div class="m-val" id="mYear">—<i>元/年</i></div>
+          </div>
+          <div class="metric">
+            <div class="m-label">每月需赚
+              <span class="q" data-tip="每月需赚" data-txt="一年除以 12 个月，平均每个月要进账多少。">?</span>
+            </div>
+            <div class="m-val" id="mMonth">—<i>元/月</i></div>
+          </div>
+          <div class="metric">
+            <div class="m-label">每天需赚
+              <span class="q" data-tip="每天需赚" data-txt="含周末和休息日在内，平均每天必须进账多少。">?</span>
+            </div>
+            <div class="m-val" id="mDay">—<i>元/天</i></div>
+          </div>
+          <div class="metric">
+            <div class="m-label">每工作小时需赚
+              <span class="q" data-tip="工作时薪" data-txt="用你填的每天工作小时去除「每天需赚」，也就是真正干活时段的时薪要求。">?</span>
+            </div>
+            <div class="m-val" id="mWorkHour">—<i>元/时</i></div>
+          </div>
+          <div class="metric">
+            <div class="m-label">每小时需赚
+              <span class="q" data-tip="自然小时" data-txt="按一天 24 小时、全年无休来算的平均每小时，代表时间的真实含金量。">?</span>
+            </div>
+            <div class="m-val" id="mHour">—<i>元/时</i></div>
+          </div>
+          <div class="metric">
+            <div class="m-label">每分钟需赚
+              <span class="q" data-tip="每分钟" data-txt="一小时除以 60。发个呆的功夫，该赚的钱就这么多。">?</span>
+            </div>
+            <div class="m-val" id="mMinute">—<i>元/分</i></div>
+          </div>
+          <div class="metric key">
+            <div class="m-label">每秒需赚
+              <span class="q" data-tip="每秒" data-txt="眼睛眨一下的时间。这是流失计时器的计算基准。">?</span>
+            </div>
+            <div class="m-val" id="mSecond">—<i>元/秒</i></div>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <!-- 计时器 -->
+      <section class="panel timer-panel" id="timerPanel">
+        <button class="fold-head" type="button" data-fold="timer" data-default="1" aria-expanded="true" aria-controls="body-timer">
+          <span class="fold-title"><span class="bar"></span>流失计时器
+            <span class="q" data-tip="流失计时器" data-txt="按下开始后，时间每走一点，就等于该赚的钱从你手里流走一点。它不创造钱，只把「时间成本」变成看得见的数字。">?</span>
+          </span>
+          <span class="fold-side"><span class="chip mono" id="chipRate">速率 ¥0.0000 / 秒</span><span class="fold-arrow"></span></span>
+        </button>
+        <div class="fold-body" id="body-timer">
+        <div class="timer-body">
+          <div class="ring-box">
+            <svg width="168" height="168" viewBox="0 0 168 168" aria-hidden="true">
+              <defs>
+                <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#f472b6"/>
+                  <stop offset="55%" stop-color="#c084fc"/>
+                  <stop offset="100%" stop-color="#fbbf24"/>
+                </linearGradient>
+              </defs>
+              <circle class="ring-bg" cx="84" cy="84" r="74"></circle>
+              <circle class="ring-fg" id="ringFg" cx="84" cy="84" r="74"
+                      stroke-dasharray="464.96" stroke-dashoffset="464.96"></circle>
+            </svg>
+            <div class="ring-core">
+              <div class="rc-l">本分钟进度</div>
+              <div class="rc-v" id="ringPct">0%</div>
+              <div class="rc-s">时间正在流走</div>
+            </div>
+          </div>
+
+          <div class="money-box">
+            <div class="money-label"><span class="live-dot"></span><span id="stateLabel">待开始</span></div>
+            <div class="money-value" id="money"><span class="cur">¥</span><span id="moneyRoll"></span></div>
+            <div class="money-sub">
+              <span>已计时 <b id="elapsed">00:00</b></span>
+              <span class="sep">·</span>
+              <span>每秒 <b id="rateTxt">0.0000</b> 元</span>
+              <span class="sep">·</span>
+              <span>期限已过 <b id="goalPct">0.0000%</b></span>
+            </div>
+            <div class="timer-ctrl">
+              <button class="btn btn-gold" id="btnStart">开始计时</button>
+              <button class="btn btn-ghost" id="btnReset">重置</button>
+            </div>
+          </div>
+        </div>
+        <div class="timer-note" id="timerNote">说明：金额 = 每秒应得 × 已经过去的秒数，精确到分。数字按系统时间计算，刷新页面后计时会重新开始。</div>
+        </div>
+      </section>
+
+      <!-- 对比 -->
+      <section class="panel">
+        <button class="fold-head" type="button" data-fold="compare" data-default="1" aria-expanded="true" aria-controls="body-compare">
+          <span class="fold-title"><span class="bar"></span>换算成大白话</span>
+          <span class="fold-side"><span class="fold-arrow"></span></span>
+        </button>
+        <div class="fold-body" id="body-compare">
+        <div class="compare-list" id="compareList">
+          <div class="compare-item">
+            <div class="ci-ico">⌛</div>
+            <div class="ci-txt">你刷 <b>10 分钟</b>手机，相当于丢掉</div>
+            <div class="ci-num" id="cmp10">¥0.00</div>
+          </div>
+          <div class="compare-item">
+            <div class="ci-ico">▶</div>
+            <div class="ci-txt">你看 <b>1 小时</b>短视频，相当于丢掉</div>
+            <div class="ci-num" id="cmp60">¥0.00</div>
+          </div>
+          <div class="compare-item">
+            <div class="ci-ico">☾</div>
+            <div class="ci-txt">你多睡 <b>8 小时</b>懒觉，相当于丢掉</div>
+            <div class="ci-num" id="cmp8h">¥0.00</div>
+          </div>
+        </div>
+        <div class="compare-foot" id="compareFoot">
+          按当前目标计算，你的每一分钟大约值 <b>¥0.00</b>。这不是鸡汤，是算术。
+        </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= AI VIP ================= -->
+    <section class="panel" style="grid-column:1/-1">
+      <button class="fold-head" type="button" data-fold="ai" data-default="1" aria-expanded="true" aria-controls="body-ai">
+        <span class="fold-title"><span class="bar"></span>AI 建议 · 高级 VIP <span class="badge vip">VIP</span></span>
+        <span class="fold-side"><span class="badge off" id="aiBadge">接口未接</span><span class="fold-arrow"></span></span>
+      </button>
+      <div class="fold-body" id="body-ai">
+
+      <div class="vip-note">
+        <b>关于这块功能：</b>AI 建议需要大模型能力，出于安全考虑，前端页面里<b>不放任何 API Key</b>，所有请求必须经过你自己的后端代理接口转发。当前页面处于「接口未接」状态：可以填写职业信息、可以查看将要发送的数据格式，但不会产生任何 AI 结果，也不会偷偷联网。
+      </div>
+
+      <div style="margin-top:14px">
+        <div class="career-head">
+          <span>职业 / 方向</span>
+          <span>每天投入（小时）</span>
+          <span>月收入（元，可填区间）</span>
+          <span></span>
+        </div>
+        <div class="career-rows" id="careerRows"></div>
+        <div class="actions" style="margin-top:10px">
+          <button class="btn btn-ghost btn-sm" id="btnAddCareer">+ 添加一个职业</button>
+          <button class="btn btn-gold" id="btnAI" style="flex:0 1 auto">生成 AI 建议</button>
+        </div>
+      </div>
+
+      <div class="fold-block">
+        <button class="fold-head sm" type="button" data-fold="aicfg" data-default="0" aria-expanded="false" aria-controls="body-aicfg">
+          <span class="fold-title">接口配置（可选，需自备后端代理）</span>
+          <span class="fold-side"><span class="fold-arrow"></span></span>
+        </button>
+        <div class="fold-body" id="body-aicfg">
+        <div>
+          <div class="hint" style="margin-top:0">
+            填入你的代理接口地址（例如 <code>https://your-domain.com/api/money-power</code>）。保存后仅存在本机浏览器，不随文件分发。留空即代表接口未接。
+          </div>
+          <div class="cfg-row">
+            <div class="input-shell">
+              <input id="inEndpoint" type="text" placeholder="https://你的域名/api/money-power" autocomplete="off" spellcheck="false">
+            </div>
+            <button class="btn btn-line btn-sm" id="btnSaveCfg">保存接口</button>
+            <button class="btn btn-ghost btn-sm" id="btnClearCfg">清除</button>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <div class="fold-block">
+        <button class="fold-head sm" type="button" data-fold="aiformat" data-default="0" aria-expanded="false" aria-controls="body-aiformat">
+          <span class="fold-title">请求 / 响应格式（接后端时照这个来）</span>
+          <span class="fold-side"><span class="fold-arrow"></span></span>
+        </button>
+        <div class="fold-body" id="body-aiformat">
+        <pre class="fold-pre">POST 你的代理接口地址
+Content-Type: application/json
+
+{
+  <span class="k">"goal"</span>: 1000000,            <span class="s">// 目标金额（元）</span>
+  <span class="k">"deadlineDays"</span>: 365,        <span class="s">// 折算后的总天数</span>
+  <span class="k">"perSecond"</span>: 0.0317,       <span class="s">// 每秒应得（元）</span>
+  <span class="k">"perWorkHour"</span>: 342.47,     <span class="s">// 每工作小时应得（元）</span>
+  <span class="k">"careers"</span>: [
+    { <span class="k">"name"</span>: <span class="s">"主业-运营"</span>, <span class="k">"hoursPerDay"</span>: 8, <span class="k">"monthlyIncome"</span>: 12000 },
+    { <span class="k">"name"</span>: <span class="s">"副业-设计"</span>, <span class="k">"hoursPerDay"</span>: 2, <span class="k">"monthlyIncome"</span>: 3000 }
+  ],
+  <span class="k">"locale"</span>: <span class="s">"zh-CN"</span>
+}
+
+期望响应（字段缺省时会显示友好提示）：
+{
+  <span class="k">"timeAllocation"</span>: [<span class="s">"怎么重新分配时间"</span>],
+  <span class="k">"boost"</span>:          [<span class="s">"该加码的职业与理由"</span>],
+  <span class="k">"cut"</span>:            [<span class="s">"该砍掉或降权的部分"</span>],
+  <span class="k">"path"</span>:           [<span class="s">"达成目标的路径步骤"</span>],
+  <span class="k">"tips"</span>:           [<span class="s">"补充建议"</span>],
+  <span class="k">"encouragement"</span>:  <span class="s">"一段不油腻的鼓励"</span>
+}</pre>
+        </div>
+      </div>
+
+      <div class="ai-out" id="aiOut">
+        <div class="empty-state">
+          <div class="es-t">还没有 AI 结论</div>
+          填好上面的职业信息后点「生成 AI 建议」。<br>
+          在接口未配置之前，这里只会提示你如何接入，不会生成任何编造的内容。
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- ================= 历史 ================= -->
+    <section class="panel" style="grid-column:1/-1">
+      <button class="fold-head" type="button" data-fold="history" data-default="0" aria-expanded="false" aria-controls="body-history">
+        <span class="fold-title"><span class="bar"></span>历史记录
+          <span class="q" data-tip="本地存储" data-txt="记录保存在这台电脑的浏览器本地，不会上传到任何服务器。换浏览器或清理浏览器数据后会丢失。">?</span>
+        </span>
+        <span class="fold-side"><span class="chip mono" id="recCount">0 条</span><span class="fold-arrow"></span></span>
+      </button>
+      <div class="fold-body" id="body-history">
+      <div class="rec-list" id="recList"></div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn btn-ghost btn-sm" id="btnClearRec" style="flex:0 1 auto">清空全部记录</button>
+      </div>
+      </div>
+    </section>
+
+    <!-- ================= 说明 ================= -->
+    <section class="panel" style="grid-column:1/-1">
+      <button class="fold-head" type="button" data-fold="guide" data-default="0" aria-expanded="false" aria-controls="body-guide">
+        <span class="fold-title"><span class="bar"></span>使用说明与操作指引</span>
+        <span class="fold-side"><span class="fold-sub">6 步上手 · 名词解释</span><span class="fold-arrow"></span></span>
+      </button>
+      <div class="fold-body" id="body-guide">
+      <div class="guide-grid">
+        <div class="guide-item">
+          <div class="gi-n">1</div>
+          <div class="gi-t">先填目标和期限</div>
+          <div class="gi-d">目标金额填你想拿到的净额（不是营业额）。期限可以切年 / 月 / 日，天数会自动折算。</div>
+        </div>
+        <div class="guide-item">
+          <div class="gi-n">2</div>
+          <div class="gi-t">看倒推结果</div>
+          <div class="gi-d">右侧七张卡从「每年」一路细到「每秒」。重点看<b style="color:var(--pink-hi)">每秒需赚</b>，它是计时器的计算基准。</div>
+        </div>
+        <div class="guide-item">
+          <div class="gi-n">3</div>
+          <div class="gi-t">按下开始，看钱流走</div>
+          <div class="gi-d">计时器按真实时间累计损失金额，精确到分。中途可暂停、可继续、可重置。改参数会自动重置。</div>
+        </div>
+        <div class="guide-item">
+          <div class="gi-n">4</div>
+          <div class="gi-t">保存与回看</div>
+          <div class="gi-d">点「保存记录」存一份快照，之后可一键载入、加备注、单独删除。数据只在本机。</div>
+        </div>
+        <div class="guide-item">
+          <div class="gi-n">5</div>
+          <div class="gi-t">AI 建议怎么用</div>
+          <div class="gi-d">填写最多若干个职业、每天投入时长和月收入。接口未配置时只展示说明，不编造结果；配置后端代理后才会真正分析。</div>
+        </div>
+        <div class="guide-item">
+          <div class="gi-n">6</div>
+          <div class="gi-t">被别的程序调用</div>
+          <div class="gi-d">页面暴露了全局对象 <code>window.MoneyPower</code>，可以读取核算结果、触发分析、导入导出数据。</div>
+        </div>
+      </div>
+
+      <div class="fold-block">
+        <button class="fold-head sm" type="button" data-fold="terms" data-default="0" aria-expanded="false" aria-controls="body-terms">
+          <span class="fold-title">名词解释（大白话）</span>
+          <span class="fold-side"><span class="fold-arrow"></span></span>
+        </button>
+        <div class="fold-body" id="body-terms">
+        <div class="terms" style="margin-top:4px">
+        <div class="term"><b>倒推核算</b>先定结果，再倒着算过程。比如「3 年要 100 万」，倒推就是每年 33.3 万、每天 913 元。</div>
+        <div class="term"><b>时薪（工作时段）</b>只算你真正干活的小时数，不含摸鱼和休息。它比「自然小时」更能反映你的劳动单价。</div>
+        <div class="term"><b>自然小时</b>按一天 24 小时算的平均值。睡觉也在「流失」，所以数字明显更小。</div>
+        <div class="term"><b>千分位</b>数字每三位加一个逗号，例如 1,000,000，方便一眼读出量级。</div>
+        <div class="term"><b>期限进度</b>已经过去的时间占整个目标期限的百分比。哪怕只过去一分钟，它也不是 0。</div>
+        <div class="term"><b>流失金额</b>每秒应得 × 已过秒数。它衡量的是「这段时间按目标折算值多少钱」，不代表你实际亏了现金。</div>
+        </div>
+        </div>
+      </div>
+
+      <div class="fold-block">
+        <button class="fold-head sm" type="button" data-fold="api" data-default="0" aria-expanded="false" aria-controls="body-api">
+          <span class="fold-title">对外接口说明（给开发者）</span>
+          <span class="fold-side"><span class="fold-arrow"></span></span>
+        </button>
+        <div class="fold-body" id="body-api">
+        <pre class="fold-pre"><span class="s">// 1. 核算：不改动页面，只拿结果</span>
+MoneyPower.calculate({
+  target: 1000000,
+  deadlineValue: 1,
+  deadlineUnit: <span class="s">'year'</span>,   <span class="s">// year | month | day</span>
+  workHoursPerDay: 8
+});
+<span class="s">// → { days, perYear, perMonth, perDay, perWorkHour, perHour, perMinute, perSecond }</span>
+
+<span class="s">// 2. 读取当前页面状态</span>
+MoneyPower.getSnapshot();
+
+<span class="s">// 3. 触发 AI 分析（需先配置代理接口）</span>
+MoneyPower.analyze({ careers: [...] })
+  .then(r =&gt; r.ok ? r.data : r.message);
+
+<span class="s">// 4. 配置接口 / 数据导出导入</span>
+MoneyPower.setAiEndpoint(<span class="s">'https://your-domain.com/api/money-power'</span>);
+MoneyPower.exportJSON();          <span class="s">// 返回全部历史记录 JSON 字符串</span>
+MoneyPower.importJSON(jsonStr);   <span class="s">// 合并导入</span>
+
+<span class="s">// 5. 监听每秒心跳</span>
+MoneyPower.on(<span class="s">'tick'</span>, s =&gt; console.log(s.elapsed, s.lost));</pre>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- ================= 关于与已知限制（默认收起） ================= -->
+    <section class="panel" style="grid-column:1/-1">
+      <button class="fold-head" type="button" data-fold="about" data-default="0" aria-expanded="false" aria-controls="body-about">
+        <span class="fold-title"><span class="bar"></span>关于与已知限制</span>
+        <span class="fold-side"><span class="fold-sub">v1.0.0 · 声明与边界</span><span class="fold-arrow"></span></span>
+      </button>
+      <div class="fold-body" id="body-about">
+        <div class="terms" style="margin-top:4px">
+          <div class="term"><b>诚实边界</b>本工具只做目标倒推与时间成本换算，不预测收入、不承诺任何结果。所有数字来自你自己填的目标与期限，属于算术推演，不构成投资、职业或财务建议。</div>
+          <div class="term"><b>流失金额的含义</b>它是「这段时间按目标折算值多少钱」，不等于你实际亏了现金，也不代表你一定赚得到。</div>
+          <div class="term"><b>折算口径</b>1 年按 365 天算，1 月按 30.4167 天算（365 ÷ 12），不考虑闰年、节假日和工作日日历。</div>
+          <div class="term"><b>计时机制</b>基于本机系统时间累计；刷新或关闭页面后计时从头开始，不做后台续算，也不跨设备同步。</div>
+          <div class="term"><b>数据与隐私</b>纯本地运行，不联网、不上传、页面内不含任何密钥。历史记录只存在本机浏览器，清理浏览器数据会丢失。</div>
+          <div class="term"><b>AI 建议</b>需要你自建后端代理接口。接口未配置或返回格式不符时，页面只给说明，不会编造结论，也不会偷偷联网。</div>
+          <div class="term"><b>动画降级</b>系统开启「减少动态效果」或设备核心数较低时，自动关闭翻牌、流光与脉冲，改为纯文本刷新。</div>
+          <div class="term"><b>版本与作者</b>钞能力检测 v1.0.0 · 作者 军哥懂保 · 微信 xunijiayuan。</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="footer">
+    <div class="disc">
+      钞能力检测 v1.0.0 · 目标倒推与时间成本可视化。纯本地运行，不联网、不上传、不含任何密钥。<em>不预测收入，不承诺结果。</em>
+    </div>
+    <div style="text-align:right">
+      作者：军哥懂保 · 微信：xunijiayuan
+    </div>
+  </footer>
+</div>
+
+<div id="tip"></div>
+<div id="toast"></div>
+
+<script>
+/* =====================================================================
+   钞能力检测 · 纯前端单页应用
+   作者：军哥懂保 / 微信 xunijiayuan
+   说明：不含任何 API Key，AI 能力需通过自建后端代理接入。
+   ===================================================================== */
+(function () {
+  'use strict';
+
+  var BUILD_SIZE = '86.9 KB';
+  var BUILD_TIME = '2026-11-11 21:08';
+
+  var STORE_REC = 'mp_records_v1';
+  var STORE_CFG = 'mp_ai_cfg_v1';
+
+  /* ---------- 基础工具 ---------- */
+  var $ = function (id) { return document.getElementById(id); };
+  var LITE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if ((navigator.hardwareConcurrency || 4) <= 2) LITE = true;
+  if (LITE) document.body.classList.add('lite');
+
+  function num(v) {
+    var n = parseFloat(String(v == null ? '' : v).replace(/[^0-9.\-]/g, ''));
+    return isFinite(n) ? n : 0;
+  }
+  function fmtInt(n) {
+    var s = String(Math.round(Math.abs(n)));
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+  function fmt2(n) {
+    if (!isFinite(n)) return '0.00';
+    var neg = n < 0;
+    var s = fmtInt(Math.abs(n));
+    var c = Math.round((Math.abs(n) - Math.floor(Math.abs(n))) * 100);
+    if (c === 100) { s = fmtInt(Math.abs(n) + 1); c = 0; }
+    return (neg ? '-' : '') + s + '.' + (c < 10 ? '0' + c : c);
+  }
+  // 金额展示：大数自动用万 / 亿
+  function fmtMoney(n) {
+    if (!isFinite(n) || n === 0) return { v: '0.00', u: '元' };
+    var a = Math.abs(n);
+    if (a >= 1e8) return { v: (n / 1e8).toFixed(2), u: '亿元' };
+    if (a >= 1e4) return { v: (n / 1e4).toFixed(2), u: '万元' };
+    if (a >= 1) return { v: fmt2(n), u: '元' };
+    return { v: smallNum(n), u: '元' };
+  }
+  function smallNum(n) {
+    var s = n.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+    return s || '0';
+  }
+  function timeStr(d) {
+    var p = function (x) { return x < 10 ? '0' + x : '' + x; };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  function toast(msg) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._tm);
+    t._tm = setTimeout(function () { t.classList.remove('show'); }, 3200);
+  }
+
+  /* ---------- 滚动数字 ---------- */
+  function buildRoll(text) {
+    var wrap = document.createElement('span');
+    wrap.className = 'rollwrap';
+    var chars = [];
+    for (var i = 0; i < text.length; i++) {
+      var ch = text.charAt(i);
+      if (ch >= '0' && ch <= '9') {
+        var d = document.createElement('span');
+        d.className = 'dg';
+        var s = document.createElement('span');
+        s.className = 'dgs';
+        for (var k = 0; k < 10; k++) {
+          var b = document.createElement('span');
+          b.textContent = String(k);
+          s.appendChild(b);
+        }
+        s.style.transform = 'translateY(' + (-Number(ch) * 10) + '%)';
+        d.appendChild(s);
+        d._strip = s; d._val = ch;
+        wrap.appendChild(d);
+        chars.push(d);
+      } else {
+        var t = document.createElement('span');
+        t.className = 'dgx' + (ch === ',' ? ' cm' : '');
+        t.textContent = ch;
+        t._val = ch;
+        wrap.appendChild(t);
+        chars.push(t);
+      }
+    }
+    wrap._chars = chars;
+    wrap._text = text;
+    return wrap;
+  }
+  function updateRoll(el, text) {
+    if (LITE) { el.textContent = text; return el; }
+    if (!el._chars) {
+      var nw = buildRoll(text);
+      el.textContent = '';
+      el.appendChild(nw);
+      return nw;
+    }
+    if (el._text === text) return el;
+    var chars = el._chars;
+    if (chars.length !== text.length) {
+      return updateRoll.replace(el, text);
+    }
+    for (var i = 0; i < text.length; i++) {
+      var ch = text.charAt(i);
+      var node = chars[i];
+      var isDigit = ch >= '0' && ch <= '9';
+      var wasDigit = !!node._strip;
+      if (isDigit !== wasDigit) return updateRoll.replace(el, text);
+      if (isDigit) {
+        if (node._val !== ch) {
+          node._strip.style.transform = 'translateY(' + (-Number(ch) * 10) + '%)';
+          node._val = ch;
+        }
+      } else if (node._val !== ch) {
+        node.textContent = ch;
+        node._val = ch;
+      }
+    }
+    el._text = text;
+    return el;
+  }
+  updateRoll.replace = function (el, text) {
+    var nw = buildRoll(text);
+    el.textContent = '';
+    el.appendChild(nw);
+    return nw;
+  };
+
+  /* ---------- 计算核心 ---------- */
+  function calc(p) {
+    var target = p.target > 0 ? p.target : 0;
+    var v = p.deadlineValue > 0 ? p.deadlineValue : 0;
+    var days = 0;
+    if (v > 0) {
+      if (p.deadlineUnit === 'year') days = v * 365;
+      else if (p.deadlineUnit === 'month') days = v * (365 / 12);
+      else days = v;
+    }
+    var wh = p.workHoursPerDay;
+    if (!(wh > 0)) wh = 0;
+    if (wh > 24) wh = 24;
+    var perYear = 0, perMonth = 0, perDay = 0, perWorkHour = 0, perHour = 0, perMinute = 0, perSecond = 0;
+    if (target > 0 && days > 0) {
+      perYear = target / (days / 365);
+      perMonth = perYear / 12;
+      perDay = target / days;
+      perWorkHour = wh > 0 ? perDay / wh : 0;
+      perHour = target / (days * 24);
+      perMinute = perHour / 60;
+      perSecond = perMinute / 60;
+    }
+    return {
+      target: target, days: days, deadlineValue: v, deadlineUnit: p.deadlineUnit,
+      workHoursPerDay: wh, perYear: perYear, perMonth: perMonth, perDay: perDay,
+      perWorkHour: perWorkHour, perHour: perHour, perMinute: perMinute, perSecond: perSecond
+    };
+  }
+
+  /* ---------- 状态 ---------- */
+  var S = {
+    deadlineUnit: 'year',
+    workHoursPerDay: 8,
+    result: null,
+    timer: { state: 'idle', acc: 0, startAt: 0, raf: 0, lastPaint: 0, lastFlash: -1e9 },
+    records: [],
+    cfg: { endpoint: '' }
+  };
+
+  /* ---------- 存储 ---------- */
+  function loadStore() {
+    try {
+      var r = JSON.parse(localStorage.getItem(STORE_REC) || '[]');
+      if (Array.isArray(r)) S.records = r;
+    } catch (e) { S.records = []; }
+    try {
+      var c = JSON.parse(localStorage.getItem(STORE_CFG) || '{}');
+      if (c && typeof c.endpoint === 'string') S.cfg = { endpoint: c.endpoint };
+    } catch (e) { S.cfg = { endpoint: '' }; }
+  }
+  function saveRecords() {
+    try { localStorage.setItem(STORE_REC, JSON.stringify(S.records.slice(0, 60))); } catch (e) {}
+  }
+  function saveCfg() {
+    try { localStorage.setItem(STORE_CFG, JSON.stringify(S.cfg)); } catch (e) {}
+  }
+
+  /* ---------- 读取输入 ---------- */
+  function readInput() {
+    var target = num($('inTarget').value);
+    var dv = num($('inDeadline').value);
+    var wh = num($('inHours').value);
+    return { target: target, deadlineValue: dv, deadlineUnit: S.deadlineUnit, workHoursPerDay: wh };
+  }
+
+  /* ---------- 渲染结果 ---------- */
+  var lastKeyRate = null;
+  function renderResult() {
+    var r = calc(readInput());
+    S.result = r;
+
+    var UNIT_SHORT = { mYear: '年', mMonth: '月', mDay: '天', mWorkHour: '时', mHour: '时', mMinute: '分', mSecond: '秒' };
+    var map = [
+      ['mYear', r.perYear], ['mMonth', r.perMonth], ['mDay', r.perDay],
+      ['mWorkHour', r.perWorkHour], ['mHour', r.perHour],
+      ['mMinute', r.perMinute], ['mSecond', r.perSecond]
+    ];
+    map.forEach(function (it) {
+      var el = $(it[0]);
+      if (!r.target || !r.days) {
+        el.innerHTML = '—<i>元/' + UNIT_SHORT[it[0]] + '</i>';
+        return;
+      }
+      var m = fmtMoney(it[1]);
+      el.innerHTML = escapeHtml(m.v) + '<i>' + m.u + '/' + UNIT_SHORT[it[0]] + '</i>';
+    });
+
+    // 每秒速率单独用 4 位小数展示
+    $('rateTxt').textContent = r.perSecond > 0 ? r.perSecond.toFixed(4) : '0.0000';
+    $('chipRate').innerHTML = '速率 <b>¥' + (r.perSecond > 0 ? r.perSecond.toFixed(4) : '0.0000') + ' / 秒</b>';
+
+    var m10 = r.perSecond * 600, m60 = r.perSecond * 3600, m8h = r.perSecond * 28800;
+    $('cmp10').textContent = '¥' + fmt2(m10);
+    $('cmp60').textContent = '¥' + fmt2(m60);
+    $('cmp8h').textContent = '¥' + fmt2(m8h);
+    var pm = fmtMoney(r.perMinute);
+    $('compareFoot').innerHTML = '按当前目标计算，你的每一分钟大约值 <b>¥' + pm.v + ' ' + pm.u + '</b>。这不是鸡汤，是算术。';
+
+    $('chipGoal').innerHTML = '目标 <b>¥' + fmtInt(r.target) + '</b> / <b>' + (r.days ? (Math.round(r.days * 100) / 100) : 0) + '</b> 天';
+
+    // 期限提示
+    var dEl = $('deadlineHint');
+    if (!r.days) {
+      dEl.textContent = '请填写大于 0 的期限';
+      dEl.className = 'hint warn';
+    } else {
+      var txt = '折算为 ' + (Math.round(r.days * 100) / 100) + ' 天';
+      if (r.deadlineUnit === 'month') txt += '（按一年 12 个月平摊）';
+      if (r.deadlineUnit === 'year') txt += '（按 365 天/年）';
+      dEl.textContent = txt;
+      dEl.className = 'hint';
+    }
+
+    // 参数合法性提示
+    var vh = $('validHint');
+    if (!r.target || !r.days) {
+      vh.textContent = '目标金额和期限都要大于 0，否则算不出结果。';
+      vh.className = 'hint warn';
+    } else if (!r.perWorkHour) {
+      vh.textContent = '「每天工作小时」要大于 0，否则算不出工作时段时薪。';
+      vh.className = 'hint warn';
+    } else {
+      vh.textContent = '改动参数会自动重算；若计时器正在运行，会被重置以保证数字一致。';
+      vh.className = 'hint';
+    }
+
+    // 速率变化 → 计时器必须重置
+    if (lastKeyRate !== null && Math.abs(lastKeyRate - r.perSecond) > 1e-12) {
+      if (S.timer.state !== 'idle') {
+        resetTimer(true);
+        toast('参数已变，计时器已重置');
+      }
+    }
+    lastKeyRate = r.perSecond;
+
+    if (S.timer.state === 'idle') paintLost(0);
+    return r;
+  }
+
+  /* ---------- 计时器 ---------- */
+  var rollEl = null;   // 金额滚动数字的 rollwrap
+
+  function elapsedMs() {
+    var t = S.timer;
+    if (t.state === 'running') return t.acc + (performance.now() - t.startAt);
+    return t.acc;
+  }
+  function paintRing(ms) {
+    var pct = (ms % 60000) / 60000;
+    var c = 464.96;
+    $('ringFg').style.strokeDashoffset = String(c * (1 - pct));
+    $('ringPct').textContent = Math.floor(pct * 100) + '%';
+  }
+  function paintTime(ms) {
+    var tot = Math.floor(ms / 1000);
+    var h = Math.floor(tot / 3600), m = Math.floor((tot % 3600) / 60), s = tot % 60;
+    var p = function (x) { return x < 10 ? '0' + x : '' + x; };
+    $('elapsed').textContent = (h > 0 ? p(h) + ':' : '') + p(m) + ':' + p(s);
+    var r = S.result;
+    var gp = 0;
+    if (r && r.days > 0) gp = (ms / 1000) / (r.days * 86400) * 100;
+    $('goalPct').textContent = (gp < 0.0001 && gp > 0 ? '0.0001' : gp.toFixed(4)) + '%';
+  }
+  function paintLost(ms, forceFlash) {
+    var r = S.result;
+    var rate = r ? r.perSecond : 0;
+    var lost = rate * (ms / 1000);
+    var txt = fmt2(lost);
+    var host = $('moneyRoll');
+
+    if (LITE) {
+      host.textContent = txt;
+    } else if (!rollEl || rollEl.parentNode !== host) {
+      host.textContent = '';
+      rollEl = buildRoll(txt);
+      host.appendChild(rollEl);
+    } else {
+      rollEl = updateRoll(rollEl, txt);
+    }
+    // 位数过多时缩字号
+    var box = $('money');
+    host.setAttribute('data-value', txt);   // 供自动化与外部程序读取纯数值
+    if (txt.length > 13) box.classList.add('small'); else box.classList.remove('small');
+
+    // 轻微高亮脉冲（每 1 秒最多一次）
+    if (!LITE && (forceFlash || performance.now() - S.timer.lastFlash > 980)) {
+      S.timer.lastFlash = performance.now();
+      box.classList.add('flash');
+      setTimeout(function () { box.classList.remove('flash'); }, 320);
+    }
+  }
+
+  function frame() {
+    var t = S.timer;
+    if (t.state !== 'running') return;
+    var ms = elapsedMs();
+    paintRing(ms);
+    var now = performance.now();
+    if (now - t.lastPaint >= (LITE ? 1000 : 120)) {
+      t.lastPaint = now;
+      paintLost(ms);
+      paintTime(ms);
+    }
+    t.raf = requestAnimationFrame(frame);
+  }
+
+  function setStatus(cls, label) {
+    var p = $('timerPanel');
+    p.classList.remove('status-running', 'status-paused');
+    if (cls) p.classList.add(cls);
+    $('stateLabel').textContent = label;
+  }
+
+  function startTimer() {
+    var t = S.timer;
+    if (t.state === 'running') {
+      t.acc += performance.now() - t.startAt;
+      t.state = 'paused';
+      cancelAnimationFrame(t.raf);
+      setStatus('status-paused', '已暂停');
+      $('btnStart').textContent = '继续计时';
+      paintLost(t.acc); paintTime(t.acc); paintRing(t.acc);
+      return;
+    }
+    if (!S.result || !S.result.perSecond) {
+      toast('先把目标金额和期限填好');
+      return;
+    }
+    t.state = 'running';
+    t.startAt = performance.now();
+    t.lastPaint = 0;
+    setStatus('status-running', '正在流失');
+    $('btnStart').textContent = '暂停';
+    frame();
+  }
+
+  function resetTimer(silent) {
+    var t = S.timer;
+    cancelAnimationFrame(t.raf);
+    t.state = 'idle'; t.acc = 0; t.startAt = 0; t.lastPaint = 0;
+    setStatus('', '待开始');
+    $('btnStart').textContent = '开始计时';
+    paintRing(0); paintTime(0); paintLost(0);
+    if (!silent) toast('已重置');
+  }
+
+  /* ---------- 「?」名词解释 ---------- */
+  var tipTimer = 0;
+  function showTip(anchor) {
+    var tip = $('tip');
+    var title = anchor.getAttribute('data-tip') || '解释';
+    var txt = anchor.getAttribute('data-txt') || '';
+    tip.innerHTML = '<b>' + escapeHtml(title) + '</b>' + escapeHtml(txt);
+    tip.classList.add('show');
+    var r = anchor.getBoundingClientRect();
+    var tw = Math.min(280, window.innerWidth - 24);
+    tip.style.width = tw + 'px';
+    var left = r.left + r.width / 2 - tw / 2;
+    left = Math.max(12, Math.min(left, window.innerWidth - tw - 12));
+    var top = r.bottom + 10;
+    var h = tip.offsetHeight;
+    if (top + h > window.innerHeight - 12) top = Math.max(12, r.top - h - 10);
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+  function hideTip() { $('tip').classList.remove('show'); document.querySelectorAll('.q.on').forEach(function (e) { e.classList.remove('on'); }); }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+  document.addEventListener('click', function (e) {
+    var q = e.target.closest ? e.target.closest('.q') : null;
+    if (q) {
+      e.stopPropagation();
+      var on = q.classList.contains('on');
+      hideTip();
+      if (!on) { q.classList.add('on'); showTip(q); }
+      return;
+    }
+    if (!e.target.closest || !e.target.closest('#tip')) hideTip();
+  });
+  window.addEventListener('scroll', hideTip, { passive: true });
+  window.addEventListener('resize', hideTip);
+
+  /* ---------- 职业列表 ---------- */
+  var careerSeed = [
+    { name: '主业', hoursPerDay: 8, monthlyIncome: 12000 },
+    { name: '副业', hoursPerDay: 2, monthlyIncome: 3000 }
+  ];
+  function careerRowHTML(c) {
+    return '<div class="cell" data-l="职业 / 方向"><input class="nm" type="text" placeholder="职业名称" value="' + escapeHtml(c.name || '') + '" autocomplete="off"></div>' +
+      '<div class="cell" data-l="每天投入"><input class="num hr" type="text" inputmode="decimal" placeholder="0" value="' + (c.hoursPerDay || '') + '" autocomplete="off"><span class="u">h</span></div>' +
+      '<div class="cell" data-l="月收入（元）"><input class="num inc" type="text" placeholder="如 8000 或 8000-15000" value="' + escapeHtml(String(c.monthlyIncome || '')) + '" autocomplete="off"></div>' +
+      '<button class="del" type="button" title="删除这个职业" aria-label="删除">×</button>';
+  }
+  function renderCareers(list) {
+    var box = $('careerRows');
+    box.innerHTML = '';
+    var arr = list && list.length ? list : careerSeed;
+    arr.forEach(function (c) {
+      var row = document.createElement('div');
+      row.className = 'career-row';
+      row.innerHTML = careerRowHTML(c);
+      box.appendChild(row);
+    });
+  }
+  function readCareers() {
+    var out = [];
+    document.querySelectorAll('#careerRows .career-row').forEach(function (row) {
+      var name = row.querySelector('.nm').value.trim();
+      var hr = num(row.querySelector('.hr').value);
+      var incRaw = row.querySelector('.inc').value.trim();
+      if (!name && !hr && !incRaw) return;
+      out.push({ name: name || '未命名职业', hoursPerDay: hr, monthlyIncome: incRaw });
+    });
+    return out;
+  }
+
+  /* ---------- AI ---------- */
+  var aiBusy = false;
+  function setAiBadge() {
+    var b = $('aiBadge');
+    if (S.cfg.endpoint) { b.className = 'badge on'; b.textContent = '已配置接口'; }
+    else { b.className = 'badge off'; b.textContent = '接口未接'; }
+    $('inEndpoint').value = S.cfg.endpoint || '';
+  }
+
+  function aiEmpty(title, desc) {
+    $('aiOut').innerHTML = '<div class="empty-state"><div class="es-t">' + escapeHtml(title) + '</div>' + desc + '</div>';
+  }
+
+  function buildPayload(careers) {
+    var r = S.result || calc(readInput());
+    return {
+      goal: r.target,
+      deadlineDays: Math.round(r.days * 100) / 100,
+      perSecond: r.perSecond,
+      perWorkHour: r.perWorkHour,
+      careers: careers.map(function (c) {
+        return { name: c.name, hoursPerDay: c.hoursPerDay, monthlyIncome: c.monthlyIncome };
+      }),
+      locale: 'zh-CN'
+    };
+  }
+
+  function analyze(payload) {
+    return new Promise(function (resolve) {
+      if (!S.cfg.endpoint) {
+        resolve({ ok: false, reason: 'NOT_CONFIGURED', message: 'AI 接口未配置：需要先接入后端代理接口，前端不保存任何密钥。' });
+        return;
+      }
+      var ctrl = ('AbortController' in window) ? new AbortController() : null;
+      var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 15000);
+      fetch(S.cfg.endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: ctrl ? ctrl.signal : undefined
+      }).then(function (res) {
+        clearTimeout(timer);
+        if (!res.ok) throw new Error('接口返回 ' + res.status);
+        return res.json();
+      }).then(function (data) {
+        resolve({ ok: true, data: data });
+      }).catch(function (err) {
+        clearTimeout(timer);
+        resolve({ ok: false, reason: 'REQUEST_FAILED', message: 'AI 接口请求失败：' + (err && err.message ? err.message : '未知错误') + '。请检查代理地址是否可访问。' });
+      });
+    });
+  }
+
+  function renderAiData(d) {
+    var secs = [
+      ['时间分配建议', d.timeAllocation],
+      ['该加码的方向', d.boost],
+      ['该砍掉或降权的', d.cut],
+      ['达成路径', d.path],
+      ['补充建议', d.tips]
+    ];
+    var html = '';
+    var any = false;
+    secs.forEach(function (it) {
+      if (Array.isArray(it[1]) && it[1].length) {
+        any = true;
+        html += '<div class="ai-card"><h4>' + it[0] + '</h4><ul>' +
+          it[1].map(function (x) { return '<li>' + escapeHtml(x) + '</li>'; }).join('') + '</ul></div>';
+      }
+    });
+    if (d.encouragement) {
+      any = true;
+      html += '<div class="ai-card"><h4>最后一句</h4>' + escapeHtml(d.encouragement) + '</div>';
+    }
+    if (!any) {
+      aiEmpty('接口有响应，但格式不对', '响应里没有识别到 timeAllocation / boost / cut / path / tips / encouragement 字段。请参考下方「请求 / 响应格式」调整后端返回。');
+      return;
+    }
+    $('aiOut').innerHTML = html;
+  }
+
+  function doAI() {
+    var careers = readCareers();
+    if (!careers.length) {
+      toast('先至少填一个职业');
+      return;
+    }
+    if (!S.result || !S.result.target || !S.result.days) {
+      toast('先把目标金额和期限填好');
+      return;
+    }
+    if (!S.cfg.endpoint) {
+      aiEmpty('AI 接口未接，这里是空的',
+        '这块功能需要后端代理接口，页面里不放任何 Key，也不会假装给你结果。<br><br>' +
+        '接入方式：展开下方「接口配置」，填入你自己服务器上的代理地址并保存，再点一次「生成 AI 建议」。请求与响应格式见「请求 / 响应格式」。</div>');
+      toast('接口未接：需要先配置后端代理地址');
+      return;
+    }
+    if (aiBusy) return;
+    aiBusy = true;
+    $('btnAI').disabled = true;
+    $('btnAI').textContent = '分析中…';
+    var payload = buildPayload(careers);
+    analyze(payload).then(function (r) {
+      aiBusy = false;
+      $('btnAI').disabled = false;
+      $('btnAI').textContent = '生成 AI 建议';
+      if (r.ok) renderAiData(r.data || {});
+      else aiEmpty('AI 暂时不可用', escapeHtml(r.message) + '<br><br>已保留你填写的职业信息，接口恢复后可直接重试。');
+    });
+  }
+
+  /* ---------- 历史 ---------- */
+  function renderRecords() {
+    var box = $('recList');
+    $('recCount').textContent = S.records.length + ' 条';
+    if (!S.records.length) {
+      box.innerHTML = '<div class="empty-state"><div class="es-t">还没有记录</div>填好目标和期限，点左侧「保存记录」存一份，之后可以一键载入、加备注。</div>';
+      return;
+    }
+    box.innerHTML = '';
+    S.records.forEach(function (rec, idx) {
+      var el = document.createElement('div');
+      el.className = 'rec';
+      el.innerHTML =
+        '<div class="rec-main">' +
+          '<div class="rec-t"><b>¥' + fmtInt(rec.target) + '</b><span>· ' + rec.daysText + '</span>' +
+            '<span class="time">' + rec.createdAt + '</span></div>' +
+          '<div class="rec-d"><span>每天 ¥' + fmt2(rec.perDay) + '</span>' +
+            '<span>每工作小时 ¥' + fmt2(rec.perWorkHour) + '</span>' +
+            '<span>每秒 ¥' + (rec.perSecond > 0 ? rec.perSecond.toFixed(4) : '0.0000') + '</span></div>' +
+        '</div>' +
+        '<div class="rec-ops">' +
+          '<button class="btn btn-ghost btn-sm act-load" type="button">载入</button>' +
+          '<button class="btn btn-ghost btn-sm act-del" type="button">删除</button>' +
+        '</div>' +
+        '<div class="rec-note"><input type="text" placeholder="加个备注，比如「第一版目标」" value="' + escapeHtml(rec.note || '') + '"></div>';
+      el.querySelector('.act-load').addEventListener('click', function () { loadRecord(rec); });
+      el.querySelector('.act-del').addEventListener('click', function () {
+        if (!confirm('删除这条记录？')) return;
+        S.records.splice(idx, 1);
+        saveRecords(); renderRecords(); toast('已删除');
+      });
+      var noteInput = el.querySelector('.rec-note input');
+      noteInput.addEventListener('change', function () {
+        S.records[idx].note = noteInput.value.trim();
+        saveRecords(); toast('备注已保存');
+      });
+      box.appendChild(el);
+    });
+  }
+
+  function loadRecord(rec) {
+    $('inTarget').value = fmtInt(rec.target);
+    $('inDeadline').value = String(rec.deadlineValue);
+    S.deadlineUnit = rec.deadlineUnit || 'year';
+    $('segUnit').querySelectorAll('button').forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute('data-unit') === S.deadlineUnit);
+    });
+    $('inHours').value = String(rec.workHoursPerDay || 8);
+    renderResult();
+    resetTimer(true);
+    toast('已载入这份记录');
+    window.scrollTo({ top: 0, behavior: LITE ? 'auto' : 'smooth' });
+  }
+
+  function saveRecord() {
+    var r = S.result || calc(readInput());
+    if (!r.target || !r.days) { toast('目标金额和期限要先填对'); return; }
+    var daysText = (Math.round(r.days * 100) / 100) + ' 天';
+    S.records.unshift({
+      target: r.target,
+      deadlineValue: r.deadlineValue,
+      deadlineUnit: r.deadlineUnit,
+      workHoursPerDay: r.workHoursPerDay,
+      days: r.days,
+      daysText: daysText,
+      perDay: r.perDay,
+      perWorkHour: r.perWorkHour,
+      perSecond: r.perSecond,
+      note: '',
+      createdAt: timeStr(new Date())
+    });
+    if (S.records.length > 60) S.records.length = 60;
+    saveRecords();
+    renderRecords();
+    toast('已保存到本机');
+  }
+
+  /* ---------- 折叠区块 ---------- */
+  var FOLD_KEY = 'mp_fold_v1';
+  var foldState = {};
+
+  function loadFoldState() {
+    try {
+      var o = JSON.parse(localStorage.getItem(FOLD_KEY) || '{}');
+      if (o && typeof o === 'object' && !Array.isArray(o)) foldState = o;
+    } catch (e) { foldState = {}; }
+  }
+  function saveFoldState() {
+    try { localStorage.setItem(FOLD_KEY, JSON.stringify(foldState)); } catch (e) {}
+  }
+  function setFold(btn, open) {
+    var id = btn.getAttribute('data-fold');
+    btn.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    var body = document.getElementById('body-' + id);
+    if (body) body.hidden = !open;
+    var host = btn.closest('.panel, .info-strip');
+    if (host) host.classList.toggle('is-collapsed', !open);
+  }
+  function refreshTimerUI() {
+    var ms = elapsedMs();
+    paintLost(ms);
+    paintTime(ms);
+    paintRing(ms);
+  }
+  function initFolds() {
+    loadFoldState();
+    var heads = document.querySelectorAll('.fold-head[data-fold]');
+    heads.forEach(function (btn) {
+      var id = btn.getAttribute('data-fold');
+      var def = btn.getAttribute('data-default') === '1';
+      var open = Object.prototype.hasOwnProperty.call(foldState, id) ? !!foldState[id] : def;
+      setFold(btn, open);
+      btn.addEventListener('click', function (e) {
+        if (e.target.closest && e.target.closest('.q')) return;
+        var next = !btn.classList.contains('open');
+        setFold(btn, next);
+        foldState[id] = next;
+        saveFoldState();
+        if (next && id === 'timer') refreshTimerUI();
+      });
+    });
+    var setAll = function (open) {
+      document.querySelectorAll('.fold-head[data-fold]').forEach(function (btn) {
+        setFold(btn, open);
+        foldState[btn.getAttribute('data-fold')] = open;
+      });
+      saveFoldState();
+      if (open) refreshTimerUI();
+      toast(open ? '已展开全部区块' : '已收起全部区块');
+    };
+    $('foldAllOpen').addEventListener('click', function () { setAll(true); });
+    $('foldAllClose').addEventListener('click', function () { setAll(false); });
+  }
+
+  /* ---------- 顶部信息 ---------- */
+  function initMeta() {
+    $('metaSize').textContent = BUILD_SIZE;
+    var t = '';
+    try {
+      var lm = document.lastModified;
+      var d = new Date(lm);
+      if (!isNaN(d.getTime()) && d.getFullYear() > 2000) t = timeStr(d);
+    } catch (e) {}
+    $('metaTime').textContent = t || BUILD_TIME;
+
+    // 尝试读取真实文件大小（file:// 下通常被浏览器拦截，失败就用构建值）
+    if (location.protocol === 'http:' || location.protocol === 'https:') {
+      fetch(location.href, { method: 'HEAD' }).then(function (r) {
+        var len = r.headers.get('content-length');
+        if (len) {
+          var kb = Number(len) / 1024;
+          $('metaSize').textContent = (kb >= 1024 ? (kb / 1024).toFixed(2) + ' MB' : kb.toFixed(1) + ' KB');
+        }
+      }).catch(function () {});
+    }
+  }
+
+  /* ---------- 事件绑定 ---------- */
+  function bind() {
+    // 金额输入：自动千分位
+    $('inTarget').addEventListener('input', function () {
+      var raw = this.value.replace(/[^\d.]/g, '');
+      var parts = raw.split('.');
+      if (parts.length > 2) parts = [parts[0], parts.slice(1).join('')];
+      var intPart = parts[0].replace(/^0+(?=\d)/, '');
+      var out = intPart ? intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '';
+      if (parts.length > 1) out += '.' + parts[1].slice(0, 2);
+      this.value = out;
+      renderResult();
+    });
+    $('inDeadline').addEventListener('input', function () {
+      this.value = this.value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1');
+      renderResult();
+    });
+    $('inHours').addEventListener('input', function () {
+      this.value = this.value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1');
+      renderResult();
+    });
+
+    $('segUnit').addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) return;
+      S.deadlineUnit = b.getAttribute('data-unit');
+      this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); });
+      renderResult();
+    });
+
+    var presets = document.querySelector('.presets');
+    presets.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) return;
+      $('inTarget').value = fmtInt(Number(b.getAttribute('data-t')));
+      $('inDeadline').value = b.getAttribute('data-v');
+      S.deadlineUnit = b.getAttribute('data-u');
+      $('segUnit').querySelectorAll('button').forEach(function (x) {
+        x.classList.toggle('on', x.getAttribute('data-unit') === S.deadlineUnit);
+      });
+      renderResult();
+      resetTimer(true);
+      toast('已套用预设，可直接开始计时');
+    });
+
+    $('btnApply').addEventListener('click', function () {
+      var r = renderResult();
+      if (!r.target || !r.days) { toast('目标金额和期限要先填对'); return; }
+      resetTimer(true);
+      startTimer();
+      if (window.innerWidth < 1040) {
+        var p = $('timerPanel');
+        p.scrollIntoView({ behavior: LITE ? 'auto' : 'smooth', block: 'center' });
+      }
+    });
+    $('btnSave').addEventListener('click', saveRecord);
+    $('btnStart').addEventListener('click', startTimer);
+    $('btnReset').addEventListener('click', function () { resetTimer(false); });
+
+    $('btnAddCareer').addEventListener('click', function () {
+      var row = document.createElement('div');
+      row.className = 'career-row';
+      row.innerHTML = careerRowHTML({ name: '', hoursPerDay: '', monthlyIncome: '' });
+      $('careerRows').appendChild(row);
+      row.querySelector('.nm').focus();
+    });
+    $('careerRows').addEventListener('click', function (e) {
+      var d = e.target.closest('.del');
+      if (!d) return;
+      if (document.querySelectorAll('#careerRows .career-row').length <= 1) {
+        toast('至少保留一个职业');
+        return;
+      }
+      d.closest('.career-row').remove();
+    });
+
+    $('btnAI').addEventListener('click', doAI);
+    $('btnSaveCfg').addEventListener('click', function () {
+      var v = $('inEndpoint').value.trim();
+      if (v && !/^https?:\/\//i.test(v)) { toast('接口地址要以 http:// 或 https:// 开头'); return; }
+      S.cfg.endpoint = v;
+      saveCfg(); setAiBadge();
+      toast(v ? '接口已保存（仅存本机）' : '接口已清空，当前为未接状态');
+    });
+    $('btnClearCfg').addEventListener('click', function () {
+      S.cfg.endpoint = '';
+      $('inEndpoint').value = '';
+      saveCfg(); setAiBadge();
+      toast('已清除接口配置');
+    });
+
+    $('btnClearRec').addEventListener('click', function () {
+      if (!S.records.length) { toast('没有记录可清空'); return; }
+      if (!confirm('确定清空全部 ' + S.records.length + ' 条记录？此操作不可撤销。')) return;
+      S.records = [];
+      saveRecords(); renderRecords();
+      toast('已清空');
+    });
+
+    // 页面隐藏时把计时冻结（避免后台标签页时间误差累积异常）
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden && S.timer.state === 'running') {
+        // performance.now 仍然准确，这里只暂停 rAF，回来时自动续上
+        cancelAnimationFrame(S.timer.raf);
+      } else if (!document.hidden && S.timer.state === 'running') {
+        S.timer.lastPaint = 0;
+        frame();
+      }
+    });
+  }
+
+  /* ---------- 对外接口 ---------- */
+  window.MoneyPower = {
+    version: '1.0.0',
+    calculate: function (p) {
+      return calc({
+        target: num(p && p.target),
+        deadlineValue: num(p && p.deadlineValue),
+        deadlineUnit: (p && p.deadlineUnit) || 'year',
+        workHoursPerDay: num(p && p.workHoursPerDay) || 8
+      });
+    },
+    getSnapshot: function () {
+      var r = S.result || calc(readInput());
+      return {
+        input: { target: r.target, deadlineValue: r.deadlineValue, deadlineUnit: r.deadlineUnit, workHoursPerDay: r.workHoursPerDay },
+        result: r,
+        timer: { state: S.timer.state, elapsedMs: elapsedMs(), lost: r.perSecond * (elapsedMs() / 1000) },
+        ai: { configured: !!S.cfg.endpoint }
+      };
+    },
+    analyze: function (payload) {
+      var p = payload || {};
+      var built = buildPayload(readCareers());
+      if (p.careers && p.careers.length) built.careers = p.careers;
+      if (typeof p.goal === 'number') built.goal = p.goal;
+      if (typeof p.deadlineDays === 'number') built.deadlineDays = p.deadlineDays;
+      return analyze(built);
+    },
+    setAiEndpoint: function (url) {
+      S.cfg.endpoint = String(url || '').trim();
+      saveCfg(); setAiBadge();
+      return !!S.cfg.endpoint;
+    },
+    exportJSON: function () { return JSON.stringify(S.records); },
+    importJSON: function (json) {
+      try {
+        var arr = JSON.parse(json);
+        if (!Array.isArray(arr)) return 0;
+        var before = S.records.length;
+        S.records = arr.concat(S.records).slice(0, 60);
+        saveRecords(); renderRecords();
+        return S.records.length - before;
+      } catch (e) { return -1; }
+    },
+    _listeners: {},
+    on: function (evt, fn) {
+      if (typeof fn !== 'function') return;
+      (this._listeners[evt] = this._listeners[evt] || []).push(fn);
+    },
+    _emit: function (evt, data) {
+      (this._listeners[evt] || []).forEach(function (f) { try { f(data); } catch (e) {} });
+    }
+  };
+  // 每秒心跳（供外部程序监听）
+  setInterval(function () {
+    if (S.timer.state !== 'running') return;
+    var r = S.result; if (!r) return;
+    var ms = elapsedMs();
+    window.MoneyPower._emit('tick', { elapsed: Math.floor(ms / 1000), lost: r.perSecond * (ms / 1000), perSecond: r.perSecond });
+  }, 1000);
+
+  /* ---------- 启动 ---------- */
+  function init() {
+    loadStore();
+    initMeta();
+    renderCareers(careerSeed);
+    setAiBadge();
+    renderRecords();
+    bind();
+    initFolds();
+    var r = renderResult();
+    $('timerNote').textContent = '说明：金额 = 每秒应得 ¥' + r.perSecond.toFixed(4) + ' × 已经过去的秒数，精确到分。数字按真实时间计算，刷新页面后计时会重新开始。';
+    paintTime(0); paintRing(0); paintLost(0);
+  }
+  init();
+})();
+</script>
+</body>
+</html>
