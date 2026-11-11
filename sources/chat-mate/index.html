@@ -1,0 +1,2364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07080c">
+<title>纯聊搭子 · 聊天伴侣筛选器</title>
+<style>
+/* ============ 2027 · ecojia.cn 同源视觉 token ============ */
+:root{
+  /* ==== 直接取自 ecojia.cn 首页 :root ==== */
+  --bg:#1a1025;
+  --bg-soft:#221536;
+  --gold:#f472b6;
+  --gold-hi:#f9a8d4;
+  --gold-deep:#c084fc;
+  --gold-grad:linear-gradient(135deg,#f472b6 0%,#c084fc 50%,#fbbf24 100%);
+  --card:rgba(53,32,69,.50);
+  --card-hi:rgba(120,60,160,.16);
+  --border:rgba(192,132,252,.22);
+  --border-hi:rgba(244,114,182,.55);
+  --text:#f3edfa;
+  --muted:#a99bc0;
+  --danger:#fb7185;
+  --ok:#6ee7b7;
+  --radius:16px;
+  --shadow:0 10px 40px rgba(10,4,22,.6);
+
+  /* ==== 本项目别名（全部指向上面同一套 token）==== */
+  --txt:var(--text);
+  --txt2:#d6c9e6;
+  --txt3:var(--muted);
+  --line:var(--border);
+  --line-soft:rgba(192,132,252,.14);
+  --divider:rgba(244,114,182,.14);
+  --gold-b:var(--gold-hi);
+  --gold-d:var(--gold-deep);
+  --warn:#fbbf24;
+  --info:var(--gold-deep);
+  --bad:var(--danger);
+  --r:16px;
+  --r-sm:11px;
+  --ink:#2a1035;
+  --font:"HarmonyOS Sans SC",MiSans,"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;min-height:100%;overflow-x:hidden}
+body{
+  background:
+    radial-gradient(60% 40% at 50% -5%, rgba(244,114,182,.16), transparent 70%),
+    radial-gradient(40% 30% at 85% 20%, rgba(147,51,234,.14), transparent 70%),
+    radial-gradient(35% 30% at 10% 30%, rgba(251,191,36,.07), transparent 70%),
+    var(--bg);
+  background-attachment:fixed;
+  color:var(--text);
+  font-family:var(--font);
+  font-size:15px;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.03;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+a{color:var(--gold-hi)}
+::selection{background:rgba(244,114,182,.3);color:#fff}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(192,132,252,.28);border-radius:9px}
+::-webkit-scrollbar-thumb:hover{background:rgba(244,114,182,.45)}
+
+/* ============ 顶栏 ============ */
+.topbar{
+  position:sticky;top:0;z-index:60;
+  backdrop-filter:blur(20px) saturate(150%);
+  -webkit-backdrop-filter:blur(20px) saturate(150%);
+  background:linear-gradient(180deg,rgba(26,16,37,.94),rgba(26,16,37,.68));
+  border-bottom:1px solid var(--line-soft);
+}
+.topbar-in{
+  max-width:1200px;margin:0 auto;padding:11px 16px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand-mark{
+  width:38px;height:38px;flex:0 0 38px;border-radius:12px;
+  background:linear-gradient(145deg,rgba(244,114,182,.22),rgba(192,132,252,.1));
+  border:1px solid rgba(244,114,182,.42);
+  display:grid;place-items:center;position:relative;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(10,4,22,.4),0 8px 22px rgba(192,132,252,.24);
+}
+.brand-mark::before{
+  content:"";position:absolute;inset:-40%;
+  background:conic-gradient(from 120deg,transparent,rgba(244,114,182,.5),transparent 55%);
+  animation:spin 7s linear infinite;
+}
+.brand-mark span{
+  position:relative;z-index:2;font-size:17px;font-weight:800;
+  background:var(--gold-grad);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.brand-txt{min-width:0}
+.brand-txt h1{
+  margin:0;font-size:16px;font-weight:750;letter-spacing:.4px;white-space:nowrap;
+  background:linear-gradient(96deg,#ffe9f6,var(--gold-hi) 46%,var(--gold-deep));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.brand-txt p{margin:1px 0 0;font-size:11px;color:var(--muted);letter-spacing:.6px;white-space:nowrap}
+.top-meta{
+  margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;
+}
+.meta-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 9px;border-radius:999px;font-size:11px;color:var(--txt2);
+  background:var(--card);border:1px solid var(--line-soft);
+  white-space:nowrap;
+}
+.meta-pill b{color:var(--gold-hi);font-weight:650}
+.dot-live{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+
+/* ============ 布局 ============ */
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:20px 16px 96px}
+
+/* ============ Hero ============ */
+.hero{
+  position:relative;overflow:hidden;
+  border-radius:22px;padding:26px 24px 24px;
+  background:
+    radial-gradient(680px 240px at 0% 0%, rgba(244,114,182,.15), transparent 70%),
+    radial-gradient(520px 220px at 100% 100%, rgba(192,132,252,.13), transparent 72%),
+    var(--card);
+  border:1px solid var(--border);
+  box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.06);
+  margin-bottom:16px;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+.hero::after{
+  content:"";position:absolute;right:-70px;top:-90px;width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(244,114,182,.2),transparent 68%);
+  filter:blur(12px);pointer-events:none;
+}
+.hero h2{
+  margin:0 0 8px;font-size:clamp(21px,4.4vw,29px);line-height:1.35;font-weight:800;letter-spacing:.5px;
+}
+.hero h2 em{
+  font-style:normal;
+  background:var(--gold-grad);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero p{margin:0;max-width:660px;color:var(--txt2);font-size:13.5px}
+.hero-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:15px}
+.tag{
+  font-size:11.5px;padding:3px 10px;border-radius:999px;
+  background:rgba(244,114,182,.1);border:1px solid rgba(244,114,182,.26);color:#f8cfe6;
+}
+.tag.dim{background:var(--card-hi);border-color:var(--line-soft);color:var(--muted)}
+.hero-stats{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px dashed var(--divider)}
+.stat b{display:block;font-size:20px;font-weight:800;color:var(--gold-hi);letter-spacing:.5px}
+.stat span{font-size:11px;color:var(--muted);letter-spacing:.5px}
+
+/* ============ Tabs ============ */
+.tabs{
+  display:flex;gap:6px;margin:0 0 16px;padding:5px;border-radius:14px;
+  background:var(--card);border:1px solid var(--line-soft);
+  overflow-x:auto;scrollbar-width:none;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:1 0 auto;min-height:44px;padding:9px 15px;border-radius:10px;font-size:13.5px;color:var(--txt2);
+  white-space:nowrap;transition:.22s;font-weight:600;letter-spacing:.3px;
+  display:inline-flex;align-items:center;gap:6px;justify-content:center;
+}
+.tab:hover{color:var(--text);background:rgba(244,114,182,.09)}
+.tab.on{
+  color:var(--ink);
+  background:var(--gold-grad);
+  box-shadow:0 6px 20px rgba(192,132,252,.34),inset 0 1px 0 rgba(255,255,255,.4);
+}
+.tab .n{
+  font-size:10px;padding:0 5px;border-radius:6px;background:rgba(42,16,53,.18);
+}
+
+/* ============ 通用卡片/按钮 ============ */
+.card{
+  border-radius:var(--radius);padding:18px;
+  background:linear-gradient(165deg,rgba(53,32,69,.6),rgba(34,21,54,.42));
+  border:1px solid var(--border);
+  box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+.card + .card{margin-top:14px}
+.card-title{display:flex;align-items:center;gap:9px;margin:0 0 4px;font-size:15px;font-weight:750;letter-spacing:.3px}
+.card-title .ic{font-size:15px;opacity:.9}
+.card-sub{margin:0 0 14px;font-size:12px;color:var(--muted)}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:44px;padding:0 16px;border-radius:12px;font-size:13.5px;font-weight:650;
+  border:1px solid var(--border);background:var(--card);color:var(--txt);
+  transition:transform .14s,background .2s,border-color .2s,box-shadow .2s;
+  white-space:nowrap;
+}
+.btn:hover{background:var(--card-hi);border-color:var(--border-hi)}
+.btn:active{transform:scale(.975)}
+.btn.primary{
+  background:var(--gold-grad);
+  color:var(--ink);border-color:transparent;
+  box-shadow:0 4px 22px rgba(192,132,252,.35),inset 0 1px 0 rgba(255,255,255,.45);
+}
+.btn.primary:hover{box-shadow:0 8px 28px rgba(244,114,182,.42)}
+.btn.ghost{background:transparent}
+.btn.danger{color:#ffb0bd;border-color:rgba(251,113,133,.32)}
+.btn.danger:hover{background:rgba(251,113,133,.12)}
+.btn.sm{min-height:44px;padding:0 12px;font-size:12px;border-radius:9px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn-row{display:flex;gap:9px;flex-wrap:wrap}
+
+/* ============ 表单 ============ */
+.field{margin-bottom:13px;min-width:0}
+.field > label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt2);margin-bottom:6px;letter-spacing:.3px}
+.field .hint{font-size:10.5px;color:var(--muted)}
+input[type=text],input[type=date],input[type=url],select,textarea{
+  width:100%;min-height:42px;padding:9px 12px;border-radius:11px;
+  background:rgba(18,10,28,.58);border:1px solid var(--line-soft);color:var(--text);
+  outline:none;transition:.2s;font-size:13.5px;
+}
+textarea{min-height:78px;resize:vertical;line-height:1.7}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--border-hi);box-shadow:0 0 0 3px rgba(244,114,182,.13);
+  background:rgba(18,10,28,.78);
+}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23a99bc0' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+input[type=date]{color-scheme:dark}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+
+/* 多选胶囊 */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  padding:6px 12px;border-radius:999px;font-size:12px;color:var(--txt2);
+  background:var(--card-hi);border:1px solid var(--border);
+  transition:.18s;user-select:none;min-height:38px;display:inline-flex;align-items:center;
+}
+.chip:hover{border-color:var(--border-hi);color:var(--text)}
+.chip.on{
+  background:var(--gold-grad);
+  color:var(--ink);border-color:transparent;font-weight:650;
+  box-shadow:0 4px 16px rgba(192,132,252,.3);
+}
+.chip .x{opacity:.55;margin-left:5px;font-size:13px}
+
+/* ============ 工具条 ============ */
+.toolbar{
+  display:flex;gap:9px;flex-wrap:wrap;align-items:center;
+  padding:12px;border-radius:14px;margin-bottom:14px;
+  background:var(--card);border:1px solid var(--line-soft);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.toolbar .grow{flex:1 1 180px;min-width:0}
+.toolbar select{min-height:38px;font-size:12.5px;max-width:100%}
+.sel-sm{width:auto;min-width:92px;flex:0 1 auto}
+
+/* ============ 候选人卡片 ============ */
+.people-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:13px}
+.person{
+  position:relative;border-radius:var(--radius);padding:16px;
+  background:linear-gradient(168deg,rgba(53,32,69,.64),rgba(34,21,54,.46));
+  border:1px solid var(--border);
+  box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.05);
+  transition:transform .2s,border-color .2s,box-shadow .2s;
+  min-width:0;overflow:hidden;
+}
+.person::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--band-c,#c084fc),transparent);
+  opacity:.9;
+}
+.person:hover{transform:translateY(-2px);border-color:var(--border-hi);box-shadow:0 16px 42px rgba(10,4,22,.68)}
+.person.is-real{border-color:rgba(110,231,183,.22)}
+.person.is-ai{border-color:rgba(192,132,252,.32)}
+.person-head{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.avatar{
+  width:42px;height:42px;flex:0 0 42px;border-radius:13px;display:grid;place-items:center;
+  font-size:16px;font-weight:800;color:var(--ink);
+  background:linear-gradient(140deg,#f9a8d4,#c084fc);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 16px rgba(192,132,252,.26);
+}
+.avatar.ai{background:linear-gradient(140deg,#a78bfa,#6d28d9);color:#f3edfa}
+.avatar.tpl{background:linear-gradient(140deg,#8b5cf6,#4c1d95);color:#ede9fe}
+.person-name{min-width:0;flex:1}
+.person-name h3{
+  margin:0;font-size:15px;font-weight:700;letter-spacing:.3px;
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;
+}
+.person-name h3 .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.person-sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:7px;flex-wrap:wrap}
+.badge{
+  font-size:9.5px;padding:1px 6px;border-radius:5px;font-weight:700;letter-spacing:.4px;
+  display:inline-flex;align-items:center;gap:3px;white-space:nowrap;line-height:1.7;
+}
+.badge.vip{
+  background:var(--gold-grad);color:var(--ink);
+  box-shadow:0 2px 10px rgba(192,132,252,.4);
+}
+.badge.real{background:rgba(110,231,183,.13);color:#8ff0cb;border:1px solid rgba(110,231,183,.28)}
+.badge.ai{background:rgba(192,132,252,.15);color:#d8b4fe;border:1px solid rgba(192,132,252,.3)}
+.badge.fict{
+  background:rgba(124,58,237,.18);color:#ddd0fb;border:1px dashed rgba(192,132,252,.5);
+}
+.badge.ghost{background:var(--card-hi);color:var(--muted);border:1px solid var(--line-soft)}
+.score-row{display:flex;align-items:center;gap:10px;margin-top:13px;padding-top:12px;border-top:1px dashed var(--divider)}
+.score-num{font-size:25px;font-weight:850;letter-spacing:.5px;line-height:1;color:var(--band-c,#fbbf24)}
+.score-num small{font-size:10px;font-weight:600;color:var(--muted);margin-left:2px;letter-spacing:0}
+.score-band{font-size:11.5px;font-weight:650;color:var(--band-c,#fbbf24)}
+.bar{flex:1;height:5px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;min-width:40px}
+.bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#7c3aed,var(--band-c,#fbbf24))}
+.chips-mini{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.mini{font-size:10.5px;padding:1.5px 8px;border-radius:6px;background:var(--card-hi);color:var(--txt2);border:1px solid var(--line-soft);white-space:nowrap}
+.person-note{font-size:11.5px;color:var(--muted);margin-top:9px;line-height:1.65;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.person-acts{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.person-acts .btn{flex:1;min-width:0;padding:0 8px;min-height:44px;font-size:12px}
+
+/* ============ 空状态 ============ */
+.empty{
+  text-align:center;padding:44px 20px;border-radius:var(--radius);
+  border:1px dashed rgba(244,114,182,.3);background:rgba(244,114,182,.045);
+}
+.empty .e-ic{font-size:34px;opacity:.55;margin-bottom:10px;color:var(--gold-hi)}
+.empty h4{margin:0 0 6px;font-size:15px}
+.empty p{margin:0 auto 16px;font-size:12.5px;color:var(--muted);max-width:420px}
+
+/* ============ 我的资料 ============ */
+.self-card{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.self-avatar{
+  width:48px;height:48px;flex:0 0 48px;border-radius:15px;display:grid;place-items:center;
+  font-size:18px;font-weight:800;color:var(--ink);background:linear-gradient(140deg,#f9a8d4,#c084fc);
+}
+.self-body{flex:1;min-width:180px}
+.self-body h4{margin:0 0 3px;font-size:14px}
+.self-body p{margin:0;font-size:11.5px;color:var(--muted)}
+
+/* ============ 分数环 ============ */
+.ring-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.ring{position:relative;width:118px;height:118px;flex:0 0 118px}
+.ring svg{transform:rotate(-90deg);display:block}
+.ring-txt{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring-txt b{font-size:31px;font-weight:850;line-height:1;color:var(--band-c,#fbbf24);letter-spacing:.5px}
+.ring-txt span{font-size:10px;color:var(--muted);letter-spacing:1.5px;margin-top:4px}
+
+/* 明细行 */
+.bd-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--divider);font-size:12.5px}
+.bd-row:last-child{border-bottom:none}
+.bd-row .k{width:52px;flex:0 0 52px;color:var(--muted);font-size:11.5px}
+.bd-row .t{flex:1;min-width:0;color:var(--txt2)}
+.bd-row .v{font-weight:700;color:var(--gold-hi);font-size:12px;white-space:nowrap}
+.bd-row .v.neg{color:#ffabba}
+.bd-row .v.pos{color:var(--ok)}
+
+/* 结果块 */
+.res-block{margin-top:14px;padding:14px;border-radius:13px;background:var(--card);border:1px solid var(--line-soft)}
+.res-block h5{margin:0 0 9px;font-size:12.5px;color:var(--gold-hi);letter-spacing:.5px;display:flex;align-items:center;gap:6px}
+.res-block ul{margin:0;padding-left:17px;font-size:13px;color:var(--txt2);line-height:1.9}
+.res-block p{margin:0;font-size:13px;color:var(--txt2);line-height:1.8}
+.quote{
+  position:relative;padding:12px 14px 12px 16px;border-radius:12px;
+  background:linear-gradient(120deg,rgba(244,114,182,.13),rgba(192,132,252,.06));
+  border:1px solid rgba(244,114,182,.24);font-size:13.5px;color:#fbe9f4;line-height:1.8;
+}
+.quote::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:2.5px;border-radius:2px;background:var(--gold-grad)}
+.avoid-list{display:flex;flex-wrap:wrap;gap:6px}
+.avoid-list .mini{background:rgba(251,113,133,.11);border-color:rgba(251,113,133,.26);color:#ffb0bd}
+
+/* ============ 补位 ============ */
+.fill-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.persona{
+  position:relative;border-radius:var(--radius);padding:18px;
+  background:linear-gradient(160deg,rgba(76,29,149,.34),rgba(53,32,69,.42));
+  border:1px solid rgba(192,132,252,.34);
+  box-shadow:0 14px 38px rgba(10,4,22,.5);
+}
+.persona-head{display:flex;gap:11px;align-items:center;margin-bottom:4px}
+.persona h3{margin:0;font-size:16px;font-weight:750;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.kv{display:flex;gap:8px;font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--divider)}
+.kv:last-child{border-bottom:none}
+.kv .k{flex:0 0 62px;color:var(--muted);font-size:11.5px}
+.kv .v{flex:1;color:var(--txt2);min-width:0}
+.notice{
+  padding:11px 13px;border-radius:11px;font-size:12px;line-height:1.75;
+  background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.26);color:#fde9b8;
+}
+.notice b{color:#fcd34d}
+.notice.blue{background:rgba(192,132,252,.1);border-color:rgba(192,132,252,.28);color:#e3d3ff}
+.notice.blue b{color:#d8b4fe}
+
+/* ============ 表格导入 ============ */
+.paste-area{width:100%;min-height:120px;font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.7}
+.map-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+.preview-tbl{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:10px;display:block;overflow-x:auto;white-space:nowrap}
+.preview-tbl th,.preview-tbl td{border:1px solid var(--line-soft);padding:5px 8px;text-align:left}
+.preview-tbl th{background:var(--card-hi);color:var(--gold-hi);font-weight:600}
+
+/* ============ 历史/代码 ============ */
+.hist-list{list-style:none;margin:0;padding:0;max-height:340px;overflow:auto}
+.hist-list li{display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed var(--divider);font-size:12px;align-items:baseline}
+.hist-list .tm{color:var(--muted);font-size:10.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hist-list .ac{color:var(--gold-hi);font-weight:650;white-space:nowrap}
+.hist-list .dt{color:var(--txt2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+pre.code{
+  margin:10px 0 0;padding:13px;border-radius:11px;overflow:auto;
+  background:rgba(12,6,20,.62);border:1px solid var(--line-soft);
+  font-family:ui-monospace,Consolas,monospace;font-size:11.5px;line-height:1.8;color:#d9ceea;
+  max-width:100%;
+}
+pre.code .k{color:var(--gold-hi)}
+pre.code .s{color:#9fe8c9}
+
+/* ============ 弹窗 ============ */
+.modal-mask{
+  position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+  padding:16px;background:rgba(10,4,22,.74);backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);animation:fade .2s ease;
+}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{
+  width:100%;max-width:560px;max-height:calc(100dvh - 32px);display:flex;flex-direction:column;
+  border-radius:20px;overflow:hidden;
+  background:linear-gradient(168deg,#2a1b3d,#1a1025 72%);
+  border:1px solid rgba(244,114,182,.28);
+  box-shadow:0 30px 80px rgba(10,4,22,.78),inset 0 1px 0 rgba(255,255,255,.07);
+  animation:pop .24s cubic-bezier(.2,.9,.3,1.2);
+}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.975)}to{opacity:1;transform:none}}
+.modal.wide{max-width:720px}
+.modal-head{
+  display:flex;align-items:center;gap:10px;padding:15px 18px;
+  border-bottom:1px solid var(--line-soft);flex:0 0 auto;
+}
+.modal-head h3{margin:0;font-size:15.5px;font-weight:750;flex:1;min-width:0}
+.modal-x{
+  width:44px;height:44px;flex:0 0 44px;border-radius:10px;display:grid;place-items:center;
+  color:var(--muted);font-size:19px;line-height:1;
+}
+.modal-x:hover{background:rgba(244,114,182,.14);color:var(--text)}
+.modal-body{padding:18px;overflow-y:auto;flex:1 1 auto;overscroll-behavior:contain;min-height:0}
+.modal-foot{
+  display:flex;gap:9px;padding:13px 18px;border-top:1px solid var(--line-soft);
+  background:rgba(10,4,22,.32);flex:0 0 auto;flex-wrap:wrap;
+}
+.modal-foot .btn{flex:1;min-height:46px;min-width:110px}
+@media(max-width:520px){
+  .modal-mask{padding:10px;align-items:flex-end}
+  .modal{max-height:calc(100dvh - 20px);border-radius:18px}
+  .modal-foot .btn{min-height:48px}
+}
+
+/* ============ Toast ============ */
+#toastBox{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:calc(100% - 32px);max-width:420px}
+.toast{
+  padding:10px 18px;border-radius:12px;font-size:13px;font-weight:600;
+  background:linear-gradient(140deg,rgba(58,32,78,.98),rgba(26,16,37,.98));
+  border:1px solid rgba(244,114,182,.38);color:#f8e4f1;
+  box-shadow:0 14px 36px rgba(10,4,22,.7);animation:tin .26s ease;max-width:100%;
+  text-align:center;
+}
+.toast.err{border-color:rgba(251,113,133,.45);color:#ffc2cb}
+@keyframes tin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* ============ 帮助 ? 角标 ============ */
+.help-dot{
+  width:17px;height:17px;flex:0 0 17px;border-radius:50%;display:inline-grid;place-items:center;
+  font-size:10.5px;font-weight:800;color:var(--ink);cursor:help;
+  background:var(--gold-grad);
+  box-shadow:0 2px 9px rgba(192,132,252,.4);user-select:none;
+  transition:transform .15s;
+}
+.help-dot:hover{transform:scale(1.14)}
+.help-tip{
+  position:fixed;z-index:250;max-width:270px;padding:11px 13px;border-radius:12px;
+  background:linear-gradient(160deg,#31204a,#1e1230);border:1px solid rgba(244,114,182,.34);
+  box-shadow:0 18px 44px rgba(10,4,22,.78);font-size:12px;line-height:1.75;color:#e9e0f4;
+  animation:fade .16s ease;
+}
+.help-tip b{color:var(--gold-hi);display:block;margin-bottom:3px;font-size:12.5px}
+
+/* ============ 说明页 ============ */
+.guide-step{display:flex;gap:12px;padding:11px 0;border-bottom:1px dashed var(--divider)}
+.guide-step:last-child{border-bottom:none}
+.step-n{
+  width:25px;height:25px;flex:0 0 25px;border-radius:8px;display:grid;place-items:center;
+  font-size:11.5px;font-weight:800;color:var(--ink);background:var(--gold-grad);
+}
+.guide-step h5{margin:0 0 2px;font-size:13px}
+.guide-step p{margin:0;font-size:12px;color:var(--muted);line-height:1.75}
+.term{margin-bottom:12px}
+.term b{font-size:12.5px;color:var(--gold-hi);display:block;margin-bottom:2px}
+.term p{margin:0;font-size:12px;color:var(--txt2);line-height:1.8}
+
+footer{position:relative;z-index:1;text-align:center;padding:26px 16px 34px;font-size:11px;color:var(--muted);line-height:1.9}
+footer b{color:var(--gold-hi);font-weight:650}
+
+/* ============ 折叠面板 ============ */
+.card.coll{padding:0;overflow:hidden}
+.coll-head{
+  display:flex;align-items:center;gap:9px;width:100%;min-height:52px;padding:12px 18px;
+  text-align:left;background:transparent;border:none;color:var(--text);
+  font-size:15px;font-weight:750;letter-spacing:.3px;
+}
+.coll-head:hover{background:rgba(244,114,182,.07)}
+.coll-t{flex:1;min-width:0;display:flex;align-items:center;gap:8px;overflow:hidden;white-space:nowrap}
+.coll-t .tt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto}
+.coll-t .ic{flex:0 0 auto;color:var(--gold-hi)}
+.coll-sub{font-size:11px;font-weight:400;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;min-width:0}
+.coll-arrow{flex:0 0 auto;font-size:10px;color:var(--muted);transition:transform .22s ease;opacity:.9;line-height:1}
+.coll.open .coll-arrow{transform:rotate(180deg)}
+.coll-body{padding:0 18px 18px}
+.coll:not(.open) .coll-body{display:none}
+@media(max-width:520px){
+  .coll-head{padding:12px 14px;font-size:14px;min-height:50px}
+  .coll-body{padding:0 14px 14px}
+}
+
+/* ============ 响应式 ============ */
+@media(max-width:900px){
+  .fill-grid{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .grid3{grid-template-columns:1fr 1fr}
+  .hero{padding:20px 17px;border-radius:18px}
+  .topbar-in{padding:9px 13px;gap:9px}
+  .top-meta{width:100%;margin-left:0;justify-content:flex-start;gap:5px}
+  .meta-pill{font-size:10px;padding:3px 7px}
+  .wrap{padding:14px 13px 90px}
+}
+@media(max-width:520px){
+  body{font-size:14.5px}
+  .people-grid{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+  .grid3{grid-template-columns:1fr}
+  .card{padding:14px}
+  .brand-txt h1{font-size:14.5px}
+  .brand-txt p{font-size:10px}
+  .hero-stats{gap:16px}
+  .stat b{font-size:17px}
+  .tabs{padding:4px}
+  .tab{padding:8px 12px;font-size:12.5px}
+  .modal-body{padding:15px}
+  .person-acts .btn{flex:1 1 46%}
+}
+@media(max-width:340px){
+  .wrap{padding:10px 10px 84px}
+  .topbar-in{padding:8px 10px}
+  .hero{padding:16px 13px}
+  .hero h2{font-size:19px}
+  .btn{padding:0 12px;font-size:12.5px}
+  .person{padding:13px}
+  .meta-pill{font-size:9.5px;padding:2.5px 6px}
+  .brand-mark{width:34px;height:34px;flex-basis:34px}
+}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <div class="brand-mark"><span>搭</span></div>
+      <div class="brand-txt">
+        <h1>纯聊搭子 · 聊天伴侣筛选器</h1>
+        <p>挑出最会聊天的那个人 · 真人 / 虚构双轨</p>
+      </div>
+    </div>
+    <div class="top-meta">
+      <span class="meta-pill"><span class="dot-live"></span>本机运行</span>
+      <button class="btn sm" id="collAllBtn" data-act="toggle-all-coll">全部收起</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- 程序信息（默认收起） -->
+  <section class="card coll" data-coll="sysinfo" style="margin-bottom:14px">
+    <button class="coll-head" type="button" data-coll-toggle="sysinfo" aria-expanded="false">
+      <span class="coll-t"><span class="ic">ⓘ</span><span class="tt">程序信息</span><span class="coll-sub">体积 / 更新时间 / 作者 / 微信</span></span>
+      <span class="coll-arrow">▾</span>
+    </button>
+    <div class="coll-body">
+      <div class="top-meta" style="margin:0;justify-content:flex-start">
+        <span class="meta-pill">程序体积 <b id="metaSize">—</b></span>
+        <span class="meta-pill">最近更新 <b id="metaTime">—</b></span>
+        <span class="meta-pill">最近保存 <b id="metaSaved">—</b></span>
+        <span class="meta-pill">作者 <b>军哥懂保</b></span>
+        <span class="meta-pill">微信 <b>xunijiayuan</b></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero">
+    <h2>从一堆人里，挑出<em>最适合纯聊天</em>的那个</h2>
+    <p>填好你和对方的出生信息，系统按生肖、星座的固定规则算契合度，再告诉你：聊天节奏怎么定、聊什么、第一句怎么开口、哪些话题别碰。全部在你本机计算，真人资料不上传。</p>
+    <div class="hero-tags">
+      <span class="tag">确定性评分 · 无随机</span>
+      <span class="tag">真人 + 虚构角色共存</span>
+      <span class="tag dim">纯前端 · 零联网</span>
+      <span class="tag dim">数据只存本机</span>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><b id="statPeople">0</b><span>候选总人数</span></div>
+      <div class="stat"><b id="statReal">0</b><span>真人</span></div>
+      <div class="stat"><b id="statFill">0</b><span>虚构补位</span></div>
+      <div class="stat"><b id="statAvg">—</b><span>平均契合度</span></div>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab on" data-view="people" role="tab">候选人 <span class="n" id="tabN">0</span></button>
+    <button class="tab" data-view="fill" role="tab">补位模式</button>
+    <button class="tab" data-view="data" role="tab">数据与接口</button>
+    <button class="tab" data-view="guide" role="tab">说明</button>
+  </nav>
+
+  <!-- ========== 候选人 ========== -->
+  <div id="view-people" class="view">
+    <section class="card coll" id="selfCard" data-coll="self">
+      <button class="coll-head" type="button" data-coll-toggle="self" aria-expanded="true">
+        <span class="coll-t"><span class="ic">◉</span><span class="tt">我的基础资料</span>
+          <span class="help-dot" data-help="self">?</span>
+          <span class="coll-sub" id="selfSub">未填写</span></span>
+        <span class="coll-arrow">▾</span>
+      </button>
+      <div class="coll-body">
+        <div class="self-card">
+          <div class="self-avatar" id="selfAvatar">我</div>
+          <div class="self-body">
+            <h4>契合度基准</h4>
+            <p id="selfDesc">还没填生日，契合度算不出来 —— 点右边补上，只存本机。</p>
+          </div>
+          <button class="btn" data-act="edit-self">编辑我的资料</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <div class="grow"><input type="text" id="qSearch" placeholder="搜昵称 / 城市 / 备注 / 标签…" autocomplete="off"></div>
+      <select id="fType" class="sel-sm">
+        <option value="">全部类型</option>
+        <option value="real">真人</option>
+        <option value="fictional">AI / 虚构</option>
+      </select>
+      <select id="fSign" class="sel-sm"><option value="">全部星座</option></select>
+      <select id="fZodiac" class="sel-sm"><option value="">全部生肖</option></select>
+      <select id="fTrait" class="sel-sm"><option value="">全部性格</option></select>
+      <select id="fSort" class="sel-sm">
+        <option value="score">按契合度</option>
+        <option value="recent">按最近修改</option>
+        <option value="name">按昵称</option>
+      </select>
+      <button class="btn sm" data-act="reset-filter">重置</button>
+    </div>
+
+    <div class="btn-row" style="margin-bottom:14px">
+      <button class="btn primary" data-act="add-person">＋ 新增候选人</button>
+      <button class="btn" data-act="go-import">批量导入</button>
+      <button class="btn ghost" data-act="load-demo">载入示例（6 人）</button>
+    </div>
+
+    <div id="peopleList" class="people-grid"></div>
+  </div>
+
+  <!-- ========== 补位 ========== -->
+  <div id="view-fill" class="view hidden">
+    <section class="card coll" data-coll="fill-form">
+      <button class="coll-head" type="button" data-coll-toggle="fill-form" aria-expanded="true">
+        <span class="coll-t"><span class="ic">◈</span><span class="tt">补位条件</span>
+          <span class="help-dot" data-help="fill">?</span>
+          <span class="coll-sub">星座 / 生肖 / 性格 / 年龄段</span></span>
+        <span class="coll-arrow">▾</span>
+      </button>
+      <div class="coll-body">
+      <p class="card-sub" style="margin-top:0">现实里缺人的时候，按你要的属性拼一个「模板角色」，陪你把聊天框架先搭起来。它是设定卡，不是真人。</p>
+      <div class="grid2">
+        <div class="field">
+          <label>想要的星座</label>
+          <select id="fillSign"><option value="">不限（随便配）</option></select>
+        </div>
+        <div class="field">
+          <label>想要的生肖</label>
+          <select id="fillZodiac"><option value="">不限（随便配）</option></select>
+        </div>
+        <div class="field">
+          <label>性别</label>
+          <select id="fillGender">
+            <option value="any">不限</option>
+            <option value="男">男</option>
+            <option value="女">女</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>年龄段</label>
+          <select id="fillAge">
+            <option value="18-24">18–24 岁</option>
+            <option value="25-30" selected>25–30 岁</option>
+            <option value="31-38">31–38 岁</option>
+            <option value="39-50">39–50 岁</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>性格标签（可多选，决定说话风格）</label>
+        <div class="chips" id="fillTraits"></div>
+      </div>
+      <div class="field">
+        <label>想聊的方向（可多选）</label>
+        <div class="chips" id="fillPrefs"></div>
+      </div>
+      <div class="btn-row" style="margin-top:4px">
+        <button class="btn primary" data-act="gen-persona">生成补位角色</button>
+        <button class="btn ghost" data-act="reset-fill">重置条件</button>
+      </div>
+      </div>
+    </section>
+
+    <div id="personaBox" style="margin-top:14px"></div>
+
+    <div class="notice" style="margin-top:14px">
+      <b>诚实边界：</b>没有接入大模型接口时，补位角色只是一张「角色设定卡」——它不会自己回话，也不会在线等你。点「开始聊天」若接口未配置，只会弹提示，不会编造任何回复。
+    </div>
+  </div>
+
+  <!-- ========== 数据 ========== -->
+  <div id="view-data" class="view hidden">
+    <section class="card coll" data-coll="data-manage">
+      <button class="coll-head" type="button" data-coll-toggle="data-manage" aria-expanded="true">
+        <span class="coll-t"><span class="ic">⇅</span><span class="tt">数据管理</span><span class="coll-sub">备份 / 导入 / 清空</span></span>
+        <span class="coll-arrow">▾</span>
+      </button>
+      <div class="coll-body">
+      <p class="card-sub" style="margin-top:0">所有数据存在这台设备的浏览器 localStorage 里，换设备/清缓存会丢，建议定期导出备份。</p>
+      <div class="btn-row">
+        <button class="btn primary" data-act="export-json">导出 JSON 备份</button>
+        <button class="btn" data-act="import-json">导入 JSON</button>
+        <button class="btn danger" data-act="clear-all">清空全部数据</button>
+      </div>
+      <div class="notice blue" style="margin-top:13px">
+        <b>隐私：</b>真人资料只存本机，不上传、不联网、不请求任何外部地址。导出的 JSON 请自己保管好。
+      </div>
+      </div>
+    </section>
+
+    <section class="card coll" data-coll="import">
+      <button class="coll-head" type="button" data-coll-toggle="import" aria-expanded="false">
+        <span class="coll-t"><span class="ic">▤</span><span class="tt">批量导入</span><span class="coll-sub">CSV / 表格粘贴</span></span>
+        <span class="coll-arrow">▾</span>
+      </button>
+      <div class="coll-body">
+      <p class="card-sub" style="margin-top:0">直接从 Excel / 飞书表格复制一整块粘进来，或者粘 CSV 文本。系统会自动认列，认错了可以手动改。</p>
+      <textarea id="pasteInput" class="paste-area" placeholder="昵称,出生日期,类型,备注&#10;小北,1996-08-12,真人,同事，话不多但很会接话&#10;南风,1992-03-05,AI扮演,补位角色，偏理性"></textarea>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn primary" data-act="parse-paste">识别列并预览</button>
+        <button class="btn ghost" data-act="paste-example">填入示例</button>
+      </div>
+      <div id="mapBox" style="margin-top:6px"></div>
+      </div>
+    </section>
+
+    <section class="card coll" data-coll="api">
+      <button class="coll-head" type="button" data-coll-toggle="api" aria-expanded="false">
+        <span class="coll-t"><span class="ic">⌘</span><span class="tt">对外接口 window.ChatMate</span>
+          <span class="help-dot" data-help="api">?</span>
+          <span class="coll-sub">接口地址 / 格式说明</span></span>
+        <span class="coll-arrow">▾</span>
+      </button>
+      <div class="coll-body">
+      <p class="card-sub" style="margin-top:0">给别的程序调用用。前端不带任何 Key，也不会自己发请求。</p>
+      <pre class="code"><span class="k">// 候选人</span>
+ChatMate.listCandidates()            <span class="s">// 全部候选（含评分）</span>
+ChatMate.addCandidate({nickname, type, birth, traits, prefs, ...})
+ChatMate.updateCandidate(id, patch)
+ChatMate.removeCandidate(id)
+ChatMate.getCandidate(id)
+
+<span class="k">// 评分（纯函数，同样输入必得同样结果）</span>
+ChatMate.score(selfProfile, candidate)   <span class="s">// → {total, band, ...}</span>
+
+<span class="k">// 补位生成（确定性模板，非大模型）</span>
+ChatMate.generateFiller({sign, zodiac, gender, traits, ageRange})
+
+<span class="k">// 导入导出</span>
+ChatMate.exportJSON()   ChatMate.importJSON(str)   ChatMate.clearAll()</pre>
+      <div class="field" style="margin-top:14px">
+        <label>聊天接口地址（可选）<span class="help-dot" data-help="endpoint">?</span></label>
+        <input type="url" id="chatEndpoint" placeholder="https://你的服务/api/chat">
+        <div class="hint">留空 = 不接。填了也只在点「开始聊天」时由你自己的服务响应。</div>
+      </div>
+      <div class="field">
+        <label>角色生成接口地址（可选）</label>
+        <input type="url" id="personaEndpoint" placeholder="https://你的服务/api/persona">
+      </div>
+      <div class="btn-row">
+        <button class="btn" data-act="save-endpoint">保存接口地址</button>
+        <button class="btn ghost" data-act="toggle-apidoc">看懂接口格式</button>
+      </div>
+      <div id="apiDoc" class="hidden" style="margin-top:12px">
+        <pre class="code"><span class="k">POST</span> {chatEndpoint}
+{ "candidate": { "id":"...", "nickname":"小北", "traits":["话少"] },
+  "self": { "nickname":"我" },
+  "history": [ {"role":"user","content":"在吗"} ],
+  "message": "今天好累" }
+
+<span class="k">期望返回</span>
+{ "reply": "那就先别硬撑，说点轻松的。" }   <span class="s">// 或 {"text":"..."}</span>
+
+<span class="k">POST</span> {personaEndpoint}
+{ "attributes": { "sign":"巨蟹座", "zodiac":"鼠", "gender":"女",
+                  "traits":["感性"], "ageRange":"25-30" } }
+
+<span class="k">期望返回</span>
+{ "persona": { "nickname":"...", "style":"...", "catchphrase":"...",
+               "mines":["..."], "topics":["..."], "opener":"..." } }</pre>
+        <div class="notice" style="margin-top:10px">跨域（CORS）要你自己的服务端放行；file:// 直接打开时浏览器可能拦截请求，建议配合本地服务使用。</div>
+      </div>
+      </div>
+    </section>
+
+    <section class="card coll" data-coll="history">
+      <button class="coll-head" type="button" data-coll-toggle="history" aria-expanded="false">
+        <span class="coll-t"><span class="ic">◷</span><span class="tt">操作历史</span>
+          <span class="help-dot" data-help="history">?</span>
+          <span class="coll-sub">最近 50 条 · 本机保存</span></span>
+        <span class="coll-arrow">▾</span>
+      </button>
+      <div class="coll-body">
+      <ul class="hist-list" id="histList"></ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ========== 说明 ========== -->
+  <div id="view-guide" class="view hidden">
+    <section class="card coll" data-coll="guide-steps">
+      <button class="coll-head" type="button" data-coll-toggle="guide-steps" aria-expanded="false">
+        <span class="coll-t"><span class="ic">◎</span><span class="tt">三步就能用</span><span class="coll-sub">使用说明 / 操作指引</span></span>
+        <span class="coll-arrow">▾</span>
+      </button>
+      <div class="coll-body">
+      <div class="guide-step"><div class="step-n">1</div><div><h5>先填你自己的资料</h5><p>点「编辑我的资料」，填出生年月日（或直接选星座 + 生肖）。这是算契合度的基准。</p></div></div>
+      <div class="guide-step"><div class="step-n">2</div><div><h5>把人加进来</h5><p>手动新增，或从表格整块粘进来批量导入。真人、AI 扮演、模板补位角色可以混着放，你自己贴标签。</p></div></div>
+      <div class="guide-step"><div class="step-n">3</div><div><h5>看排序，点开看怎么说</h5><p>列表默认按契合度从高到低。点「看怎么聊」会给你聊天节奏、3 个话题、第一句示例、要避开的话题。</p></div></div>
+      </div>
+    </section>
+
+    <section class="card coll" data-coll="guide-terms">
+      <button class="coll-head" type="button" data-coll-toggle="guide-terms" aria-expanded="false">
+        <span class="coll-t"><span class="ic">▣</span><span class="tt">关键名词（大白话）</span><span class="coll-sub">名词解释</span></span>
+        <span class="coll-arrow">▾</span>
+      </button>
+      <div class="coll-body">
+      <div class="term"><b>契合度</b><p>一个 0–100 的分。越高代表按生肖和星座的固定规则，你们越容易聊得顺。它只是参考，不是判决书。</p></div>
+      <div class="term"><b>六合 / 三合</b><p>生肖里最合得来的组合。六合是一对一最搭，三合是三个生肖抱团最搭。这两类给分最高。</p></div>
+      <div class="term"><b>六冲 / 六害 / 相刑</b><p>生肖里容易别扭的组合。冲是正面顶牛，害是暗里别扭，刑是互相磨。分数会低，但不是不能聊，只是要更注意分寸。</p></div>
+      <div class="term"><b>四元素</b><p>星座分火、土、风、水。火配风、土配水比较顺；火配水、土配风容易互相看不懂。</p></div>
+      <div class="term"><b>相位（三分 / 六分 / 四分 / 对宫）</b><p>两个星座在星盘上的角度关系。三分（120°）、六分（60°）是顺的；四分（90°）是拧巴的；对宫（180°）是互补但容易互相拉扯。</p></div>
+      <div class="term"><b>补位</b><p>缺人的时候，按你想要的属性拼一个虚构角色出来，帮你先把聊天场景搭起来。它不是真人。</p></div>
+      <div class="term"><b>模板生成</b><p>从内置的昵称、语气、雷区库里按固定规则拼出来，同样条件永远得到同一个角色。不是大模型现编。</p></div>
+      <div class="term"><b>VIP 角标</b><p>你自己给候选人打的标记，纯装饰，方便把重点人选顶出来，不影响评分。</p></div>
+      </div>
+    </section>
+
+    <section class="card coll" data-coll="guide-limits">
+      <button class="coll-head" type="button" data-coll-toggle="guide-limits" aria-expanded="false">
+        <span class="coll-t"><span class="ic">⚑</span><span class="tt">使用边界</span><span class="coll-sub">关于与已知限制</span></span>
+        <span class="coll-arrow">▾</span>
+      </button>
+      <div class="coll-body">
+      <p style="margin:0 0 9px;font-size:12.5px;color:var(--txt2);line-height:1.85">1. 生肖按出生年份简化计算（未按立春精确换年），星座按公历日期计算，边界日可能有 1 天误差。</p>
+      <p style="margin:0 0 9px;font-size:12.5px;color:var(--txt2);line-height:1.85">2. 评分是固定规则表的加减法，不含任何随机数，同样两个人算两次结果完全一致。</p>
+      <p style="margin:0 0 9px;font-size:12.5px;color:var(--txt2);line-height:1.85">3. 补位角色是「角色设定卡」，不接大模型就不会说话。页面不会假装它在线。</p>
+      <p style="margin:0;font-size:12.5px;color:var(--txt2);line-height:1.85">4. 真人资料只在你本机，不上传。清缓存或换浏览器会丢，记得导出备份。</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div>纯聊搭子 · 聊天伴侣筛选器 &nbsp;|&nbsp; 作者 <b>军哥懂保</b> &nbsp;|&nbsp; 微信 <b>xunijiayuan</b></div>
+  <div style="margin-top:4px">纯前端单页 · 双击即用 · 数据只存本机</div>
+</footer>
+
+<div id="toastBox"></div>
+<div id="modalRoot"></div>
+
+<script>
+/* ================== 常量与工具 ================== */
+const APP_SIZE_BYTES = Number("0000123887");
+const APP_BUILD = "2026-11-11 21:02";
+const STORE_KEY = "chatmate.v1";
+const SIGNS = ["白羊座","金牛座","双子座","巨蟹座","狮子座","处女座","天秤座","天蝎座","射手座","摩羯座","水瓶座","双鱼座"];
+const SIGN_ELEM = ["火","土","风","水","火","土","风","水","火","土","风","水"];
+const ZODIACS = ["鼠","牛","虎","兔","龙","蛇","马","羊","猴","鸡","狗","猪"];
+const TRAITS = ["话少","分享欲强","爱吐槽","理性","感性","幽默","社恐","社牛","慢热","共情强"];
+const PREFS = ["工作","电影","八卦","人生规划","音乐","美食","旅行","游戏","读书","情感"];
+const BAND_META = {
+  "非常适合纯聊": { min: 80, c: "#fbbf24" },
+  "适合":       { min: 66, c: "#6ee7b7" },
+  "一般":       { min: 52, c: "#c084fc" },
+  "不太合":     { min: 0,  c: "#fb7185" }
+};
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const clone = o => JSON.parse(JSON.stringify(o));
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const uid = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const pad2 = n => String(n).padStart(2, "0");
+function nowStr(d = new Date()) { return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate()) + " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes()); }
+function fmtSize(b) { if (!b) return "—"; if (b > 1048576) return (b/1048576).toFixed(2) + " MB"; return (b/1024).toFixed(1) + " KB"; }
+/* FNV-1a：确定性哈希，用于模板选取（绝不用 Math.random） */
+function hash32(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = (h * 0x01000193) >>> 0; }
+  return h >>> 0;
+}
+function pickBySeed(arr, seed) { return arr[hash32(seed) % arr.length]; }
+/* ================== 生肖 / 星座 规则表 ================== */
+const ZODIAC_LIUHE = [["鼠","牛"],["虎","猪"],["兔","狗"],["龙","鸡"],["蛇","猴"],["马","羊"]];
+const ZODIAC_SANHE = [["鼠","龙","猴"],["牛","蛇","鸡"],["虎","马","狗"],["兔","羊","猪"]];
+const ZODIAC_CHONG = [["鼠","马"],["牛","羊"],["虎","猴"],["兔","鸡"],["龙","狗"],["蛇","猪"]];
+const ZODIAC_HAI   = [["鼠","羊"],["牛","马"],["虎","蛇"],["兔","龙"],["猴","猪"],["鸡","狗"]];
+const ZODIAC_XING  = [["鼠","兔"],["虎","蛇"],["蛇","猴"],["虎","猴"],["牛","狗"],["牛","羊"],["狗","羊"],["龙","龙"],["马","马"],["鸡","鸡"],["猪","猪"]];
+const ZODIAC_SELF_XING = ["龙","马","鸡","猪"];
+const pairIn = (list, a, b) => list.some(g => g.includes(a) && g.includes(b));
+
+function zodiacRelation(a, b) {
+  if (!a || !b) return { key: "未知", score: 22, text: "生肖信息缺失，按中性分计" };
+  if (pairIn(ZODIAC_LIUHE, a, b)) return { key: "六合", score: 40, text: a + "与" + b + "六合，是最省力的一对，聊天容易自然接上" };
+  if (pairIn(ZODIAC_SANHE, a, b)) return { key: "三合", score: 34, text: a + "与" + b + "三合，气场同频，聊起来不费劲" };
+  if (pairIn(ZODIAC_CHONG, a, b)) return { key: "六冲", score: 4, text: a + "与" + b + "六冲，容易正面顶牛，需要留缓冲" };
+  if (pairIn(ZODIAC_HAI, a, b)) return { key: "六害", score: 10, text: a + "与" + b + "六害，容易暗里别扭，话说清楚比较重要" };
+  if (pairIn(ZODIAC_XING, a, b)) return { key: "相刑", score: 14, text: a + "与" + b + "相刑，容易互相磨，别在小事上较真" };
+  if (a === b) return { key: "同肖", score: 24, text: "同属" + a + "，节奏接近但容易一起钻牛角尖" };
+  return { key: "平合", score: 22, text: a + "与" + b + "无特殊冲合，属正常发挥" };
+}
+
+function signAspect(a, b) {
+  if (a == null || b == null) return { key: "未知", deg: null, score: 34, text: "星座信息缺失，按中性分计" };
+  const d = (b - a + 12) % 12;
+  const m = Math.min(d, 12 - d);
+  if (m === 0) return { key: "同座", deg: 0, score: 44, text: "同座，想法近、沟通成本低，但容易一起陷进同一种情绪" };
+  if (m === 1) return { key: "邻座", deg: 30, score: 40, text: "相邻星座，节奏相近，偶尔有点小错位但无伤大雅" };
+  if (m === 2) return { key: "六分相", deg: 60, score: 50, text: "六分相（60°），顺畅的轻度互补，聊天很舒服" };
+  if (m === 3) return { key: "四分相", deg: 90, score: 28, text: "四分相（90°），容易互相不理解，需要多解释一句" };
+  if (m === 4) return { key: "三分相", deg: 120, score: 52, text: "三分相（120°），天生的顺，聊天容易上头" };
+  if (m === 5) return { key: "梅花相", deg: 150, score: 34, text: "150° 梅花相，有点错位，靠主动找共同点" };
+  return { key: "对宫", deg: 180, score: 38, text: "对宫（180°），互补但也互相拉扯，聊得好会很有火花" };
+}
+
+function elementMod(ea, eb) {
+  if (!ea || !eb) return { v: 0, text: "" };
+  if (ea === eb) return { v: 2, text: "同为" + ea + "象，语言体系接近（+2）" };
+  const pair = [ea, eb].sort().join("");
+  if (pair === "火风") return { v: 4, text: "火象配风象，互相点火越聊越起劲（+4）" };
+  if (pair === "土水") return { v: 4, text: "土象配水象，一个稳一个软，容易聊进心里（+4）" };
+  if (pair === "水火") return { v: -6, text: "火象配水象，一个要热一个要稳，容易互相浇灭（-6）" };
+  if (pair === "土风") return { v: -6, text: "土象配风象，一个要落地一个要飘，容易聊岔（-6）" };
+  return { v: 0, text: ea + "象配" + eb + "象，中性搭配" };
+}
+
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+function bandOf(total) {
+  if (total >= 80) return "非常适合纯聊";
+  if (total >= 66) return "适合";
+  if (total >= 52) return "一般";
+  return "不太合";
+}
+
+/* ================== 话题 / 建议 内容库 ================== */
+const TOPIC_LIB = {
+  "工作": ["你最近手上最烦的一件事是什么？不用给结论，吐个槽就行", "你们那行今年最明显的变化是什么？我挺好奇一线的真实感受", "如果明天不用上班，你第一件事想干嘛"],
+  "电影": ["最近有没有一部片子，看完想立刻找人聊的？", "你更吃「讲得爽」还是「看完难受但忘不掉」那一挂？", "有没有哪部电影你看过三遍以上"],
+  "八卦": ["最近你身边最有意思的一件小事是什么？不一定是大事", "你属于爱听八卦还是只当听众的那种？", "有没有那种「说出来有点丢人但很好笑」的经历"],
+  "人生规划": ["你现在这份生活，是你三年前想要的吗？", "如果不用考虑钱，你最想试的一件事是什么", "你觉得自己这几年最大的变化在哪"],
+  "音乐": ["最近单曲循环的是哪首？我想听听你的品味", "有没有一首歌，一听就回到某个具体的夏天", "你听歌是看歌词还是听氛围"],
+  "美食": ["你心里那家「不想告诉别人」的小店是哪家？", "一个人吃饭你会认真做还是随便对付", "最近吃到最惊喜的一口是什么"],
+  "旅行": ["去过最想再去一次的地方是哪？为什么", "你旅行是攻略派还是到了再说派", "有没有一次出门，计划全废但反而最好玩"],
+  "游戏": ["最近在玩什么？不用推荐，就说说你为什么还在玩", "你玩游戏是求赢还是求放松", "有没有一款游戏你舍不得通关"],
+  "读书": ["最近在读什么？可以是很杂的那种", "有没有一本书改变了你看事情的方式", "你读书是做笔记还是读完就忘"],
+  "情感": ["你觉得一段关系里，最容易被忽略的是什么", "你是那种会主动说「我有点难过」的人吗", "你身边有没有一个可以半夜打电话的人"]
+};
+const OPENERS = [
+  "在吗？突然想起一件事想问你 —— {topic}",
+  "打扰一下，看到你说过{trait}，我这边正好卡在一个事上，想听听你的看法：{topic}",
+  "不寒暄了，直接问：{topic}",
+  "嗨，{nickname}。我最近在整理自己聊天的方式，发现跟{trait}的人最聊得动。所以想问问你：{topic}"
+];
+const AVOID_BY_TRAIT = {
+  "话少": ["别连发三条以上消息", "别追问「怎么不回」", "别一上来就发长语音"],
+  "分享欲强": ["别在他说到一半时打断", "别只回「嗯」「哦」", "别把话题硬拽回自己身上"],
+  "爱吐槽": ["别跟着一起骂到失控", "别否定他的感受说「想开点」", "别把他的吐槽当真的仇恨"],
+  "理性": ["别只讲情绪不讲事实", "别用「你不懂」堵他", "别逼他立刻共情"],
+  "感性": ["别冷冰冰甩方案", "别在他难过时讲道理", "别敷衍地说「都这样」"],
+  "幽默": ["别接不住梗还硬接", "别开他不想被开的玩笑", "别在正经话题里一直打岔"],
+  "社恐": ["别一上来就语音/电话", "别催他见面", "别公开场合点名他"],
+  "社牛": ["别让他一个人撑全场", "别对他的热情泼冷水", "别把边界感当成冷漠"],
+  "慢热": ["别催熟关系", "别追问隐私", "别三天不回又突然热情"],
+  "共情强": ["别把他当情绪垃圾桶", "别只倒苦水不回问", "别辜负他认真接住的情绪"]
+};
+
+/* ================== 确定性评分 ================== */
+function evaluate(self, cand) {
+  const sp = resolveProfile(self);
+  const cp = resolveProfile(cand);
+  const zr = zodiacRelation(sp.zodiac, cp.zodiac);
+  const as = signAspect(sp.sign, cp.sign);
+  const el = elementMod(sp.sign != null ? SIGN_ELEM[sp.sign] : "", cp.sign != null ? SIGN_ELEM[cp.sign] : "");
+  const signScore = clamp(as.score + el.v, 10, 56);
+
+  const selfPrefs = Array.isArray(self.prefs) ? self.prefs : [];
+  const candPrefs = Array.isArray(cand.prefs) ? cand.prefs : [];
+  const shared = selfPrefs.filter(p => candPrefs.includes(p));
+  const prefScore = Math.min(8, shared.length * 2);
+
+  const raw = zr.score + signScore + prefScore;
+  const total = clamp(Math.round(raw), 0, 100);
+  const band = bandOf(total);
+
+  return {
+    total, band,
+    zodiac: { ...zr, score: zr.score },
+    sign: {
+      ...as, score: signScore, elem: el.text,
+      selfSign: sp.sign != null ? SIGNS[sp.sign] : "—",
+      candSign: cp.sign != null ? SIGNS[cp.sign] : "—",
+      selfZodiac: sp.zodiac || "—", candZodiac: cp.zodiac || "—"
+    },
+    prefs: { shared, score: prefScore },
+    rhythm: buildRhythm(total, cand, self),
+    topics: buildTopics(cand, self, shared),
+    opener: buildOpener(cand, self, shared),
+    avoid: buildAvoid(cand, sp, cp, as, zr),
+    reasons: buildReasons(zr, as, el, shared, signScore, zr.score, prefScore),
+    incomplete: (sp.sign == null || sp.zodiac == null || cp.sign == null || cp.zodiac == null)
+  };
+}
+
+function buildReasons(zr, as, el, shared, signScore, zScore, prefScore) {
+  const r = [];
+  r.push({ label: "生肖", value: (zScore >= 0 ? "+" : "") + zScore, tone: zScore >= 30 ? "pos" : (zScore <= 14 ? "neg" : ""), text: zr.key + "：" + zr.text });
+  r.push({ label: "星座", value: "+" + signScore, tone: signScore >= 44 ? "pos" : (signScore <= 32 ? "neg" : ""), text: as.key + "：" + as.text });
+  if (el.text) r.push({ label: "元素", value: (el.v >= 0 ? "+" : "") + el.v, tone: el.v > 0 ? "pos" : (el.v < 0 ? "neg" : ""), text: el.text });
+  r.push({ label: "话题", value: "+" + prefScore, tone: prefScore > 0 ? "pos" : "", text: shared.length ? "共同想聊：" + shared.join("、") + "（每个 +2，上限 +8）" : "没有重合的聊天方向，靠现场找" });
+  return r;
+}
+
+function buildRhythm(total, cand, self) {
+  const t = cand.traits || [];
+  let first;
+  if (t.includes("话少") || t.includes("慢热") || t.includes("社恐")) first = "你先开口。对方不会主动，但你说到点上他会认真接。";
+  else if (t.includes("社牛") || t.includes("分享欲强")) first = "让他先起头。你只要接住并追问一句，他能讲很久。";
+  else first = "谁手上有具体的事谁先开口，别用「在干嘛」开场。";
+  let reply, depth;
+  if (total >= 80) { reply = "当天回就行，不用秒回也不用拖过夜；一天来回 3–5 轮最舒服。"; depth = "可以往深里聊。第三次对话就能碰真实烦恼，不用一直客套。"; }
+  else if (total >= 66) { reply = "半天内回，别太密。一天 2–3 轮，留点空白反而更好。"; depth = "中深度为主。可以聊观点和经历，先别急着聊价值观和家事。"; }
+  else if (total >= 52) { reply = "隔几小时回也正常，先低频试水，别一上来高频轰炸。"; depth = "浅层为主。聊具体的事、具体的场景，别上来就谈人生。"; }
+  else { reply = "隔天回都算正常。先用低频率试 3 次，看对方接不接。"; depth = "保持轻量。聊天气、聊眼前事，别碰价值观和旧伤。"; }
+  return { first, reply, depth };
+}
+
+function buildTopics(cand, self, shared) {
+  const candPrefs = cand.prefs || [];
+  const pool = [];
+  const seen = new Set();
+  const pushFrom = key => {
+    if (seen.has(key)) return;
+    const arr = TOPIC_LIB[key];
+    if (!arr) return;
+    seen.add(key);
+    const seed = hash32(String(cand.id || cand.nickname || "") + "|" + key + "|" + (self.nickname || ""));
+    pool.push(pickBySeed(arr, String(seed)));
+  };
+  shared.forEach(pushFrom);
+  candPrefs.forEach(pushFrom);
+  const fallback = ["工作", "电影", "美食", "旅行", "音乐"];
+  let i = 0;
+  while (pool.length < 3 && i < fallback.length) { pushFrom(fallback[i]); i++; }
+  return pool.slice(0, 3);
+}
+
+function buildOpener(cand, self, shared) {
+  const t = (cand.traits || [])[0] || "好聊";
+  const key = shared[0] || (cand.prefs || [])[0] || "美食";
+  const arr = TOPIC_LIB[key] || TOPIC_LIB["美食"];
+  const seed = hash32(String(cand.id || cand.nickname || "") + "|opener|" + key);
+  const topic = pickBySeed(arr, String(seed));
+  const tpl = pickBySeed(OPENERS, String(seed + 7));
+  return tpl.replace("{topic}", topic).replace("{trait}", t).replace("{nickname}", cand.nickname || "你");
+}
+
+function buildAvoid(cand, sp, cp, as, zr) {
+  const out = [];
+  (cand.traits || []).forEach(t => { (AVOID_BY_TRAIT[t] || []).forEach(x => { if (!out.includes(x)) out.push(x); }); });
+  if (zr.key === "六冲") out.push("别在分歧上争输赢，先接住再说自己的看法");
+  if (zr.key === "六害") out.push("话别说一半，含糊最容易积怨");
+  if (as.key === "四分相") out.push("别默认对方能懂你的潜台词，直接说");
+  if (as.key === "对宫") out.push("别把「互补」当成「他应该跟我想的一样」");
+  if (!out.length) out.push("别一上来查户口", "别连续追问不回的消息", "别把聊天当面试");
+  return out.slice(0, 6);
+}
+
+/* ================== 生日解析 ================== */
+const SIGN_RANGES = [
+  [3,21,4,19],[4,20,5,20],[5,21,6,21],[6,22,7,22],[7,23,8,22],[8,23,9,22],
+  [9,23,10,23],[10,24,11,22],[11,23,12,21],[12,22,1,19],[1,20,2,18],[2,19,3,20]
+];
+function birthToSign(birth) {
+  if (!birth) return null;
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(birth);
+  if (!m) return null;
+  const mo = +m[2], da = +m[3];
+  if (mo < 1 || mo > 12 || da < 1 || da > 31) return null;
+  for (let i = 0; i < 12; i++) {
+    const [m1, d1, m2, d2] = SIGN_RANGES[i];
+    if (m1 <= m2) { if ((mo === m1 && da >= d1) || (mo === m2 && da <= d2)) return i; }
+    else { if ((mo === m1 && da >= d1) || (mo === m2 && da <= d2)) return i; }
+  }
+  return 9;
+}
+function birthToZodiac(birth) {
+  const m = /^(\d{4})/.exec(birth || "");
+  if (!m) return null;
+  const y = +m[1];
+  if (y < 1900 || y > 2100) return null;
+  return ZODIACS[((y - 4) % 12 + 12) % 12];
+}
+function resolveProfile(p) {
+  p = p || {};
+  let sign = null;
+  if (typeof p.sign === "number" && p.sign >= 0 && p.sign < 12) sign = p.sign;
+  else if (typeof p.sign === "string" && SIGNS.includes(p.sign)) sign = SIGNS.indexOf(p.sign);
+  if (sign == null) sign = birthToSign(p.birth);
+  let zodiac = null;
+  if (typeof p.zodiac === "string" && ZODIACS.includes(p.zodiac)) zodiac = p.zodiac;
+  if (!zodiac) zodiac = birthToZodiac(p.birth);
+  return { sign, zodiac };
+}
+
+/* ================== 模板库（虚构补位） ================== */
+const NAME_POOL = {
+  "男": ["北窗","老周","陈默","阿岩","江北","木易","路边摊","旧唱片","穿堂风","雾岛","半页书","长夜灯","野渡","空山","老K","阿川"],
+  "女": ["小满","柚子","阿棠","晚晚","林间","桃子","南栀","一勺糖","小鹿","春日","月半","西柚","冬青","晴窗","橘子海","拾光"],
+  "any": ["深夜电台","白噪音","慢半拍","第七杯茶","旧站台","云上散步","黑胶","南风","纸飞机","静水","琥珀","山海","晚安电台","午后三点","孤岛书店","零度"]
+};
+const STYLE_BY_TRAIT = {
+  "话少": "惜字如金，一句顶三句。回得慢，但回的都是实的，不敷衍。",
+  "分享欲强": "抓着一件小事能讲十分钟，喜欢把细节摊开讲给你听。",
+  "爱吐槽": "嘴上嫌弃，心里热乎。吐槽是他亲近人的方式，不是真的怨气。",
+  "理性": "先讲逻辑再讲情绪，习惯把事拆开分析，讨厌含糊其辞。",
+  "感性": "共情很快，一句歌词就能被戳中，愿意接住你的情绪。",
+  "幽默": "自带段子手体质，再闷的场子也能被他一句话救回来。",
+  "社恐": "文字比语音自在，需要预热，熟了以后话会突然变多。",
+  "社牛": "自来熟，三句话能称兄道弟，但边界感其实很清楚。",
+  "慢热": "前三次聊天像面试，第四次开始才露出真实的样子。",
+  "共情强": "先接住情绪，再谈事情。很少急着给建议。"
+};
+const CATCH_BY_TRAIT = {
+  "话少": ["嗯，我在听。","这个可以细说。","不急，你慢慢讲。"],
+  "分享欲强": ["我跟你讲，这事儿绝了。","等等我还没说完。","你先别打断我。"],
+  "爱吐槽": ["不是我说啊……","这也太离谱了。","我服了，真的。"],
+  "理性": ["我们捋一下逻辑。","先分清是事实还是感受。","这个结论我存疑。"],
+  "感性": ["我懂那种感觉。","这句话有点戳我。","没事，先难过一会儿也行。"],
+  "幽默": ["行吧，那我开始表演了。","这题我会。","你先笑，我再解释。"],
+  "社恐": ["我先想想怎么回。","打字比说话容易。","别打电话，真的。"],
+  "社牛": ["哎这事儿我熟。","来来来我给你安排。","别客气，直接说。"],
+  "慢热": ["先这样吧，回头聊。","我还不太会聊这个。","熟了你就知道了。"],
+  "共情强": ["你先说，我不打断。","这事儿换谁都难受。","不用急着好起来。"]
+};
+const MINE_BY_TRAIT = {
+  "话少": ["被追问「你怎么不说话」","被迫在群里发言"],
+  "分享欲强": ["说到一半被打断","对方只回一个「哦」"],
+  "爱吐槽": ["被劝「想开点」","吐槽被当成真的仇恨"],
+  "理性": ["被情绪绑架","对方讲话没重点"],
+  "感性": ["被说「你太敏感了」","冷冰冰的方案式安慰"],
+  "幽默": ["梗掉地上没人接","正经场合被打断"],
+  "社恐": ["突然的语音通话","被拉到陌生人饭局"],
+  "社牛": ["冷场没人接话","热情被当成没边界"],
+  "慢热": ["被催着熟起来","三天不回又突然热络"],
+  "共情强": ["被当成情绪垃圾桶","认真接住的话被敷衍"]
+};
+const FILL_OPENERS = [
+  "晚上好。不急着聊什么正事，先随便说一件今天发生的小事？",
+  "我这边刚忙完，脑子还有点转。你先说，我接着。",
+  "换个不费脑的话题吧——最近有什么让你觉得「还挺值」的小事？",
+  "先声明我不太会寒暄。直接问：你今天过得怎么样，真话那种。"
+];
+
+function generateFiller(attrs) {
+  attrs = attrs || {};
+  const traits = (attrs.traits || []).filter(t => TRAITS.includes(t));
+  const prefs = (attrs.prefs || []).filter(p => PREFS.includes(p));
+  const gender = attrs.gender === "男" || attrs.gender === "女" ? attrs.gender : "any";
+  const seedStr = JSON.stringify({
+    s: attrs.sign || "", z: attrs.zodiac || "", g: gender,
+    t: traits.slice().sort(), a: attrs.ageRange || "25-30", p: prefs.slice().sort()
+  });
+  const h = hash32(seedStr);
+
+  const signIdx = attrs.sign && SIGNS.includes(attrs.sign) ? SIGNS.indexOf(attrs.sign) : (h % 12);
+  const zodiac = attrs.zodiac && ZODIACS.includes(attrs.zodiac) ? attrs.zodiac : ZODIACS[(h >> 3) % 12];
+  const ageRange = attrs.ageRange || "25-30";
+  const yearStart = 2026 - parseInt(ageRange.split("-")[1] || "30", 10);
+  const birthYear = yearStart + ((h >> 6) % 6);
+
+  const pool = NAME_POOL[gender] || NAME_POOL.any;
+  let nickname = pickBySeed(pool, seedStr + "|name");
+  if (nickname === "南风" && gender === "any") nickname = "南风";
+
+  const mainTrait = traits[0] || TRAITS[(h >> 9) % TRAITS.length];
+  const style = STYLE_BY_TRAIT[mainTrait] || "语气平稳，不抢话，也不冷场。";
+  const catchphrase = pickBySeed(CATCH_BY_TRAIT[mainTrait] || ["嗯，我在。"], seedStr + "|catch");
+  const mines = (MINE_BY_TRAIT[mainTrait] || []).slice(0, 3);
+  const usePrefs = prefs.length ? prefs : [PREFS[(h >> 12) % PREFS.length]];
+  const topics = usePrefs.slice(0, 3).map(p => {
+    const arr = TOPIC_LIB[p] || TOPIC_LIB["美食"];
+    return pickBySeed(arr, seedStr + "|" + p);
+  });
+  const opener = pickBySeed(FILL_OPENERS, seedStr + "|open");
+  const styleTags = traits.length ? traits.slice(0, 3) : [mainTrait];
+
+  return {
+    nickname, sign: SIGNS[signIdx], zodiac, gender: gender === "any" ? "" : gender,
+    ageRange, birthYear, traits: styleTags, prefs: usePrefs,
+    style, catchphrase, mines, topics, opener,
+    fiction: true, label: "虚构 · 模板生成", seed: h
+  };
+}
+
+/* ================== 状态与存储 ================== */
+const state = {
+  self: { nickname: "我", birth: "", sign: null, zodiac: null, gender: "", traits: [], prefs: [] },
+  candidates: [],
+  history: [],
+  settings: { chatEndpoint: "", personaEndpoint: "" },
+  lastSaved: null
+};
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (d && typeof d === "object") {
+      state.self = Object.assign(state.self, d.self || {});
+      state.candidates = Array.isArray(d.candidates) ? d.candidates : [];
+      state.history = Array.isArray(d.history) ? d.history : [];
+      state.settings = Object.assign(state.settings, d.settings || {});
+      state.lastSaved = d.lastSaved || null;
+    }
+    return true;
+  } catch (e) { console.warn("读取本地数据失败", e); return false; }
+}
+function save(silent) {
+  state.lastSaved = nowStr();
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      version: 1, self: state.self, candidates: state.candidates,
+      history: state.history.slice(0, 50), settings: state.settings, lastSaved: state.lastSaved
+    }));
+  } catch (e) {
+    toast("本地存储写入失败：" + e.message, true);
+  }
+  if (!silent) renderMeta();
+}
+function log(action, detail) {
+  state.history.unshift({ t: nowStr(), action, detail: String(detail || "") });
+  state.history = state.history.slice(0, 50);
+}
+const findCand = id => state.candidates.find(c => c.id === id);
+
+/* ================== 折叠面板状态（记住上次展开） ================== */
+const COLLAPSE_KEY = "chatmate.collapse.v1";
+/* false = 默认收起；未列出的默认展开 */
+const COLL_DEFAULTS = {
+  self: true, "fill-form": true, "data-manage": true,
+  sysinfo: false, import: false, api: false, history: false,
+  "guide-steps": false, "guide-terms": false, "guide-limits": false
+};
+let collSaved = (function () {
+  try { return JSON.parse(localStorage.getItem(COLLAPSE_KEY)) || {}; } catch (e) { return {}; }
+})();
+function isCollOpen(k) {
+  if (Object.prototype.hasOwnProperty.call(collSaved, k)) return !!collSaved[k];
+  return COLL_DEFAULTS[k] !== false;
+}
+function persistColl() {
+  try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify(collSaved)); } catch (e) {}
+}
+function applyColl() {
+  $$(".coll").forEach(el => {
+    const k = el.dataset.coll, open = isCollOpen(k);
+    el.classList.toggle("open", open);
+    const head = el.querySelector(".coll-head");
+    if (head) head.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  updateCollBtn();
+}
+function toggleColl(k) {
+  collSaved[k] = !isCollOpen(k);
+  persistColl();
+  applyColl();
+}
+function updateCollBtn() {
+  const btn = $("#collAllBtn");
+  if (!btn) return;
+  const keys = $$(".coll").map(el => el.dataset.coll);
+  const allOpen = keys.length > 0 && keys.every(k => isCollOpen(k));
+  btn.textContent = allOpen ? "全部收起" : "全部展开";
+}
+function toggleAllColl() {
+  const keys = $$(".coll").map(el => el.dataset.coll);
+  const allOpen = keys.every(k => isCollOpen(k));
+  keys.forEach(k => { collSaved[k] = !allOpen; });
+  persistColl();
+  applyColl();
+  toast(allOpen ? "已全部收起" : "已全部展开");
+}
+/* ================== 基础 UI 工具 ================== */
+function toast(msg, isErr) {
+  const box = $("#toastBox");
+  const el = document.createElement("div");
+  el.className = "toast" + (isErr ? " err" : "");
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translateY(8px)"; el.style.transition = ".25s"; }, 2200);
+  setTimeout(() => el.remove(), 2600);
+}
+function openModal(opt) {
+  const root = $("#modalRoot");
+  root.innerHTML =
+    '<div class="modal-mask" data-mask="1"><div class="modal ' + (opt.wide ? "wide" : "") + '" role="dialog" aria-modal="true">' +
+      '<div class="modal-head"><h3>' + esc(opt.title || "") + '</h3>' +
+        '<button class="modal-x" data-act="close-modal" aria-label="关闭">×</button></div>' +
+      '<div class="modal-body">' + (opt.body || "") + '</div>' +
+      '<div class="modal-foot">' + (opt.footer || '<button class="btn" data-act="close-modal">关闭</button>') + '</div>' +
+    '</div></div>';
+  document.body.style.overflow = "hidden";
+  const body = $(".modal-body");
+  if (body) body.scrollTop = 0;
+}
+function closeModal() {
+  $("#modalRoot").innerHTML = "";
+  document.body.style.overflow = "";
+}
+function confirmBox(title, text, onYes, yesLabel) {
+  openModal({
+    title,
+    body: '<p style="margin:0;font-size:13.5px;color:var(--txt2);line-height:1.85">' + text + '</p>',
+    footer: '<button class="btn" data-act="close-modal">取消</button>' +
+            '<button class="btn danger" data-act="confirm-yes">' + esc(yesLabel || "确认") + '</button>'
+  });
+  window.__confirmYes = onYes;
+}
+function bandColor(band) { return (BAND_META[band] || BAND_META["一般"]).c; }
+function ringHTML(total, band) {
+  const c = 2 * Math.PI * 50, off = c * (1 - total / 100), col = bandColor(band);
+  return '<div class="ring" style="--band-c:' + col + '">' +
+    '<svg width="118" height="118" viewBox="0 0 118 118">' +
+      '<circle cx="59" cy="59" r="50" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/>' +
+      '<circle cx="59" cy="59" r="50" fill="none" stroke="' + col + '" stroke-width="8" stroke-linecap="round" ' +
+        'stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '" ' +
+        'style="filter:drop-shadow(0 0 7px ' + col + '66)"/>' +
+    '</svg><div class="ring-txt"><b>' + total + '</b><span>契合度</span></div></div>';
+}
+function typeBadge(c) {
+  if (c.type === "real") return '<span class="badge real">真人</span>';
+  if (c.source === "template") return '<span class="badge fict">虚构 · 模板生成</span>';
+  return '<span class="badge ai">AI 扮演</span>';
+}
+function avatarOf(c) {
+  const cls = c.type === "real" ? "" : (c.source === "template" ? " tpl" : " ai");
+  const ch = (c.nickname || "?").slice(0, 1);
+  return '<div class="avatar' + cls + '">' + esc(ch) + '</div>';
+}
+function whoText(p) {
+  const pr = resolveProfile(p);
+  const arr = [];
+  if (pr.sign != null) arr.push(SIGNS[pr.sign]);
+  if (pr.zodiac) arr.push(pr.zodiac);
+  if (p.gender) arr.push(p.gender);
+  if (p.city) arr.push(p.city);
+  return arr.length ? arr.join(" · ") : "信息待补";
+}
+
+/* ================== 渲染：顶部信息 ================== */
+function renderMeta() {
+  $("#metaSize").textContent = fmtSize(APP_SIZE_BYTES);
+  $("#metaTime").textContent = APP_BUILD;
+  $("#tabN").textContent = state.candidates.length;
+  $("#statPeople").textContent = state.candidates.length;
+  $("#statReal").textContent = state.candidates.filter(c => c.type === "real").length;
+  $("#statFill").textContent = state.candidates.filter(c => c.type !== "real").length;
+  if (state.candidates.length && profileReady(state.self)) {
+    const arr = state.candidates.map(c => evaluate(state.self, c).total);
+    const avg = Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+    $("#statAvg").textContent = avg;
+  } else {
+    $("#statAvg").textContent = "—";
+  }
+  const dot = $("#metaTime");
+  if (dot) dot.title = "最近保存：" + (state.lastSaved || "尚未保存");
+  const saved = $("#metaSaved");
+  if (saved) saved.textContent = state.lastSaved || "尚未保存";
+  renderSelf();
+}
+function profileReady(p) {
+  const r = resolveProfile(p);
+  return r.sign != null && r.zodiac != null;
+}
+
+/* ================== 渲染：我的资料 ================== */
+function renderSelf() {
+  const s = state.self, pr = resolveProfile(s);
+  const desc = $("#selfDesc");
+  if (!desc) return;
+  if (profileReady(s)) {
+    desc.innerHTML = "生日 " + esc(s.birth || "—") + " · <b style='color:var(--gold)'>" +
+      (pr.sign != null ? SIGNS[pr.sign] : "—") + " · " + (pr.zodiac || "—") + "</b> · 已用于契合度计算";
+  } else {
+    desc.textContent = "还没填全生日或星座生肖，契合度只能算中性分 —— 点右边补上，只存本机。";
+  }
+  const av = $("#selfAvatar");
+  if (av) av.textContent = (s.nickname || "我").slice(0, 1);
+  const sub = $("#selfSub");
+  if (sub) sub.textContent = profileReady(s) ? (SIGNS[pr.sign] + " · " + pr.zodiac) : "未填写";
+}
+
+/* ================== 渲染：候选人列表 ================== */
+function getFilters() {
+  return {
+    q: ($("#qSearch").value || "").trim().toLowerCase(),
+    type: $("#fType").value,
+    sign: $("#fSign").value,
+    zodiac: $("#fZodiac").value,
+    trait: $("#fTrait").value,
+    sort: $("#fSort").value
+  };
+}
+function filteredList() {
+  const f = getFilters();
+  let list = state.candidates.slice();
+  if (f.type) {
+    if (f.type === "real") list = list.filter(c => c.type === "real");
+    else list = list.filter(c => c.type !== "real");
+  }
+  if (f.sign) list = list.filter(c => { const p = resolveProfile(c); return p.sign != null && SIGNS[p.sign] === f.sign; });
+  if (f.zodiac) list = list.filter(c => resolveProfile(c).zodiac === f.zodiac);
+  if (f.trait) list = list.filter(c => (c.traits || []).includes(f.trait));
+  if (f.q) {
+    list = list.filter(c => {
+      const hay = [c.nickname, c.city, c.note, c.channel, c.gender, c.zodiac, resolveProfile(c).sign != null ? SIGNS[resolveProfile(c).sign] : ""]
+        .concat(c.traits || []).concat(c.prefs || []).join(" ").toLowerCase();
+      return hay.includes(f.q);
+    });
+  }
+  if (f.sort === "score") {
+    list.sort((a, b) => evaluate(state.self, b).total - evaluate(state.self, a).total);
+  } else if (f.sort === "recent") {
+    list.sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
+  } else {
+    list.sort((a, b) => String(a.nickname || "").localeCompare(String(b.nickname || ""), "zh"));
+  }
+  return list;
+}
+function personCard(c) {
+  const r = evaluate(state.self, c);
+  const col = bandColor(r.band);
+  const pr = resolveProfile(c);
+  const tags = (c.traits || []).slice(0, 4).map(t => '<span class="mini">' + esc(t) + '</span>').join("");
+  const prefs = (c.prefs || []).slice(0, 3).map(t => '<span class="mini">#' + esc(t) + '</span>').join("");
+  return '<article class="person ' + (c.type === "real" ? "is-real" : "is-ai") + '" style="--band-c:' + col + '">' +
+    '<div class="person-head">' + avatarOf(c) +
+      '<div class="person-name"><h3>' +
+        '<span class="nm">' + esc(c.nickname) + '</span>' +
+        (c.vip ? '<span class="badge vip">VIP</span>' : "") +
+        typeBadge(c) +
+      '</h3><div class="person-sub">' + esc(whoText(c)) +
+        (c.channel ? '<span>· ' + esc(c.channel) + '</span>' : "") +
+      '</div></div>' +
+    '</div>' +
+    '<div class="score-row">' +
+      '<div class="score-num" style="--band-c:' + col + '">' + r.total + '<small>分</small></div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div class="score-band" style="--band-c:' + col + '">' + r.band + '</div>' +
+        '<div class="bar"><i style="width:' + r.total + '%"></i></div>' +
+      '</div>' +
+    '</div>' +
+    (tags || prefs ? '<div class="chips-mini">' + tags + prefs + '</div>' : "") +
+    (c.note ? '<div class="person-note">' + esc(c.note) + '</div>' : "") +
+    '<div class="person-acts">' +
+      '<button class="btn primary sm" data-act="view-score" data-id="' + c.id + '">看怎么聊</button>' +
+      '<button class="btn sm" data-act="edit-person" data-id="' + c.id + '">编辑</button>' +
+      '<button class="btn sm ghost" data-act="dup-person" data-id="' + c.id + '">复制</button>' +
+      '<button class="btn sm ghost danger" data-act="del-person" data-id="' + c.id + '">删除</button>' +
+    '</div>' +
+  '</article>';
+}
+function renderPeople() {
+  const list = filteredList();
+  const box = $("#peopleList");
+  const hint = $("#peopleHint");
+  if (!state.candidates.length) {
+    box.innerHTML = '<div class="empty" style="grid-column:1/-1">' +
+      '<div class="e-ic">◌</div><h4>还没有候选人</h4>' +
+      '<p>先点「载入示例」看看效果，或者直接新增一个。生日填了，分数才算得出来。</p>' +
+      '<div class="btn-row" style="justify-content:center">' +
+        '<button class="btn primary" data-act="add-person">＋ 新增候选人</button>' +
+        '<button class="btn" data-act="load-demo">载入示例</button>' +
+        '<button class="btn ghost" data-act="go-import">批量导入</button>' +
+      '</div></div>';
+  } else if (!list.length) {
+    box.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="e-ic">⌕</div>' +
+      '<h4>没筛出人</h4><p>换个筛选条件，或者点「重置」。</p>' +
+      '<button class="btn" data-act="reset-filter">重置筛选</button></div>';
+  } else {
+    box.innerHTML = list.map(personCard).join("");
+  }
+  if (hint) {
+    hint.innerHTML = !profileReady(state.self)
+      ? '<div class="notice" style="margin-bottom:12px"><b>先补你的生日：</b>没填之前，所有人的分数都只是中性参考。点上方「编辑我的资料」补一下，分数会立刻重算。</div>'
+      : "";
+  }
+  renderMeta();
+}
+
+/* ================== 详情弹窗 ================== */
+function summaryLine(r, c) {
+  if (r.band === "非常适合纯聊") return "规则上你们是省力的一对：开口不费劲，接话也顺，可以放心往深里聊。";
+  if (r.band === "适合") return "整体顺，偶尔需要解释一句。保持中等频率，别急着一下子拉太近。";
+  if (r.band === "一般") return "能聊，但需要你多带一点节奏。先聊具体的事，别一上来就聊价值观。";
+  return "规则上不算顺。建议低频试水，把期待放低，别在分歧上较劲。";
+}
+function showScore(id) {
+  const c = findCand(id);
+  if (!c) return;
+  const r = evaluate(state.self, c);
+  const col = bandColor(r.band);
+  const body =
+    '<div style="display:flex;gap:11px;align-items:center;margin-bottom:14px">' + avatarOf(c) +
+      '<div style="min-width:0"><div style="font-size:16px;font-weight:750;display:flex;gap:6px;align-items:center;flex-wrap:wrap">' +
+        esc(c.nickname) + (c.vip ? '<span class="badge vip">VIP</span>' : "") + typeBadge(c) +
+      '</div><div style="font-size:11.5px;color:var(--txt3)">' + esc(whoText(c)) + '</div></div></div>' +
+    (r.incomplete ? '<div class="notice" style="margin-bottom:13px">有一方缺少生日 / 星座 / 生肖，缺失项按中性分计。补全后分数会更准。</div>' : "") +
+    '<div class="ring-wrap">' + ringHTML(r.total, r.band) +
+      '<div style="flex:1;min-width:170px">' +
+        '<div style="font-size:18px;font-weight:800;color:' + col + '">' + r.band + '</div>' +
+        '<p style="margin:4px 0 0;font-size:12.5px;color:var(--txt2);line-height:1.75">' + summaryLine(r, c) + '</p>' +
+      '</div></div>' +
+    '<div class="res-block"><h5>▣ 分是怎么来的</h5>' +
+      r.reasons.map(x => '<div class="bd-row"><span class="k">' + x.label + '</span>' +
+        '<span class="t">' + esc(x.text) + '</span><span class="v ' + x.tone + '">' + x.value + '</span></div>').join("") +
+    '</div>' +
+    '<div class="res-block"><h5>◷ 聊天节奏建议</h5>' +
+      '<div class="kv"><span class="k">谁先开口</span><span class="v">' + r.rhythm.first + '</span></div>' +
+      '<div class="kv"><span class="k">多久回</span><span class="v">' + r.rhythm.reply + '</span></div>' +
+      '<div class="kv"><span class="k">聊多深</span><span class="v">' + r.rhythm.depth + '</span></div>' +
+    '</div>' +
+    '<div class="res-block"><h5>◈ 三个具体话题</h5><ul>' +
+      r.topics.map(t => "<li>" + esc(t) + "</li>").join("") + '</ul></div>' +
+    '<div class="res-block"><h5>✎ 第一句话怎么说</h5>' +
+      '<div class="quote" id="openerText">' + esc(r.opener) + '</div>' +
+      '<div style="margin-top:9px"><button class="btn sm" data-act="copy-opener" data-id="' + c.id + '">复制这句</button></div></div>' +
+    '<div class="res-block"><h5>⚠ 需要避开</h5><div class="avoid-list">' +
+      r.avoid.map(a => '<span class="mini">' + esc(a) + '</span>').join("") + '</div></div>';
+  openModal({
+    title: "契合度详情 · " + c.nickname,
+    wide: true,
+    body,
+    footer: '<button class="btn" data-act="close-modal">关闭</button>' +
+            '<button class="btn primary" data-act="start-chat" data-id="' + c.id + '">开始聊天</button>'
+  });
+}
+
+/* ================== 新增 / 编辑 ================== */
+function chipGroup(sel, list, chosen) {
+  return '<div class="chips" id="' + sel + '">' + list.map(t =>
+    '<button type="button" class="chip' + (chosen.includes(t) ? " on" : "") + '" data-chip="1" data-v="' + esc(t) + '">' + esc(t) + '</button>'
+  ).join("") + '</div>';
+}
+function signOptions(sel) {
+  return '<option value="">不填（按生日推算）</option>' + SIGNS.map((s, i) =>
+    '<option value="' + i + '"' + (String(sel) === String(i) ? " selected" : "") + '>' + s + '</option>').join("");
+}
+function zodiacOptions(sel) {
+  return '<option value="">不填（按生日推算）</option>' + ZODIACS.map(z =>
+    '<option value="' + z + '"' + (sel === z ? " selected" : "") + '>' + z + '</option>').join("");
+}
+function openPersonForm(id) {
+  const c = id ? findCand(id) : null;
+  const d = c || { nickname: "", type: "real", birth: "", sign: null, zodiac: null, gender: "", city: "", traits: [], prefs: [], channel: "", note: "", vip: false };
+  const body =
+    '<div class="field"><label>昵称 <span style="color:var(--bad)">*</span></label>' +
+      '<input type="text" id="f-nickname" maxlength="24" value="' + esc(d.nickname) + '" placeholder="怎么称呼这个人"></div>' +
+    '<div class="grid2">' +
+      '<div class="field"><label>类型</label><select id="f-type">' +
+        '<option value="real"' + (d.type === "real" ? " selected" : "") + '>真人</option>' +
+        '<option value="fictional"' + (d.type !== "real" ? " selected" : "") + '>AI / 虚构扮演</option>' +
+      '</select></div>' +
+      '<div class="field"><label>出生年月日</label><input type="date" id="f-birth" value="' + esc(d.birth || "") + '"></div>' +
+    '</div>' +
+    '<div class="grid2">' +
+      '<div class="field"><label>星座（填了会覆盖生日推算）</label><select id="f-sign">' + signOptions(d.sign) + '</select></div>' +
+      '<div class="field"><label>生肖</label><select id="f-zodiac">' + zodiacOptions(d.zodiac) + '</select></div>' +
+    '</div>' +
+    '<div class="grid2">' +
+      '<div class="field"><label>性别（可选）</label><select id="f-gender">' +
+        '<option value="">不说</option><option value="男"' + (d.gender === "男" ? " selected" : "") + '>男</option>' +
+        '<option value="女"' + (d.gender === "女" ? " selected" : "") + '>女</option></select></div>' +
+      '<div class="field"><label>城市（可选）</label><input type="text" id="f-city" maxlength="20" value="' + esc(d.city || "") + '" placeholder="如 成都"></div>' +
+    '</div>' +
+    '<div class="field"><label>性格标签（多选）</label>' + chipGroup("f-traits", TRAITS, d.traits || []) + '</div>' +
+    '<div class="field"><label>聊天偏好（多选，影响话题和加分）</label>' + chipGroup("f-prefs", PREFS, d.prefs || []) + '</div>' +
+    '<div class="grid2">' +
+      '<div class="field"><label>认识渠道（可选）</label><input type="text" id="f-channel" maxlength="24" value="' + esc(d.channel || "") + '" placeholder="如 朋友介绍 / 豆瓣"></div>' +
+      '<div class="field"><label>VIP 角标</label>' +
+        '<button type="button" class="chip' + (d.vip ? " on" : "") + '" id="f-vip" data-chip="1" data-single="vip" style="min-height:42px;width:100%;justify-content:center">' +
+        (d.vip ? "★ 已设为 VIP" : "☆ 设为 VIP") + '</button></div>' +
+    '</div>' +
+    '<div class="field"><label>备注</label><textarea id="f-note" maxlength="200" placeholder="怎么认识的、聊天感觉、要注意什么">' + esc(d.note || "") + '</textarea></div>';
+  openModal({
+    title: id ? "编辑候选人" : "新增候选人",
+    body,
+    footer: '<button class="btn" data-act="close-modal">取消</button>' +
+            '<button class="btn primary" data-act="save-person" data-id="' + (id || "") + '">保存</button>'
+  });
+}
+function collectChips(sel) {
+  return $$("#" + sel + " .chip.on").map(el => el.dataset.v);
+}
+function savePerson(id) {
+  const nick = ($("#f-nickname").value || "").trim();
+  if (!nick) { toast("昵称不能为空", true); $("#f-nickname").focus(); return; }
+  const signRaw = $("#f-sign").value;
+  const data = {
+    nickname: nick,
+    type: $("#f-type").value,
+    birth: $("#f-birth").value || "",
+    sign: signRaw === "" ? null : Number(signRaw),
+    zodiac: $("#f-zodiac").value || null,
+    gender: $("#f-gender").value || "",
+    city: ($("#f-city").value || "").trim(),
+    traits: collectChips("f-traits"),
+    prefs: collectChips("f-prefs"),
+    channel: ($("#f-channel").value || "").trim(),
+    note: ($("#f-note").value || "").trim(),
+    vip: $("#f-vip").classList.contains("on"),
+    updatedAt: nowStr()
+  };
+  if (id) {
+    const c = findCand(id);
+    Object.assign(c, data);
+    log("编辑候选人", nick);
+    toast("已更新「" + nick + "」");
+  } else {
+    state.candidates.push(Object.assign({
+      id: uid(), createdAt: nowStr(), source: "manual"
+    }, data));
+    log("新增候选人", nick + (data.type === "real" ? "（真人）" : "（AI/虚构）"));
+    toast("已新增「" + nick + "」");
+  }
+  save();
+  closeModal();
+  renderPeople();
+}
+
+/* ================== 我的资料表单 ================== */
+function openSelfForm() {
+  const s = state.self;
+  const pr = resolveProfile(s);
+  const body =
+    '<div class="notice blue" style="margin-bottom:14px">只填你自己的出生信息就能算分。数据只存本机，不会上传。</div>' +
+    '<div class="field"><label>昵称（可选）</label><input type="text" id="s-nickname" maxlength="16" value="' + esc(s.nickname || "我") + '"></div>' +
+    '<div class="field"><label>出生年月日</label><input type="date" id="s-birth" value="' + esc(s.birth || "") + '">' +
+      '<div class="hint">填了自动推星座和生肖；也可以只在下面手动选。</div></div>' +
+    '<div class="grid2">' +
+      '<div class="field"><label>星座（可覆盖）</label><select id="s-sign">' + signOptions(pr.sign) + '</select></div>' +
+      '<div class="field"><label>生肖（可覆盖）</label><select id="s-zodiac">' + zodiacOptions(pr.zodiac) + '</select></div>' +
+    '</div>' +
+    '<div class="field"><label>性别（可选）</label><select id="s-gender">' +
+      '<option value="">不说</option><option value="男"' + (s.gender === "男" ? " selected" : "") + '>男</option>' +
+      '<option value="女"' + (s.gender === "女" ? " selected" : "") + '>女</option></select></div>' +
+    '<div class="field"><label>我想聊什么（多选，用于共同话题加分）</label>' + chipGroup("s-prefs", PREFS, s.prefs || []) + '</div>';
+  openModal({
+    title: "我的基础资料",
+    body,
+    footer: '<button class="btn" data-act="close-modal">取消</button>' +
+            '<button class="btn primary" data-act="save-self">保存并重算</button>'
+  });
+}
+function saveSelf() {
+  const signRaw = $("#s-sign").value;
+  state.self = {
+    nickname: ($("#s-nickname").value || "我").trim() || "我",
+    birth: $("#s-birth").value || "",
+    sign: signRaw === "" ? null : Number(signRaw),
+    zodiac: $("#s-zodiac").value || null,
+    gender: $("#s-gender").value || "",
+    traits: state.self.traits || [],
+    prefs: collectChips("s-prefs")
+  };
+  log("更新我的资料", state.self.birth || (state.self.sign != null ? SIGNS[state.self.sign] : "未填生日"));
+  save();
+  closeModal();
+  renderPeople();
+  toast("已保存，分数已重算");
+}
+/* ================== 补位模式 ================== */
+let currentPersona = null;
+function fillSelects() {
+  const signOpts = '<option value="">不限（随便配）</option>' + SIGNS.map(s => '<option value="' + s + '">' + s + '</option>').join("");
+  const zodOpts = '<option value="">不限（随便配）</option>' + ZODIACS.map(z => '<option value="' + z + '">' + z + '</option>').join("");
+  $("#fillSign").innerHTML = signOpts;
+  $("#fillZodiac").innerHTML = zodOpts;
+  $("#fillTraits").innerHTML = TRAITS.map(t => '<button type="button" class="chip" data-chip="1" data-v="' + t + '">' + t + '</button>').join("");
+  $("#fillPrefs").innerHTML = PREFS.map(t => '<button type="button" class="chip" data-chip="1" data-v="' + t + '">' + t + '</button>').join("");
+  $("#fSign").innerHTML = '<option value="">全部星座</option>' + SIGNS.map(s => '<option value="' + s + '">' + s + '</option>').join("");
+  $("#fZodiac").innerHTML = '<option value="">全部生肖</option>' + ZODIACS.map(z => '<option value="' + z + '">' + z + '</option>').join("");
+  $("#fTrait").innerHTML = '<option value="">全部性格</option>' + TRAITS.map(t => '<option value="' + t + '">' + t + '</option>').join("");
+}
+function generatePersona() {
+  const attrs = {
+    sign: $("#fillSign").value || "",
+    zodiac: $("#fillZodiac").value || "",
+    gender: $("#fillGender").value,
+    ageRange: $("#fillAge").value,
+    traits: $$("#fillTraits .chip.on").map(e => e.dataset.v),
+    prefs: $$("#fillPrefs .chip.on").map(e => e.dataset.v)
+  };
+  const p = generateFiller(attrs);
+  const withSelf = Object.assign({}, p, { id: "persona-preview", type: "fictional", source: "template", prefs: p.prefs, traits: p.traits });
+  const r = evaluate(state.self, withSelf);
+  currentPersona = p;
+  renderPersona(p, r);
+  log("生成补位角色", p.nickname + " · " + p.sign + " · " + p.zodiac);
+  save(true);
+}
+function renderPersona(p, r) {
+  const col = bandColor(r.band);
+  $("#personaBox").innerHTML =
+    '<div class="persona">' +
+      '<div class="persona-head">' +
+        '<div class="avatar tpl">' + esc(p.nickname.slice(0, 1)) + '</div>' +
+        '<div style="min-width:0">' +
+          '<h3>' + esc(p.nickname) + '<span class="badge fict">虚构 · 模板生成</span>' +
+            '<span class="badge ghost">设定卡</span></h3>' +
+          '<div class="person-sub">' + esc(p.sign) + ' · ' + esc(p.zodiac) + ' · ' +
+            esc(p.ageRange) + ' 岁' + (p.gender ? " · " + esc(p.gender) : "") + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="notice" style="margin:12px 0">这不是真人，也不是在线 AI。它是一张按固定规则拼好的角色设定卡，用于把聊天框架先搭起来，不会自己回话。</div>' +
+      '<div class="kv"><span class="k">说话风格</span><span class="v">' + esc(p.style) + '</span></div>' +
+      '<div class="kv"><span class="k">口头禅</span><span class="v">「' + esc(p.catchphrase) + '」</span></div>' +
+      '<div class="kv"><span class="k">雷区</span><span class="v">' + p.mines.map(m => esc(m)).join("；") + '</span></div>' +
+      '<div class="kv"><span class="k">可聊话题</span><span class="v">' + p.topics.map(t => esc(t)).join("<br>") + '</span></div>' +
+      '<div class="kv"><span class="k">开场白</span><span class="v">' + esc(p.opener) + '</span></div>' +
+      '<div class="res-block" style="margin-top:13px">' +
+        '<h5>▣ 和你（' + esc(state.self.nickname || "我") + '）的规则契合度</h5>' +
+        '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">' +
+          '<div style="font-size:26px;font-weight:850;color:' + col + '">' + r.total + '</div>' +
+          '<div style="font-size:12.5px;color:' + col + ';font-weight:650">' + r.band + '</div>' +
+          '<div style="font-size:11.5px;color:var(--txt3);flex:1;min-width:150px">' +
+            r.reasons.map(x => x.label + " " + x.value).join(" ｜ ") + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="btn-row" style="margin-top:14px">' +
+        '<button class="btn primary" data-act="save-persona">存为候选人</button>' +
+        '<button class="btn" data-act="persona-chat">开始聊天</button>' +
+        '<button class="btn ghost" data-act="regen-persona">换一个</button>' +
+      '</div>' +
+    '</div>';
+}
+function savePersonaAsCandidate() {
+  if (!currentPersona) return;
+  const p = currentPersona;
+  let nick = p.nickname;
+  const used = new Set(state.candidates.map(c => c.nickname));
+  let n = 2;
+  while (used.has(nick)) { nick = p.nickname + " · " + n; n++; }
+  const cand = {
+    id: uid(), nickname: nick, type: "fictional", source: "template",
+    birth: "", sign: SIGNS.indexOf(p.sign), zodiac: p.zodiac,
+    gender: p.gender || "", city: "", traits: p.traits.slice(), prefs: p.prefs.slice(),
+    channel: "补位模板", note: "虚构 · 模板生成｜" + p.style + "｜口头禅：" + p.catchphrase,
+    vip: false, createdAt: nowStr(), updatedAt: nowStr(),
+    persona: { style: p.style, catchphrase: p.catchphrase, mines: p.mines, topics: p.topics, opener: p.opener, ageRange: p.ageRange }
+  };
+  state.candidates.push(cand);
+  log("补位角色存为候选人", nick + "（虚构 · 模板生成）");
+  save();
+  renderPeople();
+  toast("已存为候选人「" + nick + "」，注意它标着虚构");
+}
+function openEndpointGuide(cand) {
+  const body =
+    '<div class="notice" style="margin-bottom:13px"><b>接口没配置，所以现在不能真的聊天。</b><br>' +
+      '这个页面本身不带任何大模型 Key，也不会偷偷请求外部地址。你要接自己的服务，页面才会去调。</div>' +
+    '<p style="margin:0 0 10px;font-size:13px;color:var(--txt2);line-height:1.85">两种做法，选一种：</p>' +
+    '<p style="margin:0 0 6px;font-size:12.5px;color:var(--txt);line-height:1.8"><b style="color:var(--gold-hi)">做法一：</b>在「数据与接口」里填聊天接口地址，你的服务返回 JSON 就行。</p>' +
+    '<pre class="code">POST 你的地址\n{ "candidate": { "nickname": "' + esc(cand ? cand.nickname : "角色") + '" },\n' +
+      '  "self": { "nickname": "我" },\n  "history": [],\n  "message": "今天好累" }\n\n期望返回\n{ "reply": "那就先说点轻松的。" }</pre>' +
+    '<p style="margin:12px 0 6px;font-size:12.5px;color:var(--txt2);line-height:1.8"><b style="color:var(--gold)">做法二：</b>代码里直接调用 <code style="color:var(--gold-hi)">ChatMate.setChatEndpoint("https://…")</code>。</p>' +
+    '<div class="notice blue" style="margin-top:13px">在没有接口之前，页面不会给你编任何「对方回复」。它只负责筛人和给开场白。</div>';
+  openModal({
+    title: "还不能真聊：接口未配置",
+    body,
+    footer: '<button class="btn" data-act="close-modal">知道了</button>' +
+            '<button class="btn primary" data-act="jump-api">去填接口地址</button>'
+  });
+}
+async function startChat(id) {
+  const c = findCand(id) || (currentPersona ? {
+    id: "persona-preview", nickname: currentPersona.nickname, traits: currentPersona.traits
+  } : null);
+  if (!c) { toast("找不到这个角色", true); return; }
+  const ep = (state.settings.chatEndpoint || "").trim();
+  if (!ep) { openEndpointGuide(c); return; }
+  openModal({
+    title: "正在连接你的接口…",
+    body: '<div style="text-align:center;padding:18px 0"><div class="e-ic" style="font-size:28px;opacity:.6">◌</div>' +
+      '<p style="font-size:13px;color:var(--txt2)">向 ' + esc(ep) + ' 发送第一条消息</p></div>',
+    footer: '<button class="btn" data-act="close-modal">取消</button>'
+  });
+  try {
+    const res = await fetch(ep, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        candidate: { id: c.id, nickname: c.nickname, traits: c.traits || [] },
+        self: { nickname: state.self.nickname || "我" },
+        history: [],
+        message: "你好，我们先随便聊聊？"
+      })
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    const reply = data.reply || data.text || data.content || "";
+    if (!reply) throw new Error("返回里没有 reply / text 字段");
+    openModal({
+      title: "接口回复 · " + c.nickname,
+      body: '<div class="quote">' + esc(reply) + '</div>' +
+        '<div class="notice blue" style="margin-top:12px">这条回复来自你配置的接口 ' + esc(ep) + '，不是本页面生成的。</div>',
+      footer: '<button class="btn" data-act="close-modal">关闭</button>'
+    });
+  } catch (err) {
+    openModal({
+      title: "接口没通",
+      body: '<div class="notice" style="margin-bottom:10px"><b>请求失败了：</b>' + esc(err.message) + '</div>' +
+        '<p style="margin:0;font-size:12.5px;color:var(--txt2);line-height:1.85">常见原因：地址写错、服务没启动、服务端没开跨域（CORS）、用 file:// 打开被浏览器拦截。修好再试，页面不会编一个假回复糊弄你。</p>',
+      footer: '<button class="btn" data-act="close-modal">知道了</button>' +
+              '<button class="btn primary" data-act="jump-api">去检查接口</button>'
+    });
+  }
+}
+/* ================== 表格解析与导入 ================== */
+const IMPORT_FIELDS = [
+  { k: "nickname", label: "昵称", kw: /昵称|名字|姓名|称呼|nick/i },
+  { k: "birth", label: "出生日期", kw: /生日|出生|生辰|birth/i },
+  { k: "type", label: "类型", kw: /类型|类别|type|真伪/i },
+  { k: "city", label: "城市", kw: /城市|所在地|地区|city/i },
+  { k: "gender", label: "性别", kw: /性别|gender/i },
+  { k: "traits", label: "性格标签", kw: /性格|标签|特质|traits/i },
+  { k: "prefs", label: "聊天偏好", kw: /偏好|喜欢聊|话题|prefs/i },
+  { k: "channel", label: "认识渠道", kw: /渠道|来源|认识|from/i },
+  { k: "note", label: "备注", kw: /备注|说明|note|remark/i }
+];
+let parsedTable = null;
+
+function splitCSV(line, d) {
+  const out = []; let cur = "", q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (q && line[i + 1] === '"') { cur += '"'; i++; }
+      else q = !q;
+    } else if (ch === d && !q) { out.push(cur); cur = ""; }
+    else cur += ch;
+  }
+  out.push(cur);
+  return out.map(s => s.trim());
+}
+function parseTable(text) {
+  const lines = text.replace(/\r/g, "").split("\n").filter(l => l.trim() !== "");
+  if (!lines.length) return [];
+  const useTab = lines.some(l => l.includes("\t"));
+  const delim = useTab ? "\t" : (lines[0].includes(",") ? "," : "，");
+  return lines.map(l => splitCSV(l, delim));
+}
+function normBirth(v) {
+  v = String(v || "").trim();
+  let m = /^(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})/.exec(v);
+  if (m) return m[1] + "-" + pad2(m[2]) + "-" + pad2(m[3]);
+  m = /^(\d{4})(\d{2})(\d{2})$/.exec(v);
+  if (m) return m[1] + "-" + m[2] + "-" + m[3];
+  return "";
+}
+function splitList(v) {
+  return String(v || "").split(/[,，、;；/|\s]+/).map(s => s.trim()).filter(Boolean);
+}
+function guessMapping(cols) {
+  const map = {};
+  IMPORT_FIELDS.forEach(f => {
+    const idx = cols.findIndex(c => f.kw.test(String(c)));
+    map[f.k] = idx;
+  });
+  return map;
+}
+function parsePaste() {
+  const text = $("#pasteInput").value;
+  if (!text.trim()) { toast("先粘贴点内容进来", true); return; }
+  const rows = parseTable(text);
+  if (!rows.length) { toast("没解析出内容", true); return; }
+  const first = rows[0];
+  const hasHeader = first.some(h => IMPORT_FIELDS.some(f => f.kw.test(String(h))));
+  const cols = hasHeader ? first.map((h, i) => h || ("第" + (i + 1) + "列")) : first.map((_, i) => "第" + (i + 1) + "列");
+  const dataRows = hasHeader ? rows.slice(1) : rows;
+  parsedTable = { cols, dataRows, map: guessMapping(hasHeader ? first : cols), hasHeader };
+  renderMapBox();
+  toast("识别到 " + dataRows.length + " 行 · " + cols.length + " 列");
+}
+function renderMapBox() {
+  if (!parsedTable) return;
+  const p = parsedTable;
+  const selects = IMPORT_FIELDS.map(f => {
+    const opts = '<option value="-1">不导入</option>' + p.cols.map((c, i) =>
+      '<option value="' + i + '"' + (p.map[f.k] === i ? " selected" : "") + '>' + esc(c) + '</option>').join("");
+    return '<div class="field"><label>' + f.label + '</label><select data-field="' + f.k + '">' + opts + '</select></div>';
+  }).join("");
+  const preview = p.dataRows.slice(0, 5);
+  const head = '<tr>' + p.cols.map(c => '<th>' + esc(c) + '</th>').join("") + '</tr>';
+  const body = preview.map(r => '<tr>' + p.cols.map((_, i) => '<td>' + esc(r[i] || "") + '</td>').join("") + '</tr>').join("");
+  $("#mapBox").innerHTML =
+    '<div style="margin-top:14px"><div style="font-size:12px;color:var(--txt3);margin-bottom:6px">前 5 行预览' +
+      (p.hasHeader ? "（首行已识别为表头）" : "（未识别到表头，按列位置猜的）") + '</div>' +
+      '<table class="preview-tbl">' + head + body + '</table></div>' +
+    '<div style="font-size:12px;color:var(--txt3);margin-top:14px">列对应关系（认错了改这里）</div>' +
+    '<div class="map-grid">' + selects + '</div>' +
+    '<div class="btn-row" style="margin-top:12px">' +
+      '<button class="btn primary" data-act="do-import">确认导入 ' + p.dataRows.length + ' 行</button>' +
+      '<button class="btn ghost" data-act="cancel-import">取消</button>' +
+    '</div>';
+}
+function doImport() {
+  if (!parsedTable) return;
+  const map = {};
+  $$('#mapBox select[data-field]').forEach(s => { map[s.dataset.field] = Number(s.value); });
+  if (map.nickname < 0) { toast("必须指定「昵称」对应的列", true); return; }
+  let ok = 0, skip = 0;
+  parsedTable.dataRows.forEach(row => {
+    const get = k => (map[k] >= 0 ? String(row[map[k]] || "").trim() : "");
+    const nick = get("nickname");
+    if (!nick) { skip++; return; }
+    const typeRaw = get("type");
+    const isFict = /ai|虚|模板|扮演|机器|bot/i.test(typeRaw);
+    const birth = normBirth(get("birth"));
+    state.candidates.push({
+      id: uid(), nickname: nick, type: isFict ? "fictional" : "real",
+      source: "import", birth,
+      sign: null, zodiac: null,
+      gender: /男/.test(get("gender")) ? "男" : (/女/.test(get("gender")) ? "女" : ""),
+      city: get("city"),
+      traits: splitList(get("traits")).filter(t => TRAITS.includes(t)),
+      prefs: splitList(get("prefs")).filter(t => PREFS.includes(t)),
+      channel: get("channel"), note: get("note"), vip: false,
+      createdAt: nowStr(), updatedAt: nowStr()
+    });
+    ok++;
+  });
+  log("批量导入", "成功 " + ok + " 条" + (skip ? "，跳过 " + skip + " 条空昵称" : ""));
+  save();
+  parsedTable = null;
+  $("#mapBox").innerHTML = "";
+  $("#pasteInput").value = "";
+  renderAll();
+  switchView("people");
+  toast("已导入 " + ok + " 条" + (skip ? "，跳过 " + skip + " 条" : ""));
+}
+
+/* ================== JSON 导入导出 ================== */
+function exportJSON() {
+  const data = {
+    app: "纯聊搭子", version: 1, exportedAt: nowStr(),
+    self: state.self, candidates: state.candidates,
+    settings: { chatEndpoint: state.settings.chatEndpoint, personaEndpoint: state.settings.personaEndpoint }
+  };
+  const str = JSON.stringify(data, null, 2);
+  try {
+    const blob = new Blob([str], { type: "application/json;charset=utf-8" });
+    const a = document.createElement("a");
+    const d = new Date();
+    a.href = URL.createObjectURL(blob);
+    a.download = "纯聊搭子_备份_" + d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+    log("导出备份", state.candidates.length + " 条候选人");
+    save(true); renderHistory();
+    toast("已导出 JSON 备份");
+  } catch (e) {
+    openModal({
+      title: "导出失败，可手动复制",
+      body: '<p style="font-size:12.5px;color:var(--txt2)">浏览器拦了下载，直接复制下面内容另存为 .json：</p>' +
+        '<pre class="code" style="max-height:300px">' + esc(str) + '</pre>',
+      footer: '<button class="btn" data-act="close-modal">关闭</button>'
+    });
+  }
+}
+function importJSON() {
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = ".json,application/json";
+  inp.onchange = () => {
+    const file = inp.files && inp.files[0];
+    if (!file) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      try {
+        const d = JSON.parse(String(fr.result));
+        const list = Array.isArray(d) ? d : (d.candidates || []);
+        if (!Array.isArray(list)) throw new Error("文件里没有候选人数组");
+        let add = 0;
+        const ids = new Set(state.candidates.map(c => c.id));
+        list.forEach(c => {
+          if (!c || !c.nickname) return;
+          const item = Object.assign({}, c);
+          if (!item.id || ids.has(item.id)) item.id = uid();
+          ids.add(item.id);
+          item.type = item.type === "real" ? "real" : "fictional";
+          item.traits = Array.isArray(item.traits) ? item.traits : [];
+          item.prefs = Array.isArray(item.prefs) ? item.prefs : [];
+          state.candidates.push(item);
+          add++;
+        });
+        if (d && d.self && !state.self.birth && !state.self.sign) state.self = Object.assign(state.self, d.self);
+        log("导入备份", add + " 条候选人");
+        save(); renderAll();
+        toast("已合并导入 " + add + " 条");
+      } catch (e) {
+        toast("导入失败：" + e.message, true);
+      }
+    };
+    fr.readAsText(file, "utf-8");
+  };
+  inp.click();
+}
+
+/* ================== 操作历史 ================== */
+function renderHistory() {
+  const box = $("#histList");
+  if (!box) return;
+  if (!state.history.length) {
+    box.innerHTML = '<li style="justify-content:center;color:var(--txt3);padding:18px 0">还没有操作记录。做个什么都记在这。</li>';
+    return;
+  }
+  box.innerHTML = state.history.slice(0, 50).map(h =>
+    '<li><span class="tm">' + esc(h.t) + '</span><span class="ac">' + esc(h.action) + '</span>' +
+    '<span class="dt" title="' + esc(h.detail) + '">' + esc(h.detail) + '</span></li>').join("");
+}
+
+/* ================== 视图切换 ================== */
+function switchView(v) {
+  $$(".tab").forEach(t => t.classList.toggle("on", t.dataset.view === v));
+  $$(".view").forEach(s => s.classList.toggle("hidden", s.id !== "view-" + v));
+  if (v === "data") { renderHistory(); $("#chatEndpoint").value = state.settings.chatEndpoint || ""; $("#personaEndpoint").value = state.settings.personaEndpoint || ""; }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function renderAll() { renderPeople(); renderHistory(); renderMeta(); }
+
+/* ================== 帮助气泡 ================== */
+const HELP_TEXTS = {
+  self: { t: "我的基础资料", d: "只用来当契合度的基准：你的星座和生肖。生日填了会自动推，也可以手动选。只存本机，不上传。" },
+  fill: { t: "补位模式", d: "缺人的时候按你要的属性拼一个虚构角色。它是模板拼的设定卡，不是真人，也不会自己回话；条件一样，每次拼出来的人也完全一样。" },
+  api: { t: "对外接口", d: "给别的程序用的 JavaScript 入口，挂在 window.ChatMate 上。不带任何 Key，也不会主动联网，只有你自己的程序调它才动。" },
+  endpoint: { t: "聊天接口", d: "填一个你自己的服务地址，点「开始聊天」时页面才会 POST 过去。不填就只弹提示，绝不会编造回复。" },
+  history: { t: "操作历史", d: "记你最近 50 次操作，存在本机。换浏览器或清缓存会没，重要的记得导出。" }
+};
+function showHelp(el) {
+  hideHelp();
+  const key = el.dataset.help, info = HELP_TEXTS[key];
+  if (!info) return;
+  const tip = document.createElement("div");
+  tip.className = "help-tip";
+  tip.id = "helpTip";
+  tip.innerHTML = "<b>" + esc(info.t) + "</b>" + esc(info.d);
+  document.body.appendChild(tip);
+  const r = el.getBoundingClientRect();
+  const w = Math.min(270, window.innerWidth - 24);
+  tip.style.width = w + "px";
+  let left = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), window.innerWidth - w - 12);
+  tip.style.left = left + "px";
+  const th = tip.offsetHeight;
+  let top = r.bottom + 8;
+  if (top + th > window.innerHeight - 12) top = Math.max(12, r.top - th - 8);
+  tip.style.top = top + "px";
+}
+function hideHelp() { const t = $("#helpTip"); if (t) t.remove(); }
+
+/* ================== 示例数据 ================== */
+function loadDemo() {
+  const demo = [
+    { nickname: "小北", type: "real", birth: "1996-08-12", gender: "女", city: "成都", traits: ["话少", "爱吐槽"], prefs: ["电影", "音乐", "八卦"], channel: "朋友饭局", note: "一两周才回一次，但每次回都很实在。别催。", vip: true },
+    { nickname: "陈也", type: "real", birth: "1992-03-05", gender: "男", city: "杭州", traits: ["理性", "慢热"], prefs: ["工作", "人生规划", "读书"], channel: "前同事", note: "聊工作很来劲，聊情绪会先讲道理。", vip: false },
+    { nickname: "阿棠", type: "real", birth: "1995-11-02", gender: "女", city: "深圳", traits: ["分享欲强", "幽默"], prefs: ["美食", "旅行", "八卦"], channel: "小红书", note: "一件小事能讲十分钟，接住就行。", vip: false },
+    { nickname: "老周", type: "real", birth: "1988-06-18", gender: "男", city: "北京", traits: ["社恐", "共情强"], prefs: ["电影", "情感", "读书"], channel: "老同学", note: "不爱语音，文字聊得深。", vip: true },
+    { nickname: "夜航", type: "fictional", source: "manual", birth: "1999-01-28", gender: "女", city: "上海", traits: ["感性", "社牛"], prefs: ["音乐", "电影"], channel: "豆瓣", note: "AI 扮演角色，设定是深夜电台主播。", vip: false },
+    { nickname: "南风", type: "fictional", source: "manual", birth: "1993-09-09", gender: "男", city: "虚拟", traits: ["理性", "话少"], prefs: ["工作", "游戏", "读书"], channel: "AI 扮演", note: "补位用的 AI 角色，偏冷感。", vip: false }
+  ];
+  demo.forEach(d => state.candidates.push(Object.assign({
+    id: uid(), sign: null, zodiac: null, vip: false, createdAt: nowStr(), updatedAt: nowStr()
+  }, d)));
+  if (!profileReady(state.self)) {
+    state.self = Object.assign({}, state.self, {
+      nickname: "我", birth: "1990-04-10", sign: 0, zodiac: "马",
+      prefs: ["电影", "音乐", "人生规划"]
+    });
+  }
+  log("载入示例", "6 条候选人 + 我的示例资料");
+  save(); renderAll();
+  toast("示例已载入（含我的示例生日，可随时改）");
+}
+
+/* ================== 事件 ================== */
+document.addEventListener("click", e => {
+  const helpDot = e.target.closest(".help-dot");
+  if (helpDot) { e.stopPropagation(); showHelp(helpDot); return; }
+  hideHelp();
+
+  const collHead = e.target.closest("[data-coll-toggle]");
+  if (collHead) { toggleColl(collHead.dataset.collToggle); return; }
+
+  const chip = e.target.closest("[data-chip]");
+  if (chip) {
+    if (chip.dataset.single === "vip") {
+      chip.classList.toggle("on");
+      chip.textContent = chip.classList.contains("on") ? "★ 已设为 VIP" : "☆ 设为 VIP";
+    } else {
+      chip.classList.toggle("on");
+    }
+    return;
+  }
+  const el = e.target.closest("[data-act]");
+  if (!el) {
+    if (e.target.classList && e.target.classList.contains("modal-mask")) closeModal();
+    return;
+  }
+  const act = el.dataset.act, id = el.dataset.id;
+  switch (act) {
+    case "close-modal": closeModal(); break;
+    case "toggle-all-coll": toggleAllColl(); break;
+    case "confirm-yes": { const fn = window.__confirmYes; window.__confirmYes = null; closeModal(); if (fn) fn(); break; }
+    case "edit-self": openSelfForm(); break;
+    case "save-self": saveSelf(); break;
+    case "add-person": openPersonForm(null); break;
+    case "edit-person": openPersonForm(id); break;
+    case "save-person": savePerson(id); break;
+    case "view-score": showScore(id); break;
+    case "copy-opener": {
+      const c = findCand(id); if (!c) break;
+      const txt = evaluate(state.self, c).opener;
+      copyText(txt);
+      break;
+    }
+    case "dup-person": {
+      const c = findCand(id); if (!c) break;
+      const copy = clone(c);
+      copy.id = uid();
+      copy.nickname = c.nickname + "（副本）";
+      copy.createdAt = nowStr(); copy.updatedAt = nowStr();
+      state.candidates.push(copy);
+      log("复制候选人", c.nickname + " → " + copy.nickname);
+      save(); renderAll(); toast("已复制");
+      break;
+    }
+    case "del-person": {
+      const c = findCand(id); if (!c) break;
+      confirmBox("删除候选人", "确定删除「<b style='color:#fff'>" + esc(c.nickname) + "</b>」？删了就只能靠以前导出的备份找回。", () => {
+        state.candidates = state.candidates.filter(x => x.id !== id);
+        log("删除候选人", c.nickname);
+        save(); renderAll(); toast("已删除");
+      }, "确定删除");
+      break;
+    }
+    case "reset-filter":
+      $("#qSearch").value = ""; $("#fType").value = ""; $("#fSign").value = "";
+      $("#fZodiac").value = ""; $("#fTrait").value = ""; $("#fSort").value = "score";
+      renderPeople(); toast("筛选已重置");
+      break;
+    case "go-import":
+      switchView("data");
+      if (!isCollOpen("import")) { collSaved["import"] = true; persistColl(); applyColl(); }
+      setTimeout(() => $("#pasteInput").focus(), 300);
+      break;
+    case "load-demo": confirmBox("载入示例数据", "会往当前列表里加 6 条示例（4 真人 + 2 AI 扮演）。你已有的数据不会被删。", loadDemo, "载入"); break;
+    case "export-json": exportJSON(); break;
+    case "import-json": importJSON(); break;
+    case "clear-all":
+      confirmBox("清空全部数据", "会删掉所有候选人、你的资料和操作记录，且不能撤销。建议先导出备份。", () => {
+        state.candidates = []; state.history = [];
+        state.self = { nickname: "我", birth: "", sign: null, zodiac: null, gender: "", traits: [], prefs: [] };
+        save(); renderAll(); toast("已清空");
+      }, "全部清空");
+      break;
+    case "parse-paste": parsePaste(); break;
+    case "paste-example":
+      $("#pasteInput").value = "昵称,出生日期,类型,城市,性格,备注\n小北,1996-08-12,真人,成都,话少 爱吐槽,朋友介绍，回得慢\n阿棠,1995/11/2,真人,深圳,分享欲强 幽默,小红书\n南风,1993-09-09,AI扮演,虚拟,理性 话少,补位角色";
+      toast("示例已填入，点「识别列并预览」");
+      break;
+    case "do-import": doImport(); break;
+    case "cancel-import": parsedTable = null; $("#mapBox").innerHTML = ""; $("#pasteInput").value = ""; break;
+    case "gen-persona": generatePersona(); break;
+    case "reset-fill":
+      $("#fillSign").value = ""; $("#fillZodiac").value = ""; $("#fillGender").value = "any";
+      $("#fillAge").value = "25-30";
+      $$("#fillTraits .chip, #fillPrefs .chip").forEach(c => c.classList.remove("on"));
+      $("#personaBox").innerHTML = ""; currentPersona = null;
+      toast("补位条件已重置");
+      break;
+    case "save-persona": savePersonaAsCandidate(); break;
+    case "regen-persona": generatePersona(); break;
+    case "persona-chat": startChat("persona-preview"); break;
+    case "start-chat": startChat(id); break;
+    case "jump-api":
+      closeModal();
+      switchView("data");
+      if (!isCollOpen("api")) { collSaved["api"] = true; persistColl(); applyColl(); }
+      setTimeout(() => { $("#chatEndpoint").focus(); $("#chatEndpoint").scrollIntoView({ behavior: "smooth", block: "center" }); }, 240);
+      break;
+    case "save-endpoint": {
+      state.settings.chatEndpoint = ($("#chatEndpoint").value || "").trim();
+      state.settings.personaEndpoint = ($("#personaEndpoint").value || "").trim();
+      log("保存接口地址", state.settings.chatEndpoint || "（清空）");
+      save(); renderHistory();
+      toast(state.settings.chatEndpoint ? "接口地址已保存" : "接口地址已清空");
+      break;
+    }
+    case "toggle-apidoc": $("#apiDoc").classList.toggle("hidden"); break;
+  }
+});
+function copyText(txt) {
+  const done = () => toast("已复制到剪贴板");
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(txt).then(done).catch(() => fallback());
+  } else fallback();
+  function fallback() {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      document.execCommand("copy"); ta.remove(); done();
+    } catch (e) { toast("复制失败，请手动选中", true); }
+  }
+}
+
+/* ================== 对外接口 ================== */
+window.ChatMate = {
+  version: "1.0.0",
+  listCandidates() {
+    return state.candidates.map(c => Object.assign(clone(c), { score: evaluate(state.self, c) }));
+  },
+  getCandidate(id) {
+    const c = findCand(id);
+    return c ? Object.assign(clone(c), { score: evaluate(state.self, c) }) : null;
+  },
+  addCandidate(obj) {
+    obj = obj || {};
+    if (!obj.nickname) throw new Error("nickname 必填");
+    const c = Object.assign({
+      id: uid(), nickname: String(obj.nickname), type: obj.type === "fictional" ? "fictional" : "real",
+      source: "api", birth: obj.birth || "", sign: obj.sign == null ? null : obj.sign,
+      zodiac: obj.zodiac || null, gender: obj.gender || "", city: obj.city || "",
+      traits: Array.isArray(obj.traits) ? obj.traits : [], prefs: Array.isArray(obj.prefs) ? obj.prefs : [],
+      channel: obj.channel || "", note: obj.note || "", vip: !!obj.vip,
+      createdAt: nowStr(), updatedAt: nowStr()
+    }, obj);
+    c.id = c.id || uid();
+    state.candidates.push(c);
+    log("接口新增候选人", c.nickname);
+    save(); renderAll();
+    return clone(c);
+  },
+  updateCandidate(id, patch) {
+    const c = findCand(id);
+    if (!c) return null;
+    Object.assign(c, patch || {}, { updatedAt: nowStr() });
+    log("接口更新候选人", c.nickname);
+    save(); renderAll();
+    return clone(c);
+  },
+  removeCandidate(id) {
+    const c = findCand(id);
+    if (!c) return false;
+    state.candidates = state.candidates.filter(x => x.id !== id);
+    log("接口删除候选人", c.nickname);
+    save(); renderAll();
+    return true;
+  },
+  score(selfProfile, candidate) { return evaluate(selfProfile || state.self, candidate || {}); },
+  generateFiller(attrs) { return generateFiller(attrs || {}); },
+  setChatEndpoint(url) {
+    state.settings.chatEndpoint = String(url || "").trim();
+    const el = $("#chatEndpoint"); if (el) el.value = state.settings.chatEndpoint;
+    save(); return state.settings.chatEndpoint;
+  },
+  setPersonaEndpoint(url) {
+    state.settings.personaEndpoint = String(url || "").trim();
+    const el = $("#personaEndpoint"); if (el) el.value = state.settings.personaEndpoint;
+    save(); return state.settings.personaEndpoint;
+  },
+  setSelf(obj) { state.self = Object.assign({}, state.self, obj || {}); save(); renderAll(); return clone(state.self); },
+  exportJSON() {
+    return JSON.stringify({ app: "纯聊搭子", version: 1, exportedAt: nowStr(), self: state.self, candidates: state.candidates }, null, 2);
+  },
+  importJSON(str) {
+    const d = JSON.parse(str);
+    const list = Array.isArray(d) ? d : (d.candidates || []);
+    list.forEach(c => { if (c && c.nickname) { c.id = c.id || uid(); state.candidates.push(c); } });
+    save(); renderAll();
+    return state.candidates.length;
+  },
+  clearAll() {
+    state.candidates = []; state.history = [];
+    save(); renderAll();
+    return true;
+  }
+};
+
+/* ================== 初始化 ================== */
+(function init() {
+  load();
+  fillSelects();
+  const list = $("#peopleList");
+  if (list && !$("#peopleHint")) list.insertAdjacentHTML("beforebegin", '<div id="peopleHint"></div>');
+  $("#chatEndpoint").value = state.settings.chatEndpoint || "";
+  $("#personaEndpoint").value = state.settings.personaEndpoint || "";
+  $$(".tab").forEach(t => t.addEventListener("click", () => switchView(t.dataset.view)));
+  $("#qSearch").addEventListener("input", renderPeople);
+  ["#fType", "#fSign", "#fZodiac", "#fTrait", "#fSort"].forEach(s => $(s).addEventListener("change", renderPeople));
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") { hideHelp(); if ($(".modal-mask")) closeModal(); }
+  });
+  window.addEventListener("resize", hideHelp);
+  renderAll();
+  applyColl();
+})();
+
+
+
+
+</script>
+</body>
+</html>
